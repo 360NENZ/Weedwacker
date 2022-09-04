@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "ltyCEYUT+YQklJEJazq8uidcnPYsniXdr/71NKtJbDGro/JlDC/YTn67A0s6E0DZdo7Osjn/3LoTcreYhRV9yA==",
+  "success": true,
+  "projectFilePath": "C:\\local\\WeedWacker\\WeedWacker\\WeedWacker\\WeedWacker.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\himak\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512"
+  ],
+  "logs": []
+}

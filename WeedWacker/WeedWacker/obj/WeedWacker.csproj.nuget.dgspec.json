@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\local\\WeedWacker\\WeedWacker\\WeedWacker\\WeedWacker.csproj": {}
+    "C:\\Users\\Harry\\git\\Weedwacker\\Weedwacker\\Weedwacker\\Weedwacker.csproj": {}
   },
   "projects": {
-    "C:\\local\\WeedWacker\\WeedWacker\\WeedWacker\\WeedWacker.csproj": {
+    "C:\\Users\\Harry\\git\\Weedwacker\\Weedwacker\\Weedwacker\\Weedwacker.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\local\\WeedWacker\\WeedWacker\\WeedWacker\\WeedWacker.csproj",
-        "projectName": "WeedWacker",
-        "projectPath": "C:\\local\\WeedWacker\\WeedWacker\\WeedWacker\\WeedWacker.csproj",
-        "packagesPath": "C:\\Users\\himak\\.nuget\\packages\\",
-        "outputPath": "C:\\local\\WeedWacker\\WeedWacker\\WeedWacker\\obj\\",
+        "projectUniqueName": "C:\\Users\\Harry\\git\\Weedwacker\\Weedwacker\\Weedwacker\\Weedwacker.csproj",
+        "projectName": "Weedwacker",
+        "projectPath": "C:\\Users\\Harry\\git\\Weedwacker\\Weedwacker\\Weedwacker\\Weedwacker.csproj",
+        "packagesPath": "C:\\Users\\Harry\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Harry\\git\\Weedwacker\\Weedwacker\\Weedwacker\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\himak\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Harry\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -40,6 +40,10 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "dependencies": {
+            "Google.Protobuf": {
+              "target": "Package",
+              "version": "[3.21.5, )"
+            },
             "Newtonsoft.Json": {
               "target": "Package",
               "version": "[13.0.1, )"
@@ -51,8 +55,7 @@
             "net47",
             "net471",
             "net472",
-            "net48",
-            "net481"
+            "net48"
           ],
           "assetTargetFallback": true,
           "warn": true,
@@ -61,7 +64,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.400\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.301\\RuntimeIdentifierGraph.json"
         }
       }
     }

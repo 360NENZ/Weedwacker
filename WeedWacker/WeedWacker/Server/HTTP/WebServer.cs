@@ -5,7 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WeedWacker.Server.HTTP
+namespace Weedwacker.Server.HTTP
 {
     internal static class WebServer
     {
@@ -31,7 +31,11 @@ namespace WeedWacker.Server.HTTP
         static async void Loop()
         {
             while (true)
-                HandleRequest(await Listener.GetContextAsync());
+            {
+                HttpListenerContext ctx = await Listener.GetContextAsync();
+                bool b = false;
+                HandleRequest(ctx);
+            }
         }
         static async Task HandleDefaultResponse(HttpListenerResponse resp, int code)
         {
@@ -54,6 +58,7 @@ namespace WeedWacker.Server.HTTP
         }
         public static void Start()
         {
+            Listener.Prefixes.Add("http://localhost:8000/");
             Listener.Start();
             Loop();
         }

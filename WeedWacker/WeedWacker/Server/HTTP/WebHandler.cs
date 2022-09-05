@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace WeedWacker.Server.HTTP
+namespace Weedwacker.Server.HTTP
 {
     internal static class WebHandler
     {
@@ -18,7 +18,7 @@ namespace WeedWacker.Server.HTTP
         }
         public static async Task QueryCurrentRegion(HttpListenerContext ctx)
         {
-
+            //RegionHandler.QueryCurrentRegion(ctx);
         }
         public static async Task RiskyAPICheck(HttpListenerContext ctx)
         {

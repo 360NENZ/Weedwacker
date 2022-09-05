@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "ltyCEYUT+YQklJEJazq8uidcnPYsniXdr/71NKtJbDGro/JlDC/YTn67A0s6E0DZdo7Osjn/3LoTcreYhRV9yA==",
+  "dgSpecHash": "2BQHlFaLHJ0EJXuOko+/vFIfbTADkVcQcNh3qT5C3s+oenk/3WgeztMy1+S1gd3onn+ie5IASKt8wzsQgE596g==",
   "success": true,
-  "projectFilePath": "C:\\local\\WeedWacker\\WeedWacker\\WeedWacker\\WeedWacker.csproj",
+  "projectFilePath": "C:\\Users\\Harry\\git\\Weedwacker\\Weedwacker\\Weedwacker\\Weedwacker.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\himak\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512"
+    "C:\\Users\\Harry\\.nuget\\packages\\google.protobuf\\3.21.5\\google.protobuf.3.21.5.nupkg.sha512",
+    "C:\\Users\\Harry\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512"
   ],
   "logs": []
 }

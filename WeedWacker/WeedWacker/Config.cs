@@ -1,4 +1,4 @@
-﻿namespace WeedWacker
+﻿namespace Weedwacker
 {
     public static class Config
     {

@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Text;
 
-namespace WeedWacker.Server.HTTP
+namespace Weedwacker.Server.HTTP
 {
     internal static class WebResponses
     {

@@ -1,66 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Net;
+using Ceen.Httpd;
+using Ceen.Httpd.Logging;
+using Weedwacker.Server.HTTP.Handlers;
 
 namespace Weedwacker.Server.HTTP
 {
     internal static class WebServer
     {
-        static readonly HttpListener Listener = new();
-        static readonly Dictionary<string, Func<HttpListenerContext, Task>> Handlers = new()
-        {
-            { "/hk4e_global/mdk/shield/api/login", WebHandler.ClientLogin },
-            { "/hk4e_global/mdk/shield/api/verify", WebHandler.TokenLogin },
-            { "/hk4e_global/combo/granter/login/v2/login", WebHandler.SessionKeyLogin },
-            { "/query_cur_region", WebHandler.QueryCurrentRegion },
-            { "/account/risky/api/check", WebHandler.RiskyAPICheck },
-            { "/combo/box/api/config/sdk/combo", WebHandler.ConfigSDKCombo },
-            { "/hk4e_global/combo/granter/api/getConfig", WebHandler.ComboGetConfig },
-            { "/hk4e_global/mdk/shield/api/loadConfig", WebHandler.ComboLoadConfig },
-            { "/data_abtest_api/config/experiment/list", WebHandler.ConfigExperimentList },
-            { "/hk4e_global/mdk/agreement/api/getAgreementInfos", WebHandler.GetAgreementInfo },
-            { "/hk4e_global/combo/granter/api/compareProtocolVersion", WebHandler.CompareProtocolVersion }
-        };
-        static readonly Dictionary<int, Func<HttpListenerResponse, Task>> DefaultResponseHandlers = new()
-        {
-            { 404, WebResponses.NotFound }
-        };
-        static async void Loop()
-        {
-            while (true)
-            {
-                HttpListenerContext ctx = await Listener.GetContextAsync();
-                bool b = false;
-                HandleRequest(ctx);
-            }
-        }
-        static async Task HandleDefaultResponse(HttpListenerResponse resp, int code)
-        {
-            if (DefaultResponseHandlers.TryGetValue(code, out var handler))
-            {
-                await handler(resp);
-                return;
-            }
-            await WebResponses.NotFound(resp);
-        }
-        static async void HandleRequest(HttpListenerContext ctx)
-        {
-            var url = ctx.Request.Url;
-            if (url == null || !Handlers.TryGetValue(url.AbsolutePath, out var handler))
-            {
-                await HandleDefaultResponse(ctx.Response, 404);
-                return;
-            }
-            await handler(ctx);
-        }
+        static readonly CancellationTokenSource CancelToken = new();
+        static Task? ServerTask;
+        static readonly ServerConfig Configuration = new ServerConfig().AddLogger(new CLFStdOut()).
+            AddRoute("/hk4e_global/mdk/shield/api/login", new ClientLogin()).
+            AddRoute("/query_cur_region", new QueryCurrentRegion()).
+            AddRoute("/hk4e_global/mdk/shield/api/verify", new TokenLogin()).
+            AddRoute("/hk4e_global/combo/granter/login/v2/login", new SessionKeyLogin()).
+            AddRoute("/account/risky/api/check", new RiskyAPICheck()).
+            AddRoute("/combo/box/api/config/sdk/combo", new ConfigSDKCombo()).
+            AddRoute("/hk4e_global/combo/granter/api/getConfig", new ComboGetConfig()).
+            AddRoute("/hk4e_global/mdk/shield/api/loadConfig", new ComboLoadConfig()).
+            AddRoute("/data_abtest_api/config/experiment/list", new ConfigExperimentList()).
+            AddRoute("/hk4e_global/mdk/agreement/api/getAgreementInfos", new GetAgreementInfo()).
+            AddRoute("/hk4e_global/combo/granter/api/compareProtocolVersion", new CompareProtocolVersion());
         public static void Start()
         {
-            Listener.Prefixes.Add("http://localhost:8000/");
-            Listener.Start();
-            Loop();
+            ServerTask = HttpServer.ListenAsync(
+                new IPEndPoint(IPAddress.Any, 443),
+                false,
+                Configuration,
+                CancelToken.Token);
         }
     }
 }

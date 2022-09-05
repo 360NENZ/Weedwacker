@@ -19,6 +19,11 @@
         {
             Clear();
             string[] kvp;
+            if (!File.Exists("config.ini"))
+            {
+                Logger.WriteErrorLine("Config file not found!");
+                return;
+            }
             foreach (string line in await File.ReadAllLinesAsync("config.ini"))
             {
                 if (line.StartsWith('#') || !line.Contains('='))

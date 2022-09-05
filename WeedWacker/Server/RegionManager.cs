@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Weedwacker.Server.Proto;
 using System.Net;
 
-namespace Weedwacker.Server.HTTP
+namespace Weedwacker.Server
 {
     internal class RegionHandler
     {
@@ -36,19 +36,20 @@ namespace Weedwacker.Server.HTTP
                 + Config.lr(Config.GetString("accessAddress", "http"), Config.GetString("bindAddress", "http") + ":"
                 + Config.lr(Config.GetInt("accessPort", "http"), Config.GetInt("bindPort", "http")));
             List<Region> configuredRegions = new();// Config.GetArray("regions","dispatch");
-            if(Config.GetString("runMode") != "HYBRID" && configuredRegions.Count() == 0) //DISPATCH or GAME
+            if (Config.GetString("runMode") != "HYBRID" && configuredRegions.Count() == 0) //DISPATCH or GAME
             {
                 Logger.WriteErrorLine("No configured server regions. Shutting down...");
                 Environment.Exit(1);
-            } 
-            else if(configuredRegions.Count() == 0) //HYBRID
+            }
+            else if (configuredRegions.Count() == 0) //HYBRID
             {
                 Logger.DebugWriteLine("[Dispatch] Loading default region");
                 configuredRegions.Add(new Region());
             }
-            QueryRegionListHttpRsp updatedRegionList = new QueryRegionListHttpRsp {
+            QueryRegionListHttpRsp updatedRegionList = new QueryRegionListHttpRsp
+            {
                 EnableLoginPc = true,
-                ClientSecretKey = Google.Protobuf.ByteString.CopyFrom(File.ReadAllBytes(Config.GetString("dispatchKey","keyPaths")))/*
+                ClientSecretKey = Google.Protobuf.ByteString.CopyFrom(File.ReadAllBytes(Config.GetString("dispatchKey", "keyPaths")))/*
         .setClientSecretKey(ByteString.copyFrom(Crypto.DISPATCH_SEED))
         .setClientCustomConfigEncrypted(ByteString.copyFrom(customConfig))
         */

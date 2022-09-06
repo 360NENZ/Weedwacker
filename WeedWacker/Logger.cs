@@ -25,5 +25,11 @@ namespace Weedwacker
             Console.Error.WriteLine(ParseMessage(message));
             Console.ResetColor();
         }
+
+        public static void WriteErrorLine(string message, Exception e)
+        {
+            WriteErrorLine(message);
+            WriteErrorLine(e.Message);
+        }
     }
 }

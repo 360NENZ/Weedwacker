@@ -5,7 +5,7 @@ namespace Weedwacker.Server.HTTP.Handlers
     {
         public Task<bool> HandleAsync(IHttpContext context)
         {
-            throw new NotImplementedException();
+            RegionManager.QueryCurrentRegion(context);
         }
     }
 }

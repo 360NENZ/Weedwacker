@@ -6,6 +6,7 @@ namespace Weedwacker.Server.HTTP.Handlers
         public Task<bool> HandleAsync(IHttpContext context)
         {
             RegionManager.QueryCurrentRegion(context);
+            return Task.FromResult(true);
         }
     }
 }

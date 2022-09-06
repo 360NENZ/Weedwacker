@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Weedwacker.Server.Proto;
+using Weedwacker.ConfigContainer;
 using System.Net;
 using Google.Protobuf;
 using Ceen;
@@ -38,6 +39,12 @@ namespace Weedwacker.Server
 
         }
 
+        private struct QueryCurRegionRspJson
+        {
+            public string content;
+            public string sign;
+        }
+
         private static Dictionary<string, RegionData> regions = new();
         private static String? regionListResponse;
 
@@ -48,7 +55,7 @@ namespace Weedwacker.Server
             List<String> usedNames = new(); // List to check for potential naming conflicts.
 
             string dispatchDomain = "http" + (Config.GetBool("useInRouting", "http") ? "s" : "") + "://"
-                + Config.lr(Config.GetString("accessAddress", "http"), Config.GetString("bindAddress", "http") + ":"
+                + Config.lr(ConfigContainer.Server.HTTP.accessAddress, Config.GetString("bindAddress", "http") + ":"
                 + Config.lr(Config.GetInt("accessPort", "http"), Config.GetInt("bindPort", "http")));
             List<Region> configuredRegions = new();// Config.GetArray("regions","dispatch");
 
@@ -142,7 +149,7 @@ namespace Weedwacker.Server
                         rsp.content = regionData;
                         rsp.sign = "TW9yZSBsb3ZlIGZvciBVQSBQYXRjaCBwbGF5ZXJz";
 
-                        ctx.json(rsp);
+                        ctx.Response(JsonSerializer.Serialize(rsp));
                         return;
                     }
 
@@ -175,7 +182,7 @@ namespace Weedwacker.Server
                     rsp.content = Convert.ToBase64String(encryptedRegionInfoStream.toByteArray());
                     rsp.sign = Convert.ToBase64String(privateSignature.sign());
 
-                    ctx.json(rsp);
+                    ctx.Response(JsonSerializer.Serialize(rsp);
                 }
                 catch (Exception e)
                 {

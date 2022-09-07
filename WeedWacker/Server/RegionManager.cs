@@ -3,28 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.Json;
 using Weedwacker.Server.Proto;
-using Weedwacker.ConfigContainer;
 using System.Net;
 using Google.Protobuf;
 using Ceen;
+
+using static Weedwacker.Weedwacker;
 
 namespace Weedwacker.Server
 {
     internal static class RegionManager
     {
-        private struct Region
-        {
-            private Region(string name, string title, string address, uint port)
-            {
-                this.Name = name;
-                this.Title = title;
-                this.Ip = address;
-                this.Port = port;
-            }
-            public string Name = "os_usa", Title = "Weedwacker", Ip = "127.0.0.1";
-            public uint Port = 22102;
-        }
+        
         public struct RegionData
         {
             private QueryCurrRegionHttpRsp regionQuery;
@@ -35,8 +26,6 @@ namespace Weedwacker.Server
                 regionQuery = updatedQuery;
                 base64 = v;
             }
-
-
         }
 
         private struct QueryCurRegionRspJson
@@ -50,24 +39,26 @@ namespace Weedwacker.Server
 
         public static void Initialize()
         {
-            Byte[] dispatchKey = File.ReadAllBytes(Config.GetString("dispatchKey", "keyPaths"));
+            var http = configContainer.server.http;
+
+
             List<RegionSimpleInfo> servers = new();
             List<String> usedNames = new(); // List to check for potential naming conflicts.
 
-            string dispatchDomain = "http" + (Config.GetBool("useInRouting", "http") ? "s" : "") + "://"
-                + Config.lr(ConfigContainer.Server.HTTP.accessAddress, Config.GetString("bindAddress", "http") + ":"
-                + Config.lr(Config.GetInt("accessPort", "http"), Config.GetInt("bindPort", "http")));
-            List<Region> configuredRegions = new();// Config.GetArray("regions","dispatch");
+            string dispatchDomain = "http" + (http.encryption.useInRouting ? "s" : "") + "://"
+                + Config.lr(http.accessAddress, configContainer.server.http.bindAddress + ":"
+                + Config.lr(http.accessPort, http.bindPort));
+            List<Config.ConfigContainer.Region> configuredRegions = configContainer.server.dispatch.regions;
 
-            if (Config.GetString("runMode") != "HYBRID" && configuredRegions.Count() == 0) //DISPATCH or GAME
+            if (configContainer.server.runMode != Enums.ServerRunMode.HYBRID && configuredRegions.Count() == 0) //DISPATCH or GAME
             {
-                Logger.WriteErrorLine("No configured server regions. Shutting down...");
+                Logger.WriteErrorLine("No Dispatch or Game server to connect to. Shutting down...");
                 Environment.Exit(1);
             }
             else if (configuredRegions.Count() == 0) //HYBRID
             {
                 Logger.DebugWriteLine("[Dispatch] Loading default region");
-                configuredRegions.Add(new Region());
+                configuredRegions.Add(new Config.ConfigContainer.Region());
             }
 
             configuredRegions.ForEach(region =>
@@ -89,7 +80,7 @@ namespace Weedwacker.Server
                     var regionInfo = new RegionInfo();
                     regionInfo.GateserverIp = region.Ip;
                     regionInfo.GateserverPort = region.Port;
-                    regionInfo.SecretKey = ByteString.CopyFrom(dispatchKey); ;
+                    regionInfo.SecretKey = ByteString.CopyFrom(Crypto.DISPATCH_SEED); ;
 
                     // Create an updated region query.
                     var updatedQuery = new QueryCurrRegionHttpRsp();
@@ -99,12 +90,12 @@ namespace Weedwacker.Server
 
             // Create a config object.
             byte[] customConfig = Encoding.Default.GetBytes("{\"sdkenv\":\"2\",\"checkdevice\":\"false\",\"loadPatch\":\"false\",\"showexception\":\"false\",\"regionConfig\":\"pm|fk|add\",\"downloadMode\":\"0\"}");
-            Utils.xor(customConfig, dispatchKey); // XOR the config with the key.
+            Utils.xor(customConfig, Crypto.DISPATCH_KEY);
 
             QueryRegionListHttpRsp updatedRegionList = new QueryRegionListHttpRsp();
             updatedRegionList.RegionList.Add(servers);
             updatedRegionList.EnableLoginPc = true;
-            updatedRegionList.ClientSecretKey = ByteString.CopyFrom(File.ReadAllBytes(Config.GetString("dispatchKey", "keyPaths")));
+            updatedRegionList.ClientSecretKey = ByteString.CopyFrom(Crypto.DISPATCH_SEED);
             updatedRegionList.ClientCustomConfigEncrypted = ByteString.CopyFrom(customConfig);
 
             // Set the region list response.

@@ -250,7 +250,7 @@ namespace Weedwacker
 
                 public Region(
                     string name, string title,
-                    string address, int port
+                    string address, uint port
                 )
                 {
                     this.Name = name;

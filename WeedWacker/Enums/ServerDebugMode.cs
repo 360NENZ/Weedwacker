@@ -1,5 +1,9 @@
-﻿namespace Weedwacker.Enums
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
+namespace Weedwacker.Enums
 {
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum ServerDebugMode : byte
     {
         ALL = 0x0,

@@ -1,6 +1,5 @@
 ﻿using Weedwacker.Shared.Utils;
 using Ceen;
-using Weedwacker.WebServer;
 
 namespace Weedwacker.WebServer.Handlers
 {
@@ -13,7 +12,7 @@ namespace Weedwacker.WebServer.Handlers
             var rsp = context.Response;
             rsp.WriteAllAsync(RegionManager.RegionListResponse);
             // Log to console.
-            Logger.WriteLine(String.Format("[Dispatch] Client {0}s request: query_region_list", context.GetRemoteIP()));
+            Logger.WriteLine(string.Format("[Dispatch] Client {0}s request: query_region_list", context.GetRemoteIP()));
             return Task.FromResult(true);
         }
 

@@ -29,7 +29,7 @@ namespace Weedwacker.Shared.Utils
         public static void WriteErrorLine(string message, Exception e)
         {
             WriteErrorLine(message);
-            WriteErrorLine(e.Message);
+            WriteErrorLine(e.StackTrace);
         }
     }
 }

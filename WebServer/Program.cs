@@ -1,14 +1,11 @@
-﻿using Weedwacker;
-using Weedwacker.WebServer.Commands;
-using Weedwacker.WebServer;
-
+﻿using Weedwacker.WebServer.Commands;
 
 namespace Weedwacker.WebServer
 {
     static class Program
     {
 
-        static async Task Main()
+        static void Main(string[] args)
         {
             WebServer.Start();
 

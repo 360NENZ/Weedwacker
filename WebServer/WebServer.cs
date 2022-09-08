@@ -2,13 +2,15 @@
 using Ceen.Httpd;
 using Ceen.Httpd.Logging;
 using Weedwacker.WebServer.Handlers;
+using Weedwacker.WebServer.Authentication;
 using Weedwacker.Shared.Utils;
 using Weedwacker.Shared.Utils.Configuration;
 
 namespace Weedwacker.WebServer
 {
-    internal static class WebServer
+    internal class WebServer
     {
+        public static IAuthenticationSystem AuthenticationSystem { get; set; } = new DefaultAuthentication();
         
         static readonly CancellationTokenSource CancelToken = new();
         static Task? ServerTask;
@@ -26,9 +28,9 @@ namespace Weedwacker.WebServer
             AddRoute("/hk4e_global/mdk/agreement/api/getAgreementInfos", new GetAgreementInfo()).
             AddRoute("/hk4e_global/combo/granter/api/compareProtocolVersion", new CompareProtocolVersion());
 
-        public static void Start()
-        {   
-            var WebConfig = Config.Load().Result;
+        public static async void Start()
+        {
+            await Config.Load();
             Crypto.LoadKeys();
             RegionManager.Initialize();
             ServerTask = HttpServer.ListenAsync(

@@ -35,7 +35,7 @@ namespace Weedwacker.WebServer
             public string sign;
         }
 
-        // All information about a certain configured region's game server
+        // All information about configured regions' game servers
         public static Dictionary<string, RegionData> Regions { get; private set; } = new();
 
         public static string RegionListResponse { get; private set; } = "";

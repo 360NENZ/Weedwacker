@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Weedwacker.Shared.Utils.Configuration;
+using System.Security.Cryptography.Pkcs;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Weedwacker.Shared.Utils
 {
@@ -17,11 +19,11 @@ namespace Weedwacker.Shared.Utils
         public static byte[] ENCRYPT_KEY;
         public static ulong ENCRYPT_SEED = 11468049314633205968;
         public static byte[] ENCRYPT_SEED_BUFFER = new byte[0];
-        /*
-        public static PublicKey CUR_OS_ENCRYPT_KEY;
-        public static PublicKey CUR_CN_ENCRYPT_KEY;
-        public static System.Security.Cryptography.RSA CUR_SIGNING_KEY;
-        */
+        
+        public static byte[] CUR_OS_ENCRYPT_KEY; //Public key
+        public static byte[] CUR_CN_ENCRYPT_KEY; // Public Key
+        public static System.Security.Cryptography.RSA CUR_SIGNING_KEY; //Private Key
+        
         public static void LoadKeys()
         {
             var keys = Config.WebConfig.structure.keys;
@@ -30,24 +32,22 @@ namespace Weedwacker.Shared.Utils
 
             ENCRYPT_KEY = File.ReadAllBytes(keys + "secretKey.bin");
             ENCRYPT_SEED_BUFFER = File.ReadAllBytes(keys + "secretKeyBuffer.bin");
-            /*
+            
             try
-            {
+            {/*
                 var signingCertificate = new X509Certificate2(keys + "SigningKey.der")
                 CUR_SIGNING_KEY = signingCertificate.GetRSAPrivateKey();
                     .generatePrivate(new PKCS8EncodedKeySpec(FileUtils.readResource("/keys/SigningKey.der")));
+                */
+                CUR_OS_ENCRYPT_KEY = new X509Certificate(keys + "OSCB_Pub.der").GetPublicKey();
 
-                CUR_OS_ENCRYPT_KEY = new X509Certificate2(keys + "OSCB_Pub.der");
-                    .generatePublic(new X509EncodedKeySpec(FileUtils.readResource("/keys/OSCB_Pub.der")));
-
-                CUR_CN_ENCRYPT_KEY = new X509Certificate2(keys + "OSCN_Pub.der")
-                    .generatePublic(new X509EncodedKeySpec(FileUtils.readResource("/keys/OSCN_Pub.der")));
+                CUR_CN_ENCRYPT_KEY = new X509Certificate(keys + "OSCN_Pub.der").GetPublicKey();
             }
             catch (Exception e)
             {
                 Logger.WriteErrorLine("An error occurred while loading keys.", e);
             }
-          */  
+            
         }
 
         public static void Xor(byte[] packet, byte[] key)

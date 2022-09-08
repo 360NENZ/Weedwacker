@@ -57,13 +57,7 @@ namespace Weedwacker.Shared.Utils.Configuration
             public string document = "EN";
         }
 
-        public class Account
-        {
-            public bool autoCreate = false;
-            public bool EXPERIMENTAL_RealPassword = false;
-            public string[] defaultPermissions = Array.Empty<string>();
-            public int maxPlayer = -1;
-        }
+
 
         /* Server options. */
 
@@ -80,6 +74,14 @@ namespace Weedwacker.Shared.Utils.Configuration
             public Encryption encryption = new Encryption();
             public Policies policies = new Policies();
             public Files files = new Files();
+            public Account account = new Account();
+
+            public class Account
+            {
+                public bool autoCreate = false;
+                public string[] defaultPermissions = Array.Empty<string>();
+                public int maxAccount = -1;
+            }
         }
 
         public class Game

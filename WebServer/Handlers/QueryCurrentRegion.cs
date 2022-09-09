@@ -1,5 +1,7 @@
-﻿using Ceen;
+﻿using System.Text.RegularExpressions;
+using Ceen;
 using Newtonsoft.Json;
+using Weedwacker.Shared.Utils;
 using Weedwacker.WebServer;
 
 namespace Weedwacker.WebServer.Handlers
@@ -13,21 +15,20 @@ namespace Weedwacker.WebServer.Handlers
         }
 
         public Task<bool> HandleAsync(IHttpContext context)
-        {/*
-
+        {
+            var req = context.Request;
             // Get region to query.
-            string regionName = context.Request.pathParam("region");
-            string versionName = context.queryParam("version");
-
+            string regionName = req.Path.Split('/').Last();
+            string versionName = req.QueryString["version"];
             // Get region data.
             string regionData = "CAESGE5vdCBGb3VuZCB2ZXJzaW9uIGNvbmZpZw==";
-            if (context.queryParamMap().values().size() > 0)
+            if (req.QueryString.Count > 0)
             {
                 if (RegionManager.Regions.TryGetValue(regionName, out RegionManager.RegionData region))
                     regionData = region.base64;
             }
 
-            string[] versionCode = versionName.replaceAll(Pattern.compile("[a-zA-Z]").pattern(), "").split("\\.");
+            string[] versionCode = new Regex("[a-zA-Z]").Replace(versionName, "").Split("\\.");
             int versionMajor = int.Parse(versionCode[0]);
             int versionMinor = int.Parse(versionCode[1]);
             int versionFix = int.Parse(versionCode[2]);
@@ -38,20 +39,20 @@ namespace Weedwacker.WebServer.Handlers
                 {
                     //TODO QueryCurrentRegionEvent  
 
-                    if (context.queryParam("dispatchSeed") == null)
+                    if (req.QueryString.ContainsKey("dispatchSeed"))
                     {
                         // More love for UA Patch players
-                        var rsp = new RegionManager.QueryCurRegionRspJson
+                        var response = new RegionManager.QueryCurRegionRspJson
                         {
                             content = regionData,
                             sign = "TW9yZSBsb3ZlIGZvciBVQSBQYXRjaCBwbGF5ZXJz"
                         };
 
-                        context.Response.WriteAllJsonAsync(JsonConvert.SerializeObject(rsp));
+                        context.Response.WriteAllJsonAsync(JsonConvert.SerializeObject(response));
                         return Task.FromResult(true);
                     }
 
-                    string key_id = context.queryParam("key_id");
+                    string key_id = req.QueryString["key_id"];
                     Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
                     cipher.init(Cipher.ENCRYPT_MODE, key_id.Equals("3") ? Crypto.CUR_OS_ENCRYPT_KEY : Crypto.CUR_CN_ENCRYPT_KEY);
                     var regionInfo = Convert.FromBase64String(regionData);
@@ -92,11 +93,11 @@ namespace Weedwacker.WebServer.Handlers
             {
                 //TODO QueryCurrentRegionEvent
 
-                context.result(event.getRegionInfo());
+                context.Response.WriteAllAsync(regionData);
             }
             // Log to console.
-            Logger.WriteLine(String.Format("Client {0}s request: query_cur_region/{1}s", context.ip(), regionName));
-        */
+            Logger.WriteLine(string.Format("Client {0}s request: query_cur_region/{1}s", context.GetRemoteIP(), regionName));
+        
             return Task.FromResult(true);
         }
     }

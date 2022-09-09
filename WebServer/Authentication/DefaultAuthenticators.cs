@@ -141,7 +141,7 @@ namespace Weedwacker.WebServer.Authentication
             return response;
         }
     }
-
+    
     /// <summary>
     /// Handles the authentication request from the game when using a combo token/session key.
     /// </summary>
@@ -207,17 +207,17 @@ namespace Weedwacker.WebServer.Authentication
     {
         public void HandleLogin(AuthenticationRequest request)
         {
-            request.Context.result("Authentication is not available with the default authentication method.");
+            request.Context.Response.WriteAllAsync("Authentication is not available with the default authentication method.");
         }
 
         public void HandleAccountCreation(AuthenticationRequest request)
         {
-            request.Context.result("Authentication is not available with the default authentication method.");
+            request.Context.Response.WriteAllAsync("Authentication is not available with the default authentication method.");
         }
 
         public void HandlePasswordReset(AuthenticationRequest request)
         {
-            request.Context.result("Authentication is not available with the default authentication method.");
+            request.Context.Response.WriteAllAsync("Authentication is not available with the default authentication method.");
         }
     }
 
@@ -228,17 +228,17 @@ namespace Weedwacker.WebServer.Authentication
     {
         public void HandleLogin(AuthenticationRequest request)
         {
-            request.Context.result("Authentication is not available with the default authentication method.");
+            request.Context.Response.WriteAllAsync("Authentication is not available with the default authentication method.");
         }
 
         public void HandleRedirection(AuthenticationRequest request, IOAuthAuthenticator.ClientType type)
         {
-            request.Context.result("Authentication is not available with the default authentication method.");
+            request.Context.Response.WriteAllAsync("Authentication is not available with the default authentication method.");
         }
 
         public void HandleTokenProcess(AuthenticationRequest request)
         {
-            request.Context.result("Authentication is not available with the default authentication method.");
+            request.Context.Response.WriteAllAsync("Authentication is not available with the default authentication method.");
         }
     }
 }

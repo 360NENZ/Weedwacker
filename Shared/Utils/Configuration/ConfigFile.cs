@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
 
 namespace Weedwacker.Shared.Utils.Configuration
 {
@@ -12,7 +8,6 @@ namespace Weedwacker.Shared.Utils.Configuration
         public Structure structure = new();
         public Server server = new();
         public Language language = new();
-        public Account account = new();
         public int version = 1;
 
         public class Database

@@ -2,8 +2,8 @@
 {
     public class LoginAccountRequestJson
     {
-        public string account;
-        public string password;
-        public bool is_crypto;
+        public readonly string account;
+        public readonly string password;
+        public readonly bool is_crypto;
     }
 }

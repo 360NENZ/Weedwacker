@@ -1,4 +1,4 @@
-﻿using Weedwacker.WebServer.Commands;
+﻿
 
 namespace Weedwacker.WebServer
 {
@@ -9,8 +9,6 @@ namespace Weedwacker.WebServer
         {
             WebServer.Start();
 
-            // Always start this last
-            await ConsoleHandler.Start();
         }
     }
 }

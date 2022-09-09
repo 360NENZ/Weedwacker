@@ -5,12 +5,13 @@ using Weedwacker.WebServer.Handlers;
 using Weedwacker.WebServer.Authentication;
 using Weedwacker.Shared.Utils;
 using Weedwacker.Shared.Utils.Configuration;
+using Weedwacker.WebServer.Commands;
 
 namespace Weedwacker.WebServer
 {
     internal class WebServer
     {
-        public static IAuthenticationSystem AuthenticationSystem { get; set; } = new DefaultAuthentication();
+        //public static IAuthenticationSystem AuthenticationSystem { get; set; } = new DefaultAuthentication();
         
         static readonly CancellationTokenSource CancelToken = new();
         static Task? ServerTask;
@@ -31,6 +32,7 @@ namespace Weedwacker.WebServer
         public static async void Start()
         {
             await Config.Load();
+            Configuration.LoadCertificate(Config.WebConfig.server.http.encryption.keystore, Config.WebConfig.server.http.encryption.keystorePassword);
             Crypto.LoadKeys();
             RegionManager.Initialize();
             ServerTask = HttpServer.ListenAsync(
@@ -38,6 +40,9 @@ namespace Weedwacker.WebServer
                 false,
                 Configuration,
                 CancelToken.Token);
+
+            // Always start this last
+            ConsoleHandler.Start();
         }
     }
 }

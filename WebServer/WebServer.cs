@@ -40,9 +40,7 @@ namespace Weedwacker.WebServer
                 false,
                 Configuration,
                 CancelToken.Token);
-
-            // Always start this last
-            ConsoleHandler.Start();
+            await ServerTask;
         }
     }
 }

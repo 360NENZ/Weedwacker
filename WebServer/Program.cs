@@ -1,14 +1,5 @@
-﻿
+﻿using Weedwacker.WebServer;
+using Weedwacker.WebServer.Commands;
 
-namespace Weedwacker.WebServer
-{
-    static class Program
-    {
-
-        static void Main(string[] args)
-        {
-            WebServer.Start();
-
-        }
-    }
-}
+WebServer.Start();
+await ConsoleHandler.Start();

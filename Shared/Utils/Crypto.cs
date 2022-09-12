@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Weedwacker.Shared.Utils.Configuration;
-using System.Security.Cryptography.Pkcs;
-using System.Security.Cryptography.X509Certificates;
+﻿using Weedwacker.Shared.Utils.Configuration;
+using System.Security.Cryptography;
 
 namespace Weedwacker.Shared.Utils
 {
     public class Crypto
     {
-        //private static SecureRandom secureRandom = new SecureRandom();
 
         public static byte[] DISPATCH_KEY;
         public static byte[] DISPATCH_SEED;
@@ -20,9 +13,9 @@ namespace Weedwacker.Shared.Utils
         public static ulong ENCRYPT_SEED = 11468049314633205968;
         public static byte[] ENCRYPT_SEED_BUFFER = new byte[0];
         
-        public static byte[] CUR_OS_ENCRYPT_KEY; //Public key
-        public static byte[] CUR_CN_ENCRYPT_KEY; // Public Key
-        public static System.Security.Cryptography.RSA CUR_SIGNING_KEY; //Private Key
+        public static RSA CurOSEncryptor = RSA.Create(); //Public key
+        public static RSA CurCNEncryptor = RSA.Create(); // Public Key
+        public static RSA CurSigner = RSA.Create(); //Private Key
         
         public static void LoadKeys()
         {
@@ -34,14 +27,12 @@ namespace Weedwacker.Shared.Utils
             ENCRYPT_SEED_BUFFER = File.ReadAllBytes(keys + "secretKeyBuffer.bin");
             
             try
-            {/*
-                var signingCertificate = new X509Certificate2(keys + "SigningKey.der")
-                CUR_SIGNING_KEY = signingCertificate.GetRSAPrivateKey();
-                    .generatePrivate(new PKCS8EncodedKeySpec(FileUtils.readResource("/keys/SigningKey.der")));
-                */
-                CUR_OS_ENCRYPT_KEY = new X509Certificate(keys + "OSCB_Pub.der").GetPublicKey();
+            {
+                CurOSEncryptor.ImportFromPem(File.ReadAllText(keys + "OSCB.pem").ToCharArray());
 
-                CUR_CN_ENCRYPT_KEY = new X509Certificate(keys + "OSCN_Pub.der").GetPublicKey();
+                CurCNEncryptor.ImportFromPem(File.ReadAllText(keys + "OSCN.pem").ToCharArray());
+
+                CurSigner.ImportFromPem(File.ReadAllText(keys + "SigningKey.pem").ToCharArray());
             }
             catch (Exception e)
             {
@@ -63,6 +54,11 @@ namespace Weedwacker.Shared.Utils
             {
                 Logger.WriteErrorLine("Crypto error.", e);
             }
+        }
+
+        public static byte[] CreateSessionKey(int length)
+        {
+            return System.Security.Cryptography.RandomNumberGenerator.GetBytes(length);
         }
     }
 }

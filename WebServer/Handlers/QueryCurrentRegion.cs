@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using Ceen;
 using Newtonsoft.Json;
 using Weedwacker.Shared.Utils;
@@ -15,6 +16,21 @@ namespace Weedwacker.WebServer.Handlers
         }
 
         public Task<bool> HandleAsync(IHttpContext context)
+        {
+            var req = context.Request;
+            string last = req.Path.Split('/').Last();
+            if (last == "query_cur_region")
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                return Task.FromResult(WithQuery(context));
+            }
+        }
+
+        // /query_cur_region/<region>?<query>
+        private static bool WithQuery(IHttpContext context)
         {
             var req = context.Request;
             // Get region to query.
@@ -49,16 +65,15 @@ namespace Weedwacker.WebServer.Handlers
                         };
 
                         context.Response.WriteAllJsonAsync(JsonConvert.SerializeObject(response));
-                        return Task.FromResult(true);
+                        return true;
                     }
 
                     string key_id = req.QueryString["key_id"];
-                    Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-                    cipher.init(Cipher.ENCRYPT_MODE, key_id.Equals("3") ? Crypto.CUR_OS_ENCRYPT_KEY : Crypto.CUR_CN_ENCRYPT_KEY);
+                    var encryptor = key_id.Equals("3") ? Crypto.CurOSEncryptor : Crypto.CurCNEncryptor;
                     var regionInfo = Convert.FromBase64String(regionData);
 
                     //Encrypt regionInfo in chunks
-                    ByteArrayOutputStream encryptedRegionInfoStream = new ByteArrayOutputStream();
+                    byte[] encryptedRegionInfoStream = new byte[regionInfo.Length];
 
                     //Thank you so much GH Copilot
                     int chunkSize = 256 - 11;
@@ -67,26 +82,26 @@ namespace Weedwacker.WebServer.Handlers
 
                     for (int i = 0; i < numChunks; i++)
                     {
-                        byte[] chunk = Arrays.copyOfRange(regionInfo, i * chunkSize, Math.Min((i + 1) * chunkSize, regionInfoLength));
-                        byte[] encryptedChunk = cipher.doFinal(chunk);
-                        encryptedRegionInfoStream.write(encryptedChunk);
+                        byte[] chunk = new byte[chunkSize];
+                        Array.Copy(regionInfo, i * chunkSize, chunk, i * chunkSize, Math.Min((i + 1) * chunkSize, regionInfoLength));
+                        byte[] encryptedChunk = encryptor.Encrypt(chunk, RSAEncryptionPadding.OaepSHA1);
+                        Array.Copy(encryptedChunk, i * chunkSize, encryptedRegionInfoStream, i * chunkSize, Math.Min((i + 1) * chunkSize, regionInfoLength));
                     }
+                    var signer = Crypto.CurSigner;
+                    byte[] privateSignature = signer.SignData(regionInfo, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
-                    Signature privateSignature = Signature.getInstance("SHA256withRSA");
-                    privateSignature.initSign(Crypto.CUR_SIGNING_KEY);
-                    privateSignature.update(regionInfo);
 
                     var rsp = new QueryCurRegionRspJson
                     {
-                        content = Convert.ToBase64String(encryptedRegionInfoStream.toByteArray()),
-                        sign = Convert.ToBase64String(privateSignature.sign())
+                        content = Convert.ToBase64String(encryptedRegionInfoStream),
+                        sign = Convert.ToBase64String(privateSignature)
                     };
 
                     context.Response.WriteAllJsonAsync(JsonConvert.SerializeObject(rsp));
                 }
                 catch (Exception e)
                 {
-                    Logger.WriteErrorLine("An error occurred while handling query_cur_region.", e);
+                    Logger.WriteErrorLine(string.Format("An error occurred while handling query_cur_region/{0}."), e);
                 }
             }
             else
@@ -97,8 +112,7 @@ namespace Weedwacker.WebServer.Handlers
             }
             // Log to console.
             Logger.WriteLine(string.Format("Client {0}s request: query_cur_region/{1}s", context.GetRemoteIP(), regionName));
-        
-            return Task.FromResult(true);
+            return true;
         }
     }
 }

@@ -1,24 +1,62 @@
-﻿namespace Weedwacker.WebServer.Database
+﻿using MongoDB.Bson.Serialization.Attributes;
+using Newtonsoft.Json;
+using Weedwacker.Shared.Utils;
+
+namespace Weedwacker.WebServer.Database
 {
     public class Account
     {
-        /*@Id*/ public uint Id { get; set; }
+        [BsonId]
+        [BsonElement("id")]
+        [JsonIgnore]
+        public uint IdNum { get; } // WebServer unique Id. Number, but sent as a string...
+        [BsonIgnore]
+        public string Id { get; private set; } // Too lazy to write custom json converter
+
         /*@Indexed(options = @IndexOptions(unique = true))
         @Collation(locale = "simple", caseLevel = true)
-        */private string username;
-        private string password; // Unused for now
+        */
+        public string Username { get; private set; }
+        private string Password; // Unused for now
 
-        private int reservedPlayerId;
-        private string email;
+        private int ReservedPlayerId;
+        public string Email { get; private set; }
 
-        private string token;
-        private string sessionKey; // Session token for dispatch server
-        private List<string> permissions;
-        private System.Globalization.CultureInfo locale;
+        public string Token { get; private set; }
+        public string SessionKey { get; private set; } // Session token for dispatch server
+        private List<string> Permissions;
+        private System.Globalization.CultureInfo Locale;
 
-        private string banReason;
-        private int banEndTime;
-        private int banStartTime;
-        private bool isBanned;
+        private string BanReason;
+        private int BanEndTime;
+        private int BanStartTime;
+        private bool IsBanned;
+
+        public Account() { }
+
+        public Account(string username, uint id)
+        {
+            Username = username;
+            IdNum = id;
+            Id = id.ToString();
+        }
+        public void save()
+        {
+            DatabaseManager.SaveAccount(this);
+        }
+
+        public string generateSessionKey()
+        {
+            SessionKey = BitConverter.ToString(Crypto.CreateSessionKey(32)).Replace("-", string.Empty);
+            save();
+            return SessionKey;
+        }
+
+        public string generateLoginToken()
+        {
+            Token = BitConverter.ToString(Crypto.CreateSessionKey(32)).Replace("-", string.Empty);
+            save();
+            return Token;
+        }
     }
 }

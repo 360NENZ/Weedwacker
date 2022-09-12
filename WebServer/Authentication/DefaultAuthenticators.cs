@@ -12,7 +12,7 @@ namespace Weedwacker.WebServer.Authentication
     /// </summary>
     public class PasswordAuthenticator : IAuthenticator<LoginResultJson>
     {
-        public LoginResultJson Authenticate(AuthenticationRequest request)
+        public async Task<LoginResultJson> Authenticate(AuthenticationRequest request)
         {
             var response = new LoginResultJson();
 
@@ -24,14 +24,14 @@ namespace Weedwacker.WebServer.Authentication
             string loggerMessage = "";
 
             // Get account from database.
-            Account account = DatabaseHelper.getAccountByName(requestData.account);
+            Account? account = DatabaseManager.GetAccountByName(requestData.account);
             if (Config.WebConfig.server.http.account.maxAccount <= -1)
             {
                 // Check if account exists.
                 if (account == null && Config.WebConfig.server.http.account.autoCreate)
                 {
                     // This account has been created AUTOMATICALLY. There will be no permissions added.
-                    account = DatabaseHelper.createAccountWithUid(requestData.account, 0);
+                    account = DatabaseManager.CreateAccountWithUid(requestData.account, 0);
 
                     // Check if the account was created successfully.
                     if (account == null)
@@ -45,7 +45,7 @@ namespace Weedwacker.WebServer.Authentication
                         successfulLogin = true;
 
                         // Log the creation.
-                        Logger.WriteLine(string.Format("Client {0} succeessfully logged in: Account {} created.", address, response.data.account.uid));
+                        Logger.WriteLine(string.Format("Client {0} succeessfully logged in: Account {1} created.", address, response.data.account.uid));
                     }
                 }
                 else if (account != null)
@@ -65,7 +65,7 @@ namespace Weedwacker.WebServer.Authentication
                 response.message = "OK";
                 response.data.account.uid = account.Id.ToString();
                 response.data.account.token = account.generateSessionKey();
-                response.data.account.email = account.getEmail();
+                response.data.account.email = account.Email;
 
                 loggerMessage = string.Format("Client {0} logged in as {0}.", address, account.Id);
             }
@@ -86,7 +86,7 @@ namespace Weedwacker.WebServer.Authentication
     /// </summary>
     public class TokenAuthenticator : IAuthenticator<LoginResultJson>
     {
-        public LoginResultJson Authenticate(AuthenticationRequest request)
+        public async Task<LoginResultJson> Authenticate(AuthenticationRequest request)
         {
             var response = new LoginResultJson();
 
@@ -103,18 +103,18 @@ namespace Weedwacker.WebServer.Authentication
             {
 
                 // Get account from database.
-                Account account = DatabaseHelper.getAccountById(requestData.uid);
+                Account account = DatabaseManager.GetAccountById(uint.Parse(requestData.uid));
 
                 // Check if account exists/token is valid.
-                successfulLogin = account != null && account.getSessionKey().equals(requestData.token);
+                successfulLogin = account != null && account.SessionKey.Equals(requestData.token);
 
                 // Set response data.
                 if (successfulLogin)
                 {
                     response.message = "OK";
                     response.data.account.uid = account.Id.ToString();
-                    response.data.account.token = account.getSessionKey();
-                    response.data.account.email = account.getEmail();
+                    response.data.account.token = account.SessionKey;
+                    response.data.account.email = account.Email;
 
                     // Log the login.
                     loggerMessage = string.Format("Client {0} logged in via token as {0}.", address, requestData.uid);
@@ -122,19 +122,19 @@ namespace Weedwacker.WebServer.Authentication
                 else
                 {
                     response.retcode = -201;
-                    response.message = "messages.dispatch.account.account_cache_error";
+                    response.message = "Game account cache information error.";
 
                     // Log the failure.
-                    loggerMessage = string.Format("messages.dispatch.account.login_token_error", address);
+                    loggerMessage = string.Format("Client {0} failed to log in via token.", address);
                 }
 
             }
             else
             {
                 response.retcode = -201;
-                response.message = "messages.dispatch.account.server_max_player_limit";
+                response.message = "Max account limit reached, create failed";
 
-                loggerMessage = string.Format("messages.dispatch.account.login_max_player_limit", address);
+                loggerMessage = string.Format("Client {0} failed to log in: Max account limit reached", address);
             }
 
             Logger.WriteLine(loggerMessage);
@@ -147,7 +147,7 @@ namespace Weedwacker.WebServer.Authentication
     /// </summary>
     public class SessionKeyAuthenticator : IAuthenticator<ComboTokenResJson>
     {
-        public ComboTokenResJson Authenticate(AuthenticationRequest request)
+        public async Task<ComboTokenResJson> Authenticate(AuthenticationRequest request)
         {
             var response = new ComboTokenResJson();
 
@@ -158,41 +158,41 @@ namespace Weedwacker.WebServer.Authentication
             string address = request.Context.GetRemoteIP();
             string loggerMessage;
 
-            if (Config.WebConfig.account.maxPlayer <= -1)
+            if (Config.WebConfig.server.http.account.maxAccount <= -1)
             {
                 // Get account from database.
-                Account account = DatabaseHelper.getAccountById(loginData.uid);
+                Account account = DatabaseManager.GetAccountById(uint.Parse(loginData.uid));
 
                 // Check if account exists/token is valid.
-                successfulLogin = account != null && account.getSessionKey().equals(loginData.token);
+                successfulLogin = account != null && account.SessionKey.Equals(loginData.token);
 
                 // Set response data.
                 if (successfulLogin)
                 {
                     response.message = "OK";
-                    response.data.open_id = account.Id.ToString();
+                    response.data.open_id = account.Id;
                     response.data.combo_id = "157795300";
                     response.data.combo_token = account.generateLoginToken();
 
                     // Log the login.
-                    loggerMessage = string.Format("messages.dispatch.account.combo_token_success", address);
+                    loggerMessage = string.Format("Client {0} succeed to exchange combo token.", address);
 
                 }
                 else
                 {
                     response.retcode = -201;
-                    response.message = "messages.dispatch.account.session_key_error";
+                    response.message = "Wrong session key.";
 
                     // Log the failure.
-                    loggerMessage = string.Format("messages.dispatch.account.combo_token_error", address);
+                    loggerMessage = string.Format("Client {0} failed to exchange combo token.", address);
                 }
             }
             else
             {
                 response.retcode = -201;
-                response.message = "messages.dispatch.account.server_max_player_limit";
+                response.message = "Max account limit reached, create failed";
 
-                loggerMessage = string.Format("messages.dispatch.account.login_max_player_limit", address);
+                loggerMessage = string.Format("Client {0} failed to log in: Max account limit reached", address);
             }
 
             Logger.WriteLine(loggerMessage);

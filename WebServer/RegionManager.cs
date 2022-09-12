@@ -53,9 +53,9 @@ namespace Weedwacker.WebServer
                 + Config.Lr(http.accessPort, http.bindPort));
             List<ConfigFile.Region> configuredRegions = Config.WebConfig.server.dispatch.regions;
 
-            if (configuredRegions.Count == 0) //HYBRID
+            if (configuredRegions.Count == 0)
             {
-                Logger.DebugWriteLine("[Dispatch] Loading default region");
+                Logger.DebugWriteLine("No Configured Game Servers found. Loading default game server region");
                 configuredRegions.Add(new ConfigFile.Region());
             }
 

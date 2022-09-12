@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BouncyCastle.NetCoreSdk" Version="1.9.6" />
     <PackageReference Include="MongoDB.Driver" Version="2.17.1" />
   </ItemGroup>
 

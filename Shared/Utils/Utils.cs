@@ -5,11 +5,12 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Weedwacker.Shared.Utils;
-
-internal class Utils
+namespace Weedwacker.Shared.Utils
 {
 
+    public class Utils
+    {
+
+    }
+
 }
-
-

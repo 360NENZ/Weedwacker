@@ -18,7 +18,7 @@ namespace Weedwacker.Shared.Utils.Configuration
             public class DataStore
             {
                 public string connectionUri = "mongodb://localhost:27017";
-                public string collection = "weedwacker";
+                public string database = "weedwacker";
             }
         }
         public class Structure

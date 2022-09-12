@@ -25,7 +25,7 @@ internal class ClientLogin : IHttpModule
                 .Authenticate(IAuthenticationSystem.FromPasswordRequest(context, bodyData));
         // Send response.
         context.Response.WriteAllJsonAsync(JsonConvert.SerializeObject(responseData));
-
+        
         // Log to console.
         Logger.WriteLine(string.Format("Client {0} is trying to log in.", context.GetRemoteIP()));
         return Task.FromResult(true);

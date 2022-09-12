@@ -6,19 +6,20 @@ using Weedwacker.WebServer.Authentication;
 using Weedwacker.Shared.Utils;
 using Weedwacker.Shared.Utils.Configuration;
 using Weedwacker.WebServer.Commands;
+using Weedwacker.WebServer.Database;
 
 namespace Weedwacker.WebServer
 {
     internal class WebServer
     {
-        //public static IAuthenticationSystem AuthenticationSystem { get; set; } = new DefaultAuthentication();
+        public static IAuthenticationSystem AuthenticationSystem { get; set; } = new DefaultAuthentication();
         
         static readonly CancellationTokenSource CancelToken = new();
         static Task? ServerTask;
         static readonly ServerConfig Configuration = new ServerConfig().AddLogger(new CLFStdOut()).
             AddRoute("/hk4e_global/mdk/shield/api/login", new ClientLogin()).
             AddRoute("/query_region_list", new QueryRegionList()).
-            AddRoute("/query_cur_region/{region}", new QueryCurrentRegion()).
+            AddRoute("/query_cur_region", new QueryCurrentRegion()).
             AddRoute("/hk4e_global/mdk/shield/api/verify", new TokenLogin()).
             AddRoute("/hk4e_global/combo/granter/login/v2/login", new SessionKeyLogin()).
             AddRoute("/account/risky/api/check", new RiskyAPICheck()).
@@ -35,12 +36,14 @@ namespace Weedwacker.WebServer
             Configuration.LoadCertificate(Config.WebConfig.server.http.encryption.keystore, Config.WebConfig.server.http.encryption.keystorePassword);
             Crypto.LoadKeys();
             RegionManager.Initialize();
+            DatabaseManager.Initialize();
             ServerTask = HttpServer.ListenAsync(
                 new IPEndPoint(IPAddress.Any, 443),
-                false,
+                true,
                 Configuration,
                 CancelToken.Token);
             await ServerTask;
+            
         }
     }
 }

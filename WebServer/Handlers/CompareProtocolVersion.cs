@@ -1,9 +1,10 @@
-﻿using Ceen;
+﻿using Microsoft.AspNetCore.Http;
+
 namespace Weedwacker.WebServer.Handlers
 {
-    internal class CompareProtocolVersion : IHttpModule
+    internal class CompareProtocolVersion : IHandler
     {
-        public Task<bool> HandleAsync(IHttpContext context)
+        public Task<bool> HandleAsync(HttpContext context)
         {
             throw new NotImplementedException();
         }

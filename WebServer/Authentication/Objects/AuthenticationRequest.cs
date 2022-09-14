@@ -1,4 +1,4 @@
-﻿using Ceen;
+﻿using Microsoft.AspNetCore.Http;
 
 namespace Weedwacker.WebServer.Authentication.Objects
 {
@@ -8,32 +8,32 @@ namespace Weedwacker.WebServer.Authentication.Objects
     public class AuthenticationRequest
     {
 
-        public readonly IHttpContext? Context;
+        public readonly HttpContext? Context;
         public readonly LoginAccountRequestJson? PasswordRequest;
         public readonly LoginTokenRequestJson? TokenRequest;
         public readonly ComboTokenReqJson? SessionKeyRequest;
         public readonly ComboTokenReqJson.LoginTokenData? SessionKeyData;
 
-        public AuthenticationRequest(IHttpContext? context, ComboTokenReqJson? sessionKeyRequest, ComboTokenReqJson.LoginTokenData? sessionKeyData)
+        public AuthenticationRequest(HttpContext? context, ComboTokenReqJson? sessionKeyRequest, ComboTokenReqJson.LoginTokenData? sessionKeyData)
         {
             Context = context;
             SessionKeyRequest = sessionKeyRequest;
             SessionKeyData = sessionKeyData;
         }
 
-        public AuthenticationRequest(IHttpContext? context, LoginTokenRequestJson? tokenRequest)
+        public AuthenticationRequest(HttpContext? context, LoginTokenRequestJson? tokenRequest)
         {
             Context = context;
             TokenRequest = tokenRequest;
         }
 
-        public AuthenticationRequest(IHttpContext? context, LoginAccountRequestJson? passwordRequest)
+        public AuthenticationRequest(HttpContext? context, LoginAccountRequestJson? passwordRequest)
         {
             Context = context;
             PasswordRequest = passwordRequest;
         }
 
-        public AuthenticationRequest(IHttpContext? context)
+        public AuthenticationRequest(HttpContext? context)
         {
             Context = context;
         }

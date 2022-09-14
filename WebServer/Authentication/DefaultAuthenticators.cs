@@ -1,8 +1,7 @@
 ﻿using Weedwacker.WebServer.Authentication.Objects;
 using Weedwacker.WebServer.Database;
 using Weedwacker.Shared.Utils;
-using Weedwacker.Shared.Utils.Configuration;
-using Ceen;
+using Microsoft.AspNetCore.Http;
 
 namespace Weedwacker.WebServer.Authentication
 {
@@ -19,16 +18,16 @@ namespace Weedwacker.WebServer.Authentication
             var requestData = request.PasswordRequest;
 
             bool successfulLogin = false;
-            string address = request.Context.GetRemoteIP();
+            string address = request.Context.Connection.RemoteIpAddress.ToString();
             string responseMessage = "Username not found.";
             string loggerMessage = "";
 
             // Get account from database.
             Account? account = DatabaseManager.GetAccountByName(requestData.account);
-            if (Config.WebConfig.server.http.account.maxAccount <= -1)
+            if (WebServer.Configuration.Server.Account.MaxAccount <= -1)
             {
                 // Check if account exists.
-                if (account == null && Config.WebConfig.server.http.account.autoCreate)
+                if (account == null && WebServer.Configuration.Server.Account.AutoCreate)
                 {
                     // This account has been created AUTOMATICALLY. There will be no permissions added.
                     account = DatabaseManager.CreateAccountWithUid(requestData.account, 0);
@@ -93,13 +92,13 @@ namespace Weedwacker.WebServer.Authentication
             var requestData = request.TokenRequest;
 
             bool successfulLogin;
-            string address = request.Context.GetRemoteIP();
+            string address = request.Context.Connection.RemoteIpAddress.ToString();
             string loggerMessage;
 
             // Log the attempt.
             Logger.WriteLine(string.Format("Client {0} is trying to log in via token.", address));
 
-            if (Config.WebConfig.server.http.account.maxAccount <= -1)
+            if (WebServer.Configuration.Server.Account.MaxAccount <= -1)
             {
 
                 // Get account from database.
@@ -155,10 +154,10 @@ namespace Weedwacker.WebServer.Authentication
             var loginData = request.SessionKeyData;
 
             bool successfulLogin;
-            string address = request.Context.GetRemoteIP();
+            string address = request.Context.Connection.RemoteIpAddress.ToString();
             string loggerMessage;
 
-            if (Config.WebConfig.server.http.account.maxAccount <= -1)
+            if (WebServer.Configuration.Server.Account.MaxAccount <= -11)
             {
                 // Get account from database.
                 Account account = DatabaseManager.GetAccountById(uint.Parse(loginData.uid));
@@ -207,17 +206,17 @@ namespace Weedwacker.WebServer.Authentication
     {
         public void HandleLogin(AuthenticationRequest request)
         {
-            request.Context.Response.WriteAllAsync("Authentication is not available with the default authentication method.");
+            request.Context.Response.WriteAsync("Authentication is not available with the default authentication method.");
         }
 
         public void HandleAccountCreation(AuthenticationRequest request)
         {
-            request.Context.Response.WriteAllAsync("Authentication is not available with the default authentication method.");
+            request.Context.Response.WriteAsync("Authentication is not available with the default authentication method.");
         }
 
         public void HandlePasswordReset(AuthenticationRequest request)
         {
-            request.Context.Response.WriteAllAsync("Authentication is not available with the default authentication method.");
+            request.Context.Response.WriteAsync("Authentication is not available with the default authentication method.");
         }
     }
 
@@ -228,17 +227,17 @@ namespace Weedwacker.WebServer.Authentication
     {
         public void HandleLogin(AuthenticationRequest request)
         {
-            request.Context.Response.WriteAllAsync("Authentication is not available with the default authentication method.");
+            request.Context.Response.WriteAsync("Authentication is not available with the default authentication method.");
         }
 
         public void HandleRedirection(AuthenticationRequest request, IOAuthAuthenticator.ClientType type)
         {
-            request.Context.Response.WriteAllAsync("Authentication is not available with the default authentication method.");
+            request.Context.Response.WriteAsync("Authentication is not available with the default authentication method.");
         }
 
         public void HandleTokenProcess(AuthenticationRequest request)
         {
-            request.Context.Response.WriteAllAsync("Authentication is not available with the default authentication method.");
+            request.Context.Response.WriteAsync("Authentication is not available with the default authentication method.");
         }
     }
 }

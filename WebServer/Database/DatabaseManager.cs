@@ -12,9 +12,9 @@ namespace Weedwacker.WebServer.Database
         static DatabaseProperties Properties;
         public static void Initialize()
         {
-            DbClient = new MongoClient(Config.WebConfig.database.server.connectionUri);
+            DbClient = new MongoClient(WebServer.Configuration.database.connectionUri);
             // Databases and collections are implicitly created
-            Database = DbClient.GetDatabase(Config.WebConfig.database.server.database);
+            Database = DbClient.GetDatabase(WebServer.Configuration.database.database);
             Accounts = Database.GetCollection<Account>("accounts");
 
             if(Database.GetCollection<DatabaseProperties>("dbProperties").Find(w => true).FirstOrDefault() == null)

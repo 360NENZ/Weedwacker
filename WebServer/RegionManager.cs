@@ -1,16 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Text.Json;
-using System.Net;
+﻿using System.Text;
 using Google.Protobuf;
-using Ceen;
-
 using Weedwacker.Shared.Utils;
 using Weedwacker.Shared.Network.Proto;
-using Weedwacker.Shared.Utils.Configuration;
+
 
 namespace Weedwacker.WebServer
 {
@@ -42,21 +34,20 @@ namespace Weedwacker.WebServer
 
         public static void Initialize()
         {
-            var http = Config.WebConfig.server.http;
+            var kestrel = WebServer.Configuration.Kestrel;
 
 
             List<RegionSimpleInfo> servers = new();
             List<string> usedNames = new(); // List to check for potential naming conflicts.
 
-            string dispatchDomain = "http" + (http.encryption.useInRouting ? "s" : "") + "://"
-                + Config.Lr(http.accessAddress, http.bindAddress + ":"
-                + Config.Lr(http.accessPort, http.bindPort));
-            List<ConfigFile.Region> configuredRegions = Config.WebConfig.server.dispatch.regions;
+            string dispatchDomain = kestrel.Endpoints.First().Url;
+
+            List<WebConfig.Region> configuredRegions = WebServer.Configuration.Server.Dispatch.Regions;
 
             if (configuredRegions.Count == 0)
             {
                 Logger.DebugWriteLine("No Configured Game Servers found. Loading default game server region");
-                configuredRegions.Add(new ConfigFile.Region());
+                configuredRegions.Add(new WebConfig.Region());
             }
 
             configuredRegions.ForEach(region =>

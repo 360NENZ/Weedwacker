@@ -1,6 +1,6 @@
-﻿using Ceen;
-using Weedwacker.WebServer.Database;
+﻿using Weedwacker.WebServer.Database;
 using Weedwacker.WebServer.Authentication.Objects;
+using Microsoft.AspNetCore.Http;
 
 namespace Weedwacker.WebServer.Authentication
 {
@@ -63,7 +63,7 @@ namespace Weedwacker.WebServer.Authentication
         ///<param name="ctx">The Ceen context.</param>
         ///<param name="jsonData">The JSON data.</param>
         ///<returns>An authenticator.</returns>
-        static AuthenticationRequest FromPasswordRequest(IHttpContext ctx, LoginAccountRequestJson jsonData)
+        static AuthenticationRequest FromPasswordRequest(HttpContext ctx, LoginAccountRequestJson jsonData)
         {
             return new AuthenticationRequest(ctx, jsonData);
         }
@@ -74,7 +74,7 @@ namespace Weedwacker.WebServer.Authentication
         ///<param name="ctx">The Ceen context.</param>
         ///<param name="jsonData">The JSON data.</param>
         ///<returns>An authenticator.</returns>
-        static AuthenticationRequest FromTokenRequest(IHttpContext ctx, LoginTokenRequestJson jsonData)
+        static AuthenticationRequest FromTokenRequest(HttpContext ctx, LoginTokenRequestJson jsonData)
         {
             return new AuthenticationRequest(ctx, jsonData); ;
         }
@@ -85,18 +85,18 @@ namespace Weedwacker.WebServer.Authentication
         ///<param name="ctx">The Ceen context.</param>
         ///<param name="jsonData">The JSON data.</param>
         ///<returns>An authenticator.</returns>
-        static AuthenticationRequest FromComboTokenRequest(IHttpContext ctx, ComboTokenReqJson jsonData,
+        static AuthenticationRequest FromComboTokenRequest(HttpContext ctx, ComboTokenReqJson jsonData,
                                                            ComboTokenReqJson.LoginTokenData tokenData)
         {
             return new AuthenticationRequest(ctx, jsonData, tokenData);
         }
 
         ///<summary>
-        ///Generates an authentication request from a <see cref="IHttpContext"/> object.
+        ///Generates an authentication request from a <see cref="HttpContext"/> object.
         ///</summary>
         ///<param name="ctx">The Ceen context.</param>
         ///<returns>An authentication request.</returns>
-        static AuthenticationRequest FromExternalRequest(IHttpContext ctx)
+        static AuthenticationRequest FromExternalRequest(HttpContext ctx)
         {
             return new AuthenticationRequest(ctx);
         }

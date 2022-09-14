@@ -1,4 +1,4 @@
-﻿using Ceen;
+﻿using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Weedwacker.Shared.Utils;
 using Weedwacker.WebServer.Authentication;
@@ -6,13 +6,12 @@ using Weedwacker.WebServer.Authentication.Objects;
 
 namespace Weedwacker.WebServer.Handlers;
 
-internal class ClientLogin : IHttpModule
-{
-    public Task<bool> HandleAsync(IHttpContext context)
+internal class ClientLogin : IHandler
+{ 
+    public Task<bool> HandleAsync(HttpContext context)
     {
         // Parse body data.
-        string rawBodyData = context.Request.Body.ReadAllAsStringAsync().Result;
-        var bodyData = JsonConvert.DeserializeObject<LoginAccountRequestJson>(rawBodyData);
+        var bodyData = context.Request.ReadFromJsonAsync<LoginAccountRequestJson>().Result;
 
         // Validate body data.
         if (bodyData == null)
@@ -24,10 +23,10 @@ internal class ClientLogin : IHttpModule
                 .GetPasswordAuthenticator()
                 .Authenticate(IAuthenticationSystem.FromPasswordRequest(context, bodyData));
         // Send response.
-        context.Response.WriteAllJsonAsync(JsonConvert.SerializeObject(responseData));
+        context.Response.WriteAsJsonAsync(JsonConvert.SerializeObject(responseData));
         
         // Log to console.
-        Logger.WriteLine(string.Format("Client {0} is trying to log in.", context.GetRemoteIP()));
+        Logger.WriteLine(string.Format("Client {0} is trying to log in.", context.Connection.RemoteIpAddress.ToString()));
         return Task.FromResult(true);
     }
 }

@@ -1,13 +1,12 @@
 ﻿using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-using Ceen;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Weedwacker.Shared.Utils;
-using Weedwacker.WebServer;
 
 namespace Weedwacker.WebServer.Handlers
 {
-    internal class QueryCurrentRegion : IHttpModule
+    internal class QueryCurrentRegion : IHandler
     {
         private struct QueryCurRegionRspJson
         {
@@ -15,13 +14,15 @@ namespace Weedwacker.WebServer.Handlers
             public string sign;
         }
 
-        public Task<bool> HandleAsync(IHttpContext context)
+        public Task<bool> HandleAsync(HttpContext context)
         {
             var req = context.Request;
-            string last = req.Path.Split('/').Last();
+            string last = req.Path.ToString().Split('/').Last();
             if (last == "query_cur_region")
             {
-                throw new NotImplementedException();
+                //Not Found version config
+                var rsp = context.Response.WriteAsync("28\r\nCAESGE5vdCBGb3VuZCB2ZXJzaW9uIGNvbmZpZxoA\r\n0");
+                return Task.FromResult(true);
             }
             else
             {
@@ -30,15 +31,15 @@ namespace Weedwacker.WebServer.Handlers
         }
 
         // /query_cur_region/<region>?<query>
-        private static bool WithQuery(IHttpContext context)
+        private static bool WithQuery(HttpContext context)
         {
             var req = context.Request;
             // Get region to query.
-            string regionName = req.Path.Split('/').Last();
-            string versionName = req.QueryString["version"];
+            string regionName = req.Path.ToString().Split('/').Last();
+            string versionName = req.Query["version"];
             // Get region data.
             string regionData = "CAESGE5vdCBGb3VuZCB2ZXJzaW9uIGNvbmZpZw==";
-            if (req.QueryString.Count > 0)
+            if (req.Query.Count > 0)
             {
                 if (RegionManager.Regions.TryGetValue(regionName, out RegionManager.RegionData region))
                     regionData = region.base64;
@@ -55,7 +56,7 @@ namespace Weedwacker.WebServer.Handlers
                 {
                     //TODO QueryCurrentRegionEvent  
 
-                    if (req.QueryString.ContainsKey("dispatchSeed"))
+                    if (req.Query.ContainsKey("dispatchSeed"))
                     {
                         // More love for UA Patch players
                         var response = new RegionManager.QueryCurRegionRspJson
@@ -64,11 +65,11 @@ namespace Weedwacker.WebServer.Handlers
                             sign = "TW9yZSBsb3ZlIGZvciBVQSBQYXRjaCBwbGF5ZXJz"
                         };
 
-                        context.Response.WriteAllJsonAsync(JsonConvert.SerializeObject(response));
+                        context.Response.WriteAsJsonAsync(JsonConvert.SerializeObject(response));
                         return true;
                     }
 
-                    string key_id = req.QueryString["key_id"];
+                    string key_id = req.Query["key_id"];
                     var encryptor = key_id.Equals("3") ? Crypto.CurOSEncryptor : Crypto.CurCNEncryptor;
                     var regionInfo = Convert.FromBase64String(regionData);
 
@@ -97,21 +98,21 @@ namespace Weedwacker.WebServer.Handlers
                         sign = Convert.ToBase64String(privateSignature)
                     };
 
-                    context.Response.WriteAllJsonAsync(JsonConvert.SerializeObject(rsp));
+                    context.Response.WriteAsJsonAsync(JsonConvert.SerializeObject(rsp));
                 }
                 catch (Exception e)
                 {
-                    Logger.WriteErrorLine(string.Format("An error occurred while handling query_cur_region/{0}."), e);
+                    Logger.WriteErrorLine(string.Format("An error occurred while handling query_cur_region/{0}.", regionName), e);
                 }
             }
             else
             {
                 //TODO QueryCurrentRegionEvent
 
-                context.Response.WriteAllAsync(regionData);
+                context.Response.WriteAsync(regionData);
             }
             // Log to console.
-            Logger.WriteLine(string.Format("Client {0}s request: query_cur_region/{1}s", context.GetRemoteIP(), regionName));
+            Logger.WriteLine(string.Format("Client {0}s request: query_cur_region/{1}s", context.Connection.RemoteIpAddress.ToString(), regionName));
             return true;
         }
     }

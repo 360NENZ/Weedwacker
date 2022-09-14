@@ -17,22 +17,22 @@ namespace Weedwacker.Shared.Utils
         public static RSA CurCNEncryptor = RSA.Create(); // Public Key
         public static RSA CurSigner = RSA.Create(); //Private Key
         
-        public static void LoadKeys()
+        public static void LoadKeys(string path)
         {
-            var keys = Config.WebConfig.structure.keys;
-            DISPATCH_KEY = File.ReadAllBytes(keys + "dispatchKey.bin");
-            DISPATCH_SEED = File.ReadAllBytes(keys + "dispatchSeed.bin");
 
-            ENCRYPT_KEY = File.ReadAllBytes(keys + "secretKey.bin");
-            ENCRYPT_SEED_BUFFER = File.ReadAllBytes(keys + "secretKeyBuffer.bin");
+            DISPATCH_KEY = File.ReadAllBytes(path + "dispatchKey.bin");
+            DISPATCH_SEED = File.ReadAllBytes(path + "dispatchSeed.bin");
+
+            ENCRYPT_KEY = File.ReadAllBytes(path + "secretKey.bin");
+            ENCRYPT_SEED_BUFFER = File.ReadAllBytes(path + "secretKeyBuffer.bin");
             
             try
             {
-                CurOSEncryptor.ImportFromPem(File.ReadAllText(keys + "OSCB.pem").ToCharArray());
+                CurOSEncryptor.ImportFromPem(File.ReadAllText(path + "OSCB.pem").ToCharArray());
 
-                CurCNEncryptor.ImportFromPem(File.ReadAllText(keys + "OSCN.pem").ToCharArray());
+                CurCNEncryptor.ImportFromPem(File.ReadAllText(path + "OSCN.pem").ToCharArray());
 
-                CurSigner.ImportFromPem(File.ReadAllText(keys + "SigningKey.pem").ToCharArray());
+                CurSigner.ImportFromPem(File.ReadAllText(path + "SigningKey.pem").ToCharArray());
             }
             catch (Exception e)
             {

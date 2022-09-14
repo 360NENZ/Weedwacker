@@ -10,7 +10,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebServer", "WebServer\WebS
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "Shared\Shared.csproj", "{017075AB-199D-4E93-8E9B-C74BBD01E73D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameServer", "GameServer\GameServer.csproj", "{9E87FF6C-63B4-42B1-B076-5B7A58EA5695}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameServer", "GameServer\GameServer.csproj", "{9E87FF6C-63B4-42B1-B076-5B7A58EA5695}"
+	ProjectSection(ProjectDependencies) = postProject
+		{017075AB-199D-4E93-8E9B-C74BBD01E73D} = {017075AB-199D-4E93-8E9B-C74BBD01E73D}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -2,17 +2,17 @@
 {
     public class ComboTokenReqJson
     {
-        public readonly int app_id;
-        public readonly int channel_id;
-        public readonly string data;
-        public readonly string device;
-        public readonly string sign;
+        public int app_id { get; set; }
+        public int channel_id { get; set; }
+        public string data { get; set; }
+        public string device { get; set; }
+        public string sign { get; set; }
 
         public class LoginTokenData
         {
-            public readonly string uid;
-            public readonly string token;
-            public readonly bool guest;
+            public string uid { get; set; }
+            public string token { get; set; }
+            public bool guest { get; set; }
         }
     }
 }

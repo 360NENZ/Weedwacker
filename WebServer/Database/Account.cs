@@ -6,56 +6,54 @@ namespace Weedwacker.WebServer.Database
 {
     public class Account
     {
-        [BsonId]
-        [BsonElement("id")]
-        [JsonIgnore]
-        public uint IdNum { get; } // WebServer unique Id. Number, but sent as a string...
-        [BsonIgnore]
-        public string Id { get; private set; } // Too lazy to write custom json converter
+        public string Id { get; private set; } // WebServer unique Id. Number, but sent as a string...
 
         /*@Indexed(options = @IndexOptions(unique = true))
         @Collation(locale = "simple", caseLevel = true)
         */
         public string Username { get; private set; }
         private string Password; // Unused for now
-
-        private int ReservedPlayerId;
         public string Email { get; private set; }
 
         public string Token { get; private set; }
         public string SessionKey { get; private set; } // Session token for dispatch server
-        private List<string> Permissions;
-        private System.Globalization.CultureInfo Locale;
+        public List<string> Permissions;
+        public System.Globalization.CultureInfo Locale;
 
         private string BanReason;
         private int BanEndTime;
         private int BanStartTime;
         private bool IsBanned;
 
-        public Account() { }
+        public List<GameAccount> GameAccounts;
 
-        public Account(string username, uint id)
+        public class GameAccount
+        {
+            public int uid { get; private set; }
+        }
+        
+
+        public Account(string username, string id)
         {
             Username = username;
-            IdNum = id;
-            Id = id.ToString();
+            Id = id;
         }
-        public void save()
+        public async Task save()
         {
-            DatabaseManager.SaveAccount(this);
+            await DatabaseManager.SaveAccount(this);
         }
 
-        public string generateSessionKey()
+        public async Task<string> GenerateSessionKey()
         {
             SessionKey = BitConverter.ToString(Crypto.CreateSessionKey(32)).Replace("-", string.Empty);
-            save();
+            await save();
             return SessionKey;
         }
 
-        public string generateLoginToken()
+        public async Task<string> GenerateLoginToken()
         {
             Token = BitConverter.ToString(Crypto.CreateSessionKey(32)).Replace("-", string.Empty);
-            save();
+            await save();
             return Token;
         }
     }

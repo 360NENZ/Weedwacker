@@ -23,14 +23,14 @@ namespace Weedwacker.WebServer.Authentication
             string loggerMessage = "";
 
             // Get account from database.
-            Account? account = DatabaseManager.GetAccountByName(requestData.account);
+            Account? account = await DatabaseManager.GetAccountByNameAsync(requestData.account);
             if (WebServer.Configuration.Server.Account.MaxAccount <= -1)
             {
                 // Check if account exists.
                 if (account == null && WebServer.Configuration.Server.Account.AutoCreate)
                 {
                     // This account has been created AUTOMATICALLY. There will be no permissions added.
-                    account = DatabaseManager.CreateAccountWithUid(requestData.account, 0);
+                    account = DatabaseManager.CreateAccountWithUid(requestData.account, "0");
 
                     // Check if the account was created successfully.
                     if (account == null)
@@ -62,8 +62,8 @@ namespace Weedwacker.WebServer.Authentication
             if (successfulLogin)
             {
                 response.message = "OK";
-                response.data.account.uid = account.Id.ToString();
-                response.data.account.token = account.generateSessionKey();
+                response.data.account.uid = account.Id;
+                response.data.account.token = await account.GenerateSessionKey();
                 response.data.account.email = account.Email;
 
                 loggerMessage = string.Format("Client {0} logged in as {0}.", address, account.Id);
@@ -102,7 +102,7 @@ namespace Weedwacker.WebServer.Authentication
             {
 
                 // Get account from database.
-                Account account = DatabaseManager.GetAccountById(uint.Parse(requestData.uid));
+                Account? account = DatabaseManager.GetAccountById(requestData.uid);
 
                 // Check if account exists/token is valid.
                 successfulLogin = account != null && account.SessionKey.Equals(requestData.token);
@@ -157,10 +157,10 @@ namespace Weedwacker.WebServer.Authentication
             string address = request.Context.Connection.RemoteIpAddress.ToString();
             string loggerMessage;
 
-            if (WebServer.Configuration.Server.Account.MaxAccount <= -11)
+            if (WebServer.Configuration.Server.Account.MaxAccount <= -1)
             {
                 // Get account from database.
-                Account account = DatabaseManager.GetAccountById(uint.Parse(loginData.uid));
+                Account? account = DatabaseManager.GetAccountById(loginData.uid);
 
                 // Check if account exists/token is valid.
                 successfulLogin = account != null && account.SessionKey.Equals(loginData.token);
@@ -171,7 +171,7 @@ namespace Weedwacker.WebServer.Authentication
                     response.message = "OK";
                     response.data.open_id = account.Id;
                     response.data.combo_id = "157795300";
-                    response.data.combo_token = account.generateLoginToken();
+                    response.data.combo_token = await account.GenerateLoginToken();
 
                     // Log the login.
                     loggerMessage = string.Format("Client {0} succeed to exchange combo token.", address);
@@ -204,19 +204,19 @@ namespace Weedwacker.WebServer.Authentication
     /// </summary>
     public class ExternalAuthentication : IExternalAuthenticator
     {
-        public void HandleLogin(AuthenticationRequest request)
+        public async Task HandleLogin(AuthenticationRequest request)
         {
-            request.Context.Response.WriteAsync("Authentication is not available with the default authentication method.");
+            await request.Context.Response.WriteAsync("Authentication is not available with the default authentication method.");
         }
 
-        public void HandleAccountCreation(AuthenticationRequest request)
+        public async Task HandleAccountCreation(AuthenticationRequest request)
         {
-            request.Context.Response.WriteAsync("Authentication is not available with the default authentication method.");
+            await request.Context.Response.WriteAsync("Authentication is not available with the default authentication method.");
         }
 
-        public void HandlePasswordReset(AuthenticationRequest request)
+        public async Task HandlePasswordReset(AuthenticationRequest request)
         {
-            request.Context.Response.WriteAsync("Authentication is not available with the default authentication method.");
+            await request.Context.Response.WriteAsync("Authentication is not available with the default authentication method.");
         }
     }
 
@@ -225,19 +225,19 @@ namespace Weedwacker.WebServer.Authentication
     /// </summary>
     public class OAuthAuthentication : IOAuthAuthenticator
     {
-        public void HandleLogin(AuthenticationRequest request)
+        public async Task HandleLogin(AuthenticationRequest request)
         {
-            request.Context.Response.WriteAsync("Authentication is not available with the default authentication method.");
+            await request.Context.Response.WriteAsync("Authentication is not available with the default authentication method.");
         }
 
-        public void HandleRedirection(AuthenticationRequest request, IOAuthAuthenticator.ClientType type)
+        public async Task HandleRedirection(AuthenticationRequest request, IOAuthAuthenticator.ClientType type)
         {
-            request.Context.Response.WriteAsync("Authentication is not available with the default authentication method.");
+            await request.Context.Response.WriteAsync("Authentication is not available with the default authentication method.");
         }
 
-        public void HandleTokenProcess(AuthenticationRequest request)
+        public async Task HandleTokenProcess(AuthenticationRequest request)
         {
-            request.Context.Response.WriteAsync("Authentication is not available with the default authentication method.");
+            await request.Context.Response.WriteAsync("Authentication is not available with the default authentication method.");
         }
     }
 }

@@ -21,7 +21,7 @@ namespace Weedwacker.WebServer
             }
         }
 
-        public struct QueryCurRegionRspJson
+        public class QueryCurRegionRspJson
         {
             public string content;
             public string sign;

@@ -2,19 +2,19 @@
 {
 	public class ComboTokenResJson
 	{
-		public string message;
-		public int retcode;
-		public LoginData data = new LoginData();
+		public string message { get; set; }
+		public int retcode { get; set; }
+		public LoginData data { get; set; } = new LoginData();
 
 		public class LoginData
 		{
-			public int account_type = 1;
-			public bool heartbeat;
-			public string combo_id;
-			public string combo_token;
-			public string open_id;
-			public string data = "{\"guest\":false}";
-			public string? fatigue_remind = null; // ?
+			public int account_type { get; set; } = 1;
+			public bool heartbeat { get; set; }
+			public string combo_id { get; set; }
+			public string combo_token { get; set; }
+			public string open_id { get; set; }
+			public string data { get; set; } = "{\"guest\":false}";
+			public string? fatigue_remind { get; set; } = null; // ?
 		}
 	}
 }

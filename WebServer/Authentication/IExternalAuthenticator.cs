@@ -11,7 +11,7 @@ namespace Weedwacker.WebServer.Authentication
         ///Called when an external login request is made.
         ///</summary>
         ///<param name="request">The authentication request.</param>
-        void HandleLogin(AuthenticationRequest request);
+        Task HandleLogin(AuthenticationRequest request);
 
         ///<summary>
         ///Called when an external account creation request is made.
@@ -19,7 +19,7 @@ namespace Weedwacker.WebServer.Authentication
         ///                Use AuthenticationRequest#getResponse() to get the response body.
         ///</summary>
         ///<param name="request">The authentication request.</param>
-        void HandleAccountCreation(AuthenticationRequest request);
+        Task HandleAccountCreation(AuthenticationRequest request);
 
         ///<summary>
         ///Called when an external password reset request is made.
@@ -27,6 +27,6 @@ namespace Weedwacker.WebServer.Authentication
         ///                Use AuthenticationRequest#getResponse() to get the response body.
         ///</summary>
         ///<param name="request">The authentication request.</param>
-        void HandlePasswordReset(AuthenticationRequest request);
+        Task HandlePasswordReset(AuthenticationRequest request);
     }
 }

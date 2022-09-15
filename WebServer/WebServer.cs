@@ -15,22 +15,55 @@ namespace Weedwacker.WebServer
     {
         public static IAuthenticationSystem AuthenticationSystem { get; set; } = new DefaultAuthentication();
         public static WebConfig Configuration;
-        
+
         static Task? ServerTask;
-        static readonly Dictionary<string, IHandler> routings = new()
+        static readonly Dictionary<string, IHandler> AllRoutingTypes = new()
         {
-            {"/query_region_list", new QueryRegionList()},
-            {"/query_cur_region", new QueryCurrentRegion()},
-            {"/hk4e_global/mdk/shield/api/login", new ClientLogin()},
-            {"/hk4e_global/mdk/shield/api/verify", new TokenLogin()},
-            {"/hk4e_global/combo/granter/login/v2/login", new SessionKeyLogin()},
-            {"/account/risky/api/check", new RiskyAPICheck()},
-            {"/combo/box/api/config/sdk/combo", new ConfigSDKCombo()},
-            {"/hk4e_global/combo/granter/api/getConfig", new ComboGetConfig()},
-            {"/hk4e_global/mdk/shield/api/loadConfig", new ComboLoadConfig()},
-            {"/data_abtest_api/config/experiment/list", new ConfigExperimentList()},
-            {"/hk4e_global/mdk/agreement/api/getAgreementInfos", new GetAgreementInfo()},
             {"/hk4e_global/combo/granter/api/compareProtocolVersion", new CompareProtocolVersion()},
+            {"/log/sdk/upload", new LogSdkUpload()},
+            {"/sdk/upload", new SdkUpload()},
+            {"/perf/config/verify", new PerfConfigVerify()},
+            {"/common/h5log/log/batch", new LogBatch()},
+            {"/common/hk4e_global/announcement/api/getAlertPic", new GetAlertPic()},
+            {"/common/hk4e_global/announcement/api/getAlertAnn", new GetAlertAnn()},
+            {"/common/hk4e_global/announcement/api/getAnnList", new GetAnnList()},
+            {"/common/hk4e_global/announcement/api/getAnnContent", new GetAnnContent()},
+            {"/hk4e_global/mdk/shopwindow/shopwindow/listPriceTier", new ListPriceTier()}
+        };
+        static readonly Dictionary<string, IHandler> GetRoutings = new()
+        {
+            {"/hk4e_global/combo/granter/api/getConfig", new ComboGetConfig()},
+            {"/combo/box/api/config/sdk/combo", new ConfigSDKCombo()},
+            {"/hk4e_global/mdk/agreement/api/getAgreementInfos", new GetAgreementInfo()},
+            {"/hk4e_global/mdk/shield/api/loadConfig", new LoadConfig()},
+            {"/query_cur_region", new QueryCurrentRegion()},
+            {"/query_region_list", new QueryRegionList()},
+            {"/admin/mi18n/plat_oversea/*", new WebStaticVersion()},
+            {"/authentication/type", new AuthenticationType()},
+            {"/authentication/openid/redirect", new OpenIdRedirect()},
+            {"/Api/twitter_login", new ApiTwitterLogin()},
+            {"/sdkTwitterLogin.html", new SdkTwitterLogin()},
+            {"/hk4e/announcement/", new GetPageResources()},
+            {"/gacha", new GachaRecords()},
+            //{"/gacha/details", new GachaDetails()}
+           
+    };
+
+        static readonly Dictionary<string, IHandler> PostRoutings = new()
+        {
+            {"/hk4e_global/mdk/shield/api/login", new ClientLogin()},
+            {"/data_abtest_api/config/experiment/list", new ConfigExperimentList()},
+            {"/account/risky/api/check", new RiskyAPICheck()},
+            {"/sdk/dataUpload", new SdkDataUpload()},
+            {"/hk4e_global/combo/granter/login/v2/login", new SessionKeyLogin()},
+            {"/hk4e_global/mdk/shield/api/verify", new TokenLogin()},
+            {"/authentication/register", new AuthenticationRegister()},
+            {"/authentication/login", new AuthenticationLogin()},
+            {"/authentication/change_password", new AuthenticationChangePassword()},
+            {"/hk4e_global/mdk/shield/api/loginByThirdparty", new LoginByThirdParty()},
+            {"/log", new Log()},
+            {"/crash/dataUpload", new CrashDataUpload()}
+
         };
         public static async void Start()
         {
@@ -49,9 +82,17 @@ namespace Weedwacker.WebServer
 
             builder.Services.AddRazorPages();
             var app = builder.Build();
-            foreach(var routing in routings)
+            foreach(var routing in AllRoutingTypes)
             {
-                app.Map(routing.Key, (HttpContext context) => routing.Value.HandleAsync(context));
+                app.Map(routing.Key, async (HttpContext context) => await routing.Value.HandleAsync(context));
+            }
+            foreach (var routing in GetRoutings)
+            {
+                app.MapGet(routing.Key, async (HttpContext context) => await routing.Value.HandleAsync(context));
+            }
+            foreach (var routing in PostRoutings)
+            {
+                app.MapPost(routing.Key, async (HttpContext context) => await routing.Value.HandleAsync(context));
             }
             ServerTask = app.RunAsync();
             await ServerTask;

@@ -11,19 +11,19 @@ namespace Weedwacker.WebServer.Authentication
         /// Called when an OAuth login request is made.
         /// </summary>
         /// <param name="request">The authentication request.</param>
-        void HandleLogin(AuthenticationRequest request);
+        Task HandleLogin(AuthenticationRequest request);
 
         /// <summary>
         /// Called when a client requests to redirect to login page.
         /// </summary>
         /// <param name="request">The authentication request.</param>
-        void HandleRedirection(AuthenticationRequest request, ClientType clientType);
+        Task HandleRedirection(AuthenticationRequest request, ClientType clientType);
 
         /// <summary>
         /// Called when an OAuth login requests callback.
         /// </summary>
         /// <param name="request">The authentication request.</param>
-        void HandleTokenProcess(AuthenticationRequest request);
+        Task HandleTokenProcess(AuthenticationRequest request);
 
         /// <summary>
         /// The type of the client.

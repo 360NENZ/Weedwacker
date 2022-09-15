@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
 using Weedwacker.Shared.Utils;
 using Weedwacker.WebServer.Authentication;
 using Weedwacker.WebServer.Authentication.Objects;
@@ -8,25 +7,25 @@ namespace Weedwacker.WebServer.Handlers;
 
 internal class ClientLogin : IHandler
 { 
-    public Task<bool> HandleAsync(HttpContext context)
+    public async Task<bool> HandleAsync(HttpContext context)
     {
         // Parse body data.
-        var bodyData = context.Request.ReadFromJsonAsync<LoginAccountRequestJson>().Result;
+        var bodyData = await context.Request.ReadFromJsonAsync<LoginAccountRequestJson>();
 
         // Validate body data.
-        if (bodyData == null)
+        if (bodyData.account == null)
         {
-            return Task.FromResult(false);
+            return false;
         }
         // Pass data to authentication handler.
-        var responseData = WebServer.AuthenticationSystem
+        var responseData = await WebServer.AuthenticationSystem
                 .GetPasswordAuthenticator()
                 .Authenticate(IAuthenticationSystem.FromPasswordRequest(context, bodyData));
         // Send response.
-        context.Response.WriteAsJsonAsync(JsonConvert.SerializeObject(responseData));
+        await context.Response.WriteAsJsonAsync(responseData);
         
         // Log to console.
         Logger.WriteLine(string.Format("Client {0} is trying to log in.", context.Connection.RemoteIpAddress.ToString()));
-        return Task.FromResult(true);
+        return true;
     }
 }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Reflection;
 
 namespace Weedwacker.Shared.Utils
 {
@@ -10,7 +12,13 @@ namespace Weedwacker.Shared.Utils
         }
         private static string ParseMessage(string message)
         {
-            return $"[{DateTime.UtcNow:yy-MM-dd HH:mm:ss}] {message}";
+            StackTrace stackTrace = new StackTrace();           // get call stack
+            StackFrame[] stackFrames = stackTrace.GetFrames();  // get method calls (frames)
+
+            StackFrame callingFrame = stackFrames[1];
+            string method = callingFrame.GetMethod().DeclaringType.Name;
+
+            return $"[{DateTime.UtcNow:yy-MM-dd HH:mm:ss}]<{method}> {message}";
         }
         public static void DebugWriteLine(string message)
         {

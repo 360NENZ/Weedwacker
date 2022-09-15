@@ -22,37 +22,42 @@ namespace Weedwacker.WebServer.Database
                 Properties = new();
                 Database.GetCollection<DatabaseProperties>("dbProperties").InsertOne(Properties);
             }
+            else
+            {
+                Properties = Database.GetCollection<DatabaseProperties>("dbProperties").Find(w => true).First();
+            }
             Logger.WriteLine("Connected to WebServer database");
         }
-        
-        public static Account? CreateAccountWithUid(string username, uint uid)
+
+        public static Account? CreateAccountWithUid(string username, string uid)
         {
             //Make sure there are no name or id collisions
-            var queryResult = Accounts.Find(w => w.Username == username || w.IdNum == uid);
+            var queryResult = Accounts.Find(w => w.Username == username || w.Id == uid);
             if(queryResult.ToList().Count > 0)
             {
                 return null;
             }
 
             // Account
-            Account account = new Account(username,uid);
-            if(uid == Properties.NextUid)
+            
+            if(uid == Properties.NextUid || uid == "0")
             {
                 //Increment the counter
-                var filter = Builders<DatabaseProperties>.Filter.Eq(x => x.NextUid, Properties.NextUid); // All the documents with NextUid = Properties.NextUid
-                var update = Builders<DatabaseProperties>.Update.Inc(x => x.NextUid, 1); // Increment counter by 1
-                Properties.NextUid++;
+                var filter = Builders<DatabaseProperties>.Filter.Eq(x => x.NextUid, Properties.NextUid); // All the documents with (NextUid = Properties.NextUid)
+                var newUid = (int.Parse(Properties.NextUid) + 1).ToString();
+                var update = Builders<DatabaseProperties>.Update.Set(x => x.NextUid, newUid); // Increment counter by 1
+                
                 Database.GetCollection<DatabaseProperties>("dbProperties").UpdateOne(filter, update);
             }
-
-            SaveAccount(account);
+            Account account = new(username, uid);
+            Accounts.InsertOne(account);
             return account;
         }
         
-        public static void SaveAccount(Account account)
+        public static async Task SaveAccount(Account account)
         {
-            // Replaces the account document. If it doesn't exist, creates a new one
-            Accounts.ReplaceOneAsync<Account>(w => w.Id == account.Id, account, new ReplaceOptions { IsUpsert = true });
+            // Replaces the account document.
+            await Accounts.ReplaceOneAsync<Account>(w => w.Username == account.Username, account);
         }
 
         public static void UpdateAccount(string field, params string[] args)
@@ -60,14 +65,20 @@ namespace Weedwacker.WebServer.Database
 
         }
 
-        public static Account? GetAccountById(uint uid)
+        public static Account? GetAccountById(string uid)
         {
-                return Accounts.Find(w => w.IdNum == uid).FirstOrDefault();
+                return Accounts.Find(w => w.Id == uid).FirstOrDefault();
         }
 
-        public static Account? GetAccountByName(string name)
+        public static async Task<Account?> GetAccountByNameAsync(string name)
         {
-                return Accounts.Find(w => w.Username == name).FirstOrDefault();
+            var matches = await Accounts.FindAsync(w => w.Username == name);
+                return matches.FirstOrDefault();
+        }
+        public static async Task<Account> GetAccountBySessionKeyAsync(string sessionKey)
+        {
+            var matches = await Accounts.FindAsync(w => w.SessionKey == sessionKey);
+            return matches.FirstOrDefault();
         }
     }
 }

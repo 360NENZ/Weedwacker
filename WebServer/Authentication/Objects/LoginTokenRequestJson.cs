@@ -2,7 +2,7 @@
 {
     public class LoginTokenRequestJson
     {
-        public string uid;
-        public string token;
+        public string uid { get; set; }
+        public string token { get; set; }
     }
 }

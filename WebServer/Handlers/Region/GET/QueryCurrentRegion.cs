@@ -1,37 +1,36 @@
 ﻿using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
 using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.WebServer.Handlers
 {
     internal class QueryCurrentRegion : IHandler
     {
-        private struct QueryCurRegionRspJson
+        private class QueryCurRegionRspJson
         {
-            public string content;
-            public string sign;
+            public string? content { get; set; }
+            public string? sign { get; set; }
         }
 
-        public Task<bool> HandleAsync(HttpContext context)
+        public async Task<bool> HandleAsync(HttpContext context)
         {
             var req = context.Request;
             string last = req.Path.ToString().Split('/').Last();
             if (last == "query_cur_region")
             {
                 //Not Found version config
-                var rsp = context.Response.WriteAsync("28\r\nCAESGE5vdCBGb3VuZCB2ZXJzaW9uIGNvbmZpZxoA\r\n0");
-                return Task.FromResult(true);
+                await context.Response.WriteAsync("CAESGE5vdCBGb3VuZCB2ZXJzaW9uIGNvbmZpZxoA");
+                return true;
             }
             else
             {
-                return Task.FromResult(WithQuery(context));
+                return await WithQuery(context);
             }
         }
 
-        // /query_cur_region/<region>?<query>
-        private static bool WithQuery(HttpContext context)
+        // /query_cur_region/{region}?{query}
+        private async Task<bool> WithQuery(HttpContext context)
         {
             var req = context.Request;
             // Get region to query.
@@ -58,14 +57,15 @@ namespace Weedwacker.WebServer.Handlers
 
                     if (req.Query.ContainsKey("dispatchSeed"))
                     {
-                        // More love for UA Patch players
+                        
                         var response = new RegionManager.QueryCurRegionRspJson
                         {
                             content = regionData,
+                            // More love for UA Patch players
                             sign = "TW9yZSBsb3ZlIGZvciBVQSBQYXRjaCBwbGF5ZXJz"
                         };
 
-                        context.Response.WriteAsJsonAsync(JsonConvert.SerializeObject(response));
+                        await context.Response.WriteAsJsonAsync(response);
                         return true;
                     }
 
@@ -98,7 +98,7 @@ namespace Weedwacker.WebServer.Handlers
                         sign = Convert.ToBase64String(privateSignature)
                     };
 
-                    context.Response.WriteAsJsonAsync(JsonConvert.SerializeObject(rsp));
+                    await context.Response.WriteAsJsonAsync(rsp);
                 }
                 catch (Exception e)
                 {
@@ -109,7 +109,7 @@ namespace Weedwacker.WebServer.Handlers
             {
                 //TODO QueryCurrentRegionEvent
 
-                context.Response.WriteAsync(regionData);
+                await context.Response.WriteAsync(regionData);
             }
             // Log to console.
             Logger.WriteLine(string.Format("Client {0}s request: query_cur_region/{1}s", context.Connection.RemoteIpAddress.ToString(), regionName));

@@ -1,4 +1,5 @@
-﻿using Weedwacker.Shared.Utils.Configuration;
+﻿using Newtonsoft.Json;
+using Weedwacker.Shared.Utils.Configuration;
 
 namespace Weedwacker.WebServer
 {
@@ -9,13 +10,14 @@ namespace Weedwacker.WebServer
 
         public class KestrelJson
         {
+            [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
             public List<Endpoint> Endpoints = new() { new Endpoint() };
             public class Endpoint
             {
 
                 public CertificateJson Certificate = new();
 
-                public string Url = "https://localhost:443";
+                public string Url = "https://127.0.0.1:443";
                 public string ClientCertificateMode = "NoCertificate";
                 public string[] SslProtocols = new string[] { "Tls12", "Tls13" };
                 public class CertificateJson
@@ -44,6 +46,7 @@ namespace Weedwacker.WebServer
             public PoliciesJson Policies = new();
             public FilesJson Files = new();
             public AccountJson Account = new();
+            public Shared.Enums.ServerDebugMode LogPackets = Shared.Enums.ServerDebugMode.NONE;
             public DispatchJson Dispatch = new();
 
             public class AccountJson
@@ -59,7 +62,8 @@ namespace Weedwacker.WebServer
 
         public class DispatchJson
         {
-            public List<Region> Regions = new();
+            [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public List<Region> Regions = new() {new Region()};
             public string DefaultName = "Weedwacker";
 
         }
@@ -81,27 +85,5 @@ namespace Weedwacker.WebServer
             public string ErrorFile = "./404.html";
         }
 
-        /* Objects. */
-
-        public class Region
-        {
-            public Region() { }
-
-            public Region(
-                string name, string title,
-                string address, uint port
-            )
-            {
-                Name = name;
-                Title = title;
-                Ip = address;
-                Port = port;
-            }
-
-            public string Name = "os_usa";
-            public string Title = "Weedwacker";
-            public string Ip = "127.0.0.1";
-            public uint Port = 22102;
-        }
     }
 }

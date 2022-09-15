@@ -19,12 +19,20 @@ namespace Weedwacker.Shared.Utils
         
         public static void LoadKeys(string path)
         {
-
-            DISPATCH_KEY = File.ReadAllBytes(path + "dispatchKey.bin");
-            DISPATCH_SEED = File.ReadAllBytes(path + "dispatchSeed.bin");
-
-            ENCRYPT_KEY = File.ReadAllBytes(path + "secretKey.bin");
-            ENCRYPT_SEED_BUFFER = File.ReadAllBytes(path + "secretKeyBuffer.bin");
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+            var keypath = Path.Combine(path, "dispatchKey.bin");
+            var seedpath = Path.Combine(path, "dispatchSeed.bin");
+            var encryptkeypath = Path.Combine(path, "secretKey.bin");
+            var encryptseedbufferpath = Path.Combine(path, "secretKeyBuffer.bin");
+            if (File.Exists(keypath))
+                DISPATCH_KEY = File.ReadAllBytes(keypath);
+            if (File.Exists(seedpath))
+                DISPATCH_SEED = File.ReadAllBytes(seedpath);
+            if (File.Exists(encryptkeypath))
+                ENCRYPT_KEY = File.ReadAllBytes(encryptkeypath);
+            if (File.Exists(encryptseedbufferpath))
+                ENCRYPT_SEED_BUFFER = File.ReadAllBytes(encryptseedbufferpath);
             
             try
             {

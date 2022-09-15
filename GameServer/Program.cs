@@ -1,2 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+﻿using GameServer;
+
+Listener.StartListener();
+Console.ReadLine(); // wait here (later make this be console command handler)

@@ -28,22 +28,5 @@ namespace GameServer
             sortedList.Add(key, item);
             return key;
         }
-        public static void WriteHandshake(this BinaryWriter bw, int convId)
-        {
-            bw.Write((byte)0x0);
-            bw.Write((byte)0x0);
-            bw.Write((byte)0x1);
-            bw.Write((byte)0x45);
-            bw.Write((byte)0x0);
-            bw.Write(convId); // missing 3 bytes yet
-            bw.Write((byte)0x49);
-            bw.Write((byte)0x96);
-            bw.Write((byte)0x02);
-            bw.Write((byte)0xd2);
-            bw.Write((byte)0x14);
-            bw.Write((byte)0x51);
-            bw.Write((byte)0x45);
-            bw.Write((byte)0x45);
-        }
     }
 }

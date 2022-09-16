@@ -51,6 +51,28 @@ namespace GameServer
             if (convo == null) return;
             var con = new Connection(convo, rcv.RemoteEndPoint);
             Connections.Add(convId, con);
+            var resp = await CreateHandshakeResponse(convId);
+            await UDPClient?.SendAsync(resp, resp.Length, rcv.RemoteEndPoint);
+        }
+        public static async Task<byte[]> CreateHandshakeResponse(int convId)
+        {
+            await using var ms = new MemoryStream();
+            using var bw = new BinaryWriter(ms);
+            bw.Write((byte)0x0);
+            bw.Write((byte)0x0);
+            bw.Write((byte)0x1);
+            bw.Write((byte)0x45);
+            bw.Write((byte)0x0);
+            bw.Write(convId); // missing 3 bytes yet
+            bw.Write((byte)0x49);
+            bw.Write((byte)0x96);
+            bw.Write((byte)0x02);
+            bw.Write((byte)0xd2);
+            bw.Write((byte)0x14);
+            bw.Write((byte)0x51);
+            bw.Write((byte)0x45);
+            bw.Write((byte)0x45);
+            return ms.ToArray();
         }
         static async void ConnectionLoop()
         {

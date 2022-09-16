@@ -4,15 +4,16 @@
 	{
 		public string? message { get; set; }
 		public int retcode { get; set; }
-		public VerifyData data { get; set; } = new VerifyData();
+		public VerifyData? data { get; set; } = new VerifyData();
 
         public class VerifyData
 		{
 			public VerifyAccountData account { get; set; } = new VerifyAccountData();
 			public bool device_grant_required { get; set; } = false;
-			public string realname_operation { get; set; } = "NONE";
+			public string realname_operation { get; set; } = "None";
 			public bool realperson_required { get; set; } = false;
 			public bool safe_mobile_required { get; set; } = false;
+			public bool reactivate_required { get; set; } = false;
 		}
 
 		public class VerifyAccountData
@@ -33,6 +34,7 @@
 			public string apple_name { get; set; } = "";
 			public string sony_name { get; set; } = "";
 			public string tap_name { get; set; } = "";
+			public string steam_name { get; set; } = "";
 			public string country { get; set; } = "US";
 			public string reactivate_ticket { get; set; } = "";
 			public string area_code { get; set; } = "**";

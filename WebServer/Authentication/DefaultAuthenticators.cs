@@ -120,8 +120,9 @@ namespace Weedwacker.WebServer.Authentication
                 }
                 else
                 {
-                    response.retcode = -201;
+                    response.retcode = -111;
                     response.message = "Game account cache information error.";
+                    response.data = null;
 
                     // Log the failure.
                     loggerMessage = string.Format("Client {0} failed to log in via token.", address);

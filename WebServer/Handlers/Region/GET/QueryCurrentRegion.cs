@@ -1,13 +1,15 @@
 ﻿using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.WebServer.Handlers
 {
+    // Known Queries: version=OSRELWin3.0.0&lang=1&platform=3&binary=1&time=352&channel_id=1&sub_channel_id=3&account_type=1&dispatchSeed=fdbb946d8ec3ddc3&key_id=3
     internal class QueryCurrentRegion : IHandler
     {
-        private class QueryCurRegionRspJson
+        public class QueryCurRegionRspJson
         {
             public string? content { get; set; }
             public string? sign { get; set; }
@@ -25,12 +27,12 @@ namespace Weedwacker.WebServer.Handlers
             }
             else
             {
-                return await WithQuery(context);
+                return await WithRegion(context);
             }
         }
 
         // /query_cur_region/{region}?{query}
-        private async Task<bool> WithQuery(HttpContext context)
+        private async Task<bool> WithRegion(HttpContext context)
         {
             var req = context.Request;
             // Get region to query.
@@ -44,7 +46,7 @@ namespace Weedwacker.WebServer.Handlers
                     regionData = region.base64;
             }
 
-            string[] versionCode = new Regex("[a-zA-Z]").Replace(versionName, "").Split("\\.");
+            string[] versionCode = new Regex("[a-zA-Z]").Replace(versionName, "").Split(".");
             int versionMajor = int.Parse(versionCode[0]);
             int versionMinor = int.Parse(versionCode[1]);
             int versionFix = int.Parse(versionCode[2]);
@@ -55,7 +57,7 @@ namespace Weedwacker.WebServer.Handlers
                 {
                     //TODO QueryCurrentRegionEvent  
 
-                    if (req.Query.ContainsKey("dispatchSeed"))
+                    if (!req.Query.ContainsKey("dispatchSeed"))
                     {
                         
                         var response = new RegionManager.QueryCurRegionRspJson
@@ -73,20 +75,23 @@ namespace Weedwacker.WebServer.Handlers
                     var encryptor = key_id.Equals("3") ? Crypto.CurOSEncryptor : Crypto.CurCNEncryptor;
                     var regionInfo = Convert.FromBase64String(regionData);
 
-                    //Encrypt regionInfo in chunks
-                    byte[] encryptedRegionInfoStream = new byte[regionInfo.Length];
+
 
                     //Thank you so much GH Copilot
                     int chunkSize = 256 - 11;
                     int regionInfoLength = regionInfo.Length;
                     int numChunks = (int)Math.Ceiling(regionInfoLength / (double)chunkSize);
 
+                    //Encrypt regionInfo in chunks
+                    byte[] encryptedRegionInfo = new byte[numChunks*256];
+
                     for (int i = 0; i < numChunks; i++)
                     {
-                        byte[] chunk = new byte[chunkSize];
-                        Array.Copy(regionInfo, i * chunkSize, chunk, i * chunkSize, Math.Min((i + 1) * chunkSize, regionInfoLength));
-                        byte[] encryptedChunk = encryptor.Encrypt(chunk, RSAEncryptionPadding.OaepSHA1);
-                        Array.Copy(encryptedChunk, i * chunkSize, encryptedRegionInfoStream, i * chunkSize, Math.Min((i + 1) * chunkSize, regionInfoLength));
+                        Index from = i * chunkSize;
+                        Index to = Math.Min((i + 1) * chunkSize, regionInfoLength);
+                        byte[] chunk = regionInfo[from..to];
+                        byte[] encryptedChunk = encryptor.Encrypt(chunk, RSAEncryptionPadding.Pkcs1);
+                        Array.Copy(encryptedChunk, 0, encryptedRegionInfo, i*256, encryptedChunk.Length);
                     }
                     var signer = Crypto.CurSigner;
                     byte[] privateSignature = signer.SignData(regionInfo, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
@@ -94,10 +99,12 @@ namespace Weedwacker.WebServer.Handlers
 
                     var rsp = new QueryCurRegionRspJson
                     {
-                        content = Convert.ToBase64String(encryptedRegionInfoStream),
+                        content = Convert.ToBase64String(encryptedRegionInfo),
                         sign = Convert.ToBase64String(privateSignature)
                     };
 
+                    context.Response.Headers.Vary = "Accept-Encoding";
+                    context.Response.Headers.ContentType = "text/html";
                     await context.Response.WriteAsJsonAsync(rsp);
                 }
                 catch (Exception e)

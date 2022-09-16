@@ -2,23 +2,22 @@
 
 namespace Weedwacker.WebServer.Handlers
 {
-    internal class RiskyAPICheck : IHandler
+    // Known Queries: biz_key=hk4e_global&country_code=REDACTED&token=REDACTED&uid=REDACTED HTTP/1.1
+    internal class GetAgreementInfo : IHandler
     {
-        public class ApiCheckResJson
+        public class GetAgreementInfoResJson
         {
             public int retcode { get; set; } = 0;
             public string message { get; set; } = "OK";
             public Data data { get; set; } = new();
             public class Data
             {
-                public string id { get; set; } = "none";
-                public string action { get; set; } = "ACTION_NONE";
-                public string? geetest { get; set; } = null;
+                public string[] marketing_agreements { get; set; } = Array.Empty<string>();
             }
         }
         public async Task<bool> HandleAsync(HttpContext context)
         {
-            await context.Response.WriteAsJsonAsync(new ApiCheckResJson());
+            await context.Response.WriteAsJsonAsync(new GetAgreementInfoResJson());
             return true;
         }
     }

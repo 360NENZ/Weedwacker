@@ -6,7 +6,8 @@ using Weedwacker.WebServer.Authentication.Objects;
 namespace Weedwacker.WebServer.Handlers;
 
 internal class ClientLogin : IHandler
-{ 
+{
+    // Known Queries: biz_key=hk4e_global&client_type=3 
     public async Task<bool> HandleAsync(HttpContext context)
     {
         // Parse body data.
@@ -18,7 +19,7 @@ internal class ClientLogin : IHandler
             return false;
         }
         // Pass data to authentication handler.
-        var responseData = await WebServer.AuthenticationSystem
+        LoginResultJson responseData = await WebServer.AuthenticationSystem
                 .GetPasswordAuthenticator()
                 .Authenticate(IAuthenticationSystem.FromPasswordRequest(context, bodyData));
         // Send response.

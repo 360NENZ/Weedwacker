@@ -4,6 +4,7 @@ namespace Weedwacker.WebServer.Handlers
 {
     internal class LoadConfig : IHandler
     {
+        // Known Queries: client=3&game_key=hk4e_global
         public class LoadConfigResJson
         {
             public int retcode { get; set; } = 0;
@@ -16,7 +17,7 @@ namespace Weedwacker.WebServer.Handlers
                 public string client { get; set; } = "PC";
                 public string identity { get; set; } = "I_IDENTITY";
                 public bool guest { get; set; } = false;
-                public string ignore_version { get; set; } = "";
+                public string ignore_versions { get; set; } = "";
                 public string scene { get; set; } = "S_NORMAL";
                 public string name { get; set; } = "原神海外";
                 public bool disable_regist { get; set; } = false;

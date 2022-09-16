@@ -9,10 +9,10 @@ namespace Weedwacker.WebServer
     internal static class RegionManager
     {
 
-        public struct RegionData
+        public class RegionData
         {
-            private QueryCurrRegionHttpRsp regionQuery;
-            public string base64;
+            public QueryCurrRegionHttpRsp regionQuery { get; set; }
+            public string base64 { get; set; }
 
             public RegionData(QueryCurrRegionHttpRsp updatedQuery, string v)
             {
@@ -23,8 +23,8 @@ namespace Weedwacker.WebServer
 
         public class QueryCurRegionRspJson
         {
-            public string content;
-            public string sign;
+            public string content { get; set; }
+            public string sign { get; set; }
         }
 
         // All information about configured regions' game servers

@@ -2,8 +2,13 @@
 
 namespace Weedwacker.WebServer.Handlers
 {
+    // Known Queries: topic=plat_explog_sdk_v2
     internal class LogBatch : IHandler
     {
+        public class LogBatchReqJson
+        {
+            public string data { get; set; }//ginormous
+        }
         public class LogBatchResJson
         {
             public int retcode { get; set; } = 0;

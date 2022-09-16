@@ -23,7 +23,6 @@ namespace Weedwacker.WebServer
             {"/log/sdk/upload", new LogSdkUpload()},
             {"/sdk/upload", new SdkUpload()},
             {"/perf/config/verify", new PerfConfigVerify()},
-            {"/common/h5log/log/batch", new LogBatch()},
             {"/common/hk4e_global/announcement/api/getAlertPic", new GetAlertPic()},
             {"/common/hk4e_global/announcement/api/getAlertAnn", new GetAlertAnn()},
             {"/common/hk4e_global/announcement/api/getAnnList", new GetAnnList()},
@@ -34,18 +33,24 @@ namespace Weedwacker.WebServer
         {
             {"/hk4e_global/combo/granter/api/getConfig", new ComboGetConfig()},
             {"/combo/box/api/config/sdk/combo", new ConfigSDKCombo()},
+            {"/combo/box/api/config/sw/precache", new PreCache()},
             {"/hk4e_global/mdk/agreement/api/getAgreementInfos", new GetAgreementInfo()},
             {"/hk4e_global/mdk/shield/api/loadConfig", new LoadConfig()},
-            {"/query_cur_region", new QueryCurrentRegion()},
+            {"/query_cur_region/{**region}", new QueryCurrentRegion()},
             {"/query_region_list", new QueryRegionList()},
             {"/admin/mi18n/plat_oversea/*", new WebStaticVersion()},
+            {"/admin/mi18n/hk4e_cn/", new WebStaticGacha()},
             {"/authentication/type", new AuthenticationType()},
             {"/authentication/openid/redirect", new OpenIdRedirect()},
             {"/Api/twitter_login", new ApiTwitterLogin()},
             {"/sdkTwitterLogin.html", new SdkTwitterLogin()},
             {"/hk4e/announcement/", new GetPageResources()},
-            {"/gacha", new GachaRecords()},
-            //{"/gacha/details", new GachaDetails()}
+            {"/upload/op-public/", new OpPublic()},
+            {"/gacha", new GachaRecords()},//???
+            {"/genshin/event/", new GameEvent()},
+            {"/hk4e/gacha_info/", new GachaInfo()},
+            {"/event/gacha_info/api/getGachaLog", new GetGachaLog()}
+            //{"/gacha/details", new GachaDetails()}//???
            
     };
 
@@ -56,13 +61,18 @@ namespace Weedwacker.WebServer
             {"/account/risky/api/check", new RiskyAPICheck()},
             {"/sdk/dataUpload", new SdkDataUpload()},
             {"/hk4e_global/combo/granter/login/v2/login", new SessionKeyLogin()},
+            {"/hk4e_global/combo/granter/login/beforeVerify", new BeforeVerify()},
+            {"/hk4e_global/combo/red_dot/list", new RedDotList()},
             {"/hk4e_global/mdk/shield/api/verify", new TokenLogin()},
             {"/authentication/register", new AuthenticationRegister()},
             {"/authentication/login", new AuthenticationLogin()},
             {"/authentication/change_password", new AuthenticationChangePassword()},
             {"/hk4e_global/mdk/shield/api/loginByThirdparty", new LoginByThirdParty()},
             {"/log", new Log()},
-            {"/crash/dataUpload", new CrashDataUpload()}
+            {"/crash/dataUpload", new CrashDataUpload()},
+            {"/common/h5log/log/batch", new LogBatch()},
+            {"/khulk/dispatch/getGateAddress", new KhulkGetGateAddress()},
+            {"/dispatch/dispatch/getGateAddress", new DispatchGetGateAddress()}
 
         };
         public static async void Start()

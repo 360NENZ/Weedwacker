@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-
 namespace Weedwacker.WebServer.Handlers
 {
-    internal class ConfigSDKCombo : IHandler
+    internal class PreCache : IHandler
     {
-        public class ConfigSDKComboResJson
+        // Known Queries: biz=hk4e_global&client=3
+        public class PreCacheResJson
         {
             public int retcode { get; set; } = 0;
             public string message { get; set; } = "OK";
@@ -15,15 +15,14 @@ namespace Weedwacker.WebServer.Handlers
                 public Vals vals { get; set; } = new();
                 public class Vals
                 {
-                    public bool disable_email_bind_skip { get; set; } = false;
-                    public int email_bind_remind_interval { get; set; } = 7;
-                    public bool email_bind_remind { get; set; } = true;
+                    public bool enable { get; set; } = true;
+                    public string url { get; set; } = "https://sdk.hoyoverse.com/sw.html";
                 }
             }
         }
         public async Task<bool> HandleAsync(HttpContext context)
         {
-            await context.Response.WriteAsJsonAsync(new ConfigSDKComboResJson());
+            await context.Response.WriteAsJsonAsync(new PreCacheResJson());
             return true;
         }
     }

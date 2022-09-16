@@ -78,7 +78,7 @@ namespace GameServer
         {
             while (!CancelToken.IsCancellationRequested && Multiplex != null && UDPClient != null)
             {
-                await AcceptConnection(await UDPClient.ReceiveAsync());
+                await AcceptConnection(await UDPClient.ReceiveAsync(CancelToken.Token));
             }
         }
         

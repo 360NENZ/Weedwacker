@@ -52,7 +52,8 @@ namespace GameServer
             var con = new Connection(convo, rcv.RemoteEndPoint);
             Connections.Add(convId, con);
             var resp = await CreateHandshakeResponse(convId);
-            await UDPClient?.SendAsync(resp, resp.Length, rcv.RemoteEndPoint);
+            if (UDPClient == null) return;
+            await UDPClient.SendAsync(resp, resp.Length, rcv.RemoteEndPoint);
         }
         public static async Task<byte[]> CreateHandshakeResponse(int convId)
         {

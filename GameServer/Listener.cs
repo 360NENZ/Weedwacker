@@ -9,8 +9,10 @@ namespace GameServer
 {
     internal class Listener
     {
-        public const int MaxMessageSize = 16384;
+        public const int MAX_MSG_SIZE = 16384;
         static readonly byte[] FIRST_RCV_PKT = new byte[] { 0, 0, 0, 255, 0, 0, 0, 0, 0, 0, 0, 0, 73, 150, 2, 210, 255, 255, 255, 255 };
+        public const int HANDSHAKE_SIZE = 20;
+        public static bool IsHandShake(params byte[] data) => FIRST_RCV_PKT.SequenceEqual(data);
         static Socket? UDPListener => UDPClient?.Client;
         static UdpClient? UDPClient;
         static IPEndPoint? ListenAddress;
@@ -36,24 +38,29 @@ namespace GameServer
             if (UDPListener == null) return;
             KCPTransport = KcpSocketTransport.CreateMultiplexConnection(UDPListener, ListenAddress, 1400);
             KCPTransport.Start();
-            ConnectionLoop();
         }
-        static async Task AcceptConnection(UdpReceiveResult rcv)
+        static void RegisterConnection(Connection con)
         {
-            if (!FIRST_RCV_PKT.SequenceEqual(rcv.Buffer))
-            {
-                Logger.WriteErrorLine($"Invalid handshake packet from {rcv.RemoteEndPoint}");
-                return;
-            }
-            Logger.WriteLine($"Received: ({string.Join(", ", rcv.Buffer)}) from: {rcv.RemoteEndPoint}");
+            if (!con.ConversationID.HasValue) return;
+            Connections[con.ConversationID.Value] = con;
+        }
+        public static void UnregisterConnection(Connection con)
+        {
+            if (!con.ConversationID.HasValue) return;
+            if (Connections.Remove(con.ConversationID.Value))
+                Logger.WriteLine($"Connection with {con.RemoteEndPoint} has been closed");
+        }
+        public static async Task AcceptConnection(SocketReceiveFromResult rcv)
+        {
             int convId = Connections.GetNextAvailableIndex();
             var convo = Multiplex?.CreateConversation(convId, ConvOpt);
             if (convo == null) return;
-            var con = new Connection(convo, rcv.RemoteEndPoint);
-            Connections.Add(convId, con);
+            var user = (IPEndPoint)rcv.RemoteEndPoint;
+            var con = new Connection(convo, user);
+            RegisterConnection(con);
             var resp = await CreateHandshakeResponse(convId);
             if (UDPClient == null) return;
-            await UDPClient.SendAsync(resp, resp.Length, rcv.RemoteEndPoint);
+            await UDPClient.SendAsync(resp, resp.Length, user);
         }
         public static async Task<byte[]> CreateHandshakeResponse(int convId)
         {
@@ -63,8 +70,7 @@ namespace GameServer
             bw.Write((byte)0x0);
             bw.Write((byte)0x1);
             bw.Write((byte)0x45);
-            bw.Write((byte)0x0);
-            bw.Write(convId); // missing 3 bytes yet
+            bw.Write((ulong)convId);
             bw.Write((byte)0x49);
             bw.Write((byte)0x96);
             bw.Write((byte)0x02);
@@ -75,13 +81,5 @@ namespace GameServer
             bw.Write((byte)0x45);
             return ms.ToArray();
         }
-        static async void ConnectionLoop()
-        {
-            while (!CancelToken.IsCancellationRequested && Multiplex != null && UDPClient != null)
-            {
-                await AcceptConnection(await UDPClient.ReceiveAsync(CancelToken.Token));
-            }
-        }
-        
     }
 }

@@ -1,10 +1,12 @@
-﻿using System;
+﻿using GameServer;
+using System;
 using System.Buffers;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Weedwacker.Shared.Utils;
 
 namespace KcpSharp
 {
@@ -222,12 +224,13 @@ namespace KcpSharp
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     int bytesReceived;
+                    SocketReceiveFromResult result = default;
                     try
                     {
 #if NEED_SOCKET_SHIM
                         bytesReceived = await ReceiveFromAsync(_socket, memory, _endPoint, cancellationToken).ConfigureAwait(false);
 #else
-                        SocketReceiveFromResult result = await _socket.ReceiveFromAsync(memory, SocketFlags.None, _endPoint, cancellationToken).ConfigureAwait(false);
+                        result = await _socket.ReceiveFromAsync(memory, SocketFlags.None, _endPoint, cancellationToken).ConfigureAwait(false);
                         bytesReceived = result.ReceivedBytes;
 #endif
                     }
@@ -242,7 +245,13 @@ namespace KcpSharp
 
                     if (bytesReceived != 0 && bytesReceived <= _mtu)
                     {
-                        await connection.InputPakcetAsync(memory.Slice(0, bytesReceived), cancellationToken).ConfigureAwait(false);
+                        var data = memory[..bytesReceived];
+                        if (bytesReceived == Listener.HANDSHAKE_SIZE && Listener.IsHandShake(data.ToArray()))
+                        {
+                            await Listener.AcceptConnection(result);
+                            return;
+                        }
+                        await connection.InputPakcetAsync(data, cancellationToken).ConfigureAwait(false);
                     }
                 }
             }
@@ -261,6 +270,7 @@ namespace KcpSharp
             bool result;
             try
             {
+                Logger.WriteErrorLine("KCP Error:", ex);
                 result = HandleException(ex);
             }
             catch

@@ -3,14 +3,16 @@ using Microsoft.VisualBasic;
 using System.Buffers;
 using System.Net;
 using System.Net.Sockets;
+using Weedwacker.Shared.Utils;
 
 namespace GameServer
 {
     internal class Connection
     {
+        public int? ConversationID => Conversation.ConversationId;
         readonly KcpConversation Conversation;
         readonly CancellationTokenSource CancelToken;
-        readonly IPEndPoint RemoteEndPoint;
+        public readonly IPEndPoint RemoteEndPoint;
         public Connection(KcpConversation conversation, IPEndPoint remote)
         {
             Conversation = conversation;
@@ -20,7 +22,15 @@ namespace GameServer
         }
         async void Start()
         {
+            Logger.WriteLine($"New connection to {RemoteEndPoint} created with conversation id {Conversation.ConversationId}");
             await ReceiveLoop();
+        }
+        void Stop()
+        {
+            Listener.UnregisterConnection(this);
+            Conversation.Dispose();
+            CancelToken.Cancel();
+            CancelToken.Dispose();
         }
         async Task ReceiveLoop()
         {
@@ -32,7 +42,7 @@ namespace GameServer
                 {
                     break;
                 }
-                if (result.BytesReceived > Listener.MaxMessageSize)
+                if (result.BytesReceived > Listener.MAX_MSG_SIZE)
                 {
                     // The message is too large.
                     Conversation.SetTransportClosed();
@@ -50,11 +60,16 @@ namespace GameServer
                     }
                     await ProcessMessageAsync(buffer.AsMemory(0, result.BytesReceived));
                 }
+                catch (Exception ex)
+                {
+                    Logger.WriteErrorLine("Packet parse error", ex);
+                }
                 finally
                 {
                     ArrayPool<byte>.Shared.Return(buffer);
                 }
-            }          
+            }
+            Stop();
         }
         // DO THE PROCESSING OF THE PACKET
         async Task ProcessMessageAsync(Memory<byte> data)

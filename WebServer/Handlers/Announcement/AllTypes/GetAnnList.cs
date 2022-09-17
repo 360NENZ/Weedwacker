@@ -6,7 +6,7 @@ namespace Weedwacker.WebServer.Handlers
 {
     internal class GetAnnList : IHandler
     {
-        public class GetAnnListResJson
+        public class GetAnnListRspJson
         {
             public int retcode { get; set; } = 0;
             public string message { get; set; } = "OK";
@@ -110,31 +110,31 @@ namespace Weedwacker.WebServer.Handlers
                     }
                 }
             }
-            public GetAnnListResJson(Data dataa)
+            public GetAnnListRspJson(Data dataa)
             {
                 data = dataa;
             }
         }
         public async Task<bool> HandleAsync(HttpContext context)
         {
-            GetAnnListResJson.Data data;
+            GetAnnListRspJson.Data data;
 
             if (!File.Exists(WebServer.Configuration.structure.data + "GameAnnouncementList.json"))
             {
                 string dispatchDomain = WebServer.Configuration.Kestrel.Endpoints.First().Url;
-                GetAnnListResJson.Data.AnnList.Announcement ann1 = new("<strong>Welcome to Weedwacker!</strong>", "Welcome!", "1.jpg", dispatchDomain, "System");
-                GetAnnListResJson.Data.AnnList.Announcement ann2 = new("<strong>How to use announcements</strong>", "How to use announcements", "2.jpg", dispatchDomain, "System");
-                data = new(new List<GetAnnListResJson.Data.AnnList.Announcement>() { ann1, ann2 });
+                GetAnnListRspJson.Data.AnnList.Announcement ann1 = new("<strong>Welcome to Weedwacker!</strong>", "Welcome!", "1.jpg", dispatchDomain, "System");
+                GetAnnListRspJson.Data.AnnList.Announcement ann2 = new("<strong>How to use announcements</strong>", "How to use announcements", "2.jpg", dispatchDomain, "System");
+                data = new(new List<GetAnnListRspJson.Data.AnnList.Announcement>() { ann1, ann2 });
                 Logger.WriteLine("GameAnnouncementList.json not found. Generating default json");
                 string jsonString = JsonConvert.SerializeObject(data, Formatting.Indented);
                 await File.WriteAllTextAsync(WebServer.Configuration.structure.data + "GameAnnouncementList.json", jsonString);
             }
             else
             {
-                data = JsonConvert.DeserializeObject<GetAnnListResJson.Data>(await File.ReadAllTextAsync(WebServer.Configuration.structure.data + "GameAnnouncement.json"));
+                data = JsonConvert.DeserializeObject<GetAnnListRspJson.Data>(await File.ReadAllTextAsync(WebServer.Configuration.structure.data + "GameAnnouncement.json"));
             }
 
-            await context.Response.WriteAsJsonAsync(new GetAnnListResJson(data));
+            await context.Response.WriteAsJsonAsync(new GetAnnListRspJson(data));
             return true;
         }
     }

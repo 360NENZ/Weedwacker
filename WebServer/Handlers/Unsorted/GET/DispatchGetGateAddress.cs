@@ -5,7 +5,7 @@ namespace Weedwacker.WebServer.Handlers
     // Known Queries: game=hk4e_global&region=os_euro
     internal class DispatchGetGateAddress : IHandler
     {
-        public class DispatchGetGateAddressResJson
+        public class DispatchGetGateAddressRspJson
         {
             public int retcode { get; set; } = 0;
             public string message { get; set; } = "OK";

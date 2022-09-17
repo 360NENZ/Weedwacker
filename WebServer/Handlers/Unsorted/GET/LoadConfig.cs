@@ -5,7 +5,7 @@ namespace Weedwacker.WebServer.Handlers
     internal class LoadConfig : IHandler
     {
         // Known Queries: client=3&game_key=hk4e_global
-        public class LoadConfigResJson
+        public class LoadConfigRspJson
         {
             public int retcode { get; set; } = 0;
             public string message { get; set; } = "OK";
@@ -53,7 +53,7 @@ namespace Weedwacker.WebServer.Handlers
         }
         public async Task<bool> HandleAsync(HttpContext context)
         {
-            await context.Response.WriteAsJsonAsync(new LoadConfigResJson());
+            await context.Response.WriteAsJsonAsync(new LoadConfigRspJson());
             return true;
         }
     }

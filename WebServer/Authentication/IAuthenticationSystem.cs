@@ -60,7 +60,7 @@ namespace Weedwacker.WebServer.Authentication
         ///<summary>
         ///Generates an authentication request from a <see cref="LoginAccountRequestJson"/> object.
         ///</summary>
-        ///<param name="ctx">The Ceen context.</param>
+        ///<param name="ctx">The http context.</param>
         ///<param name="jsonData">The JSON data.</param>
         ///<returns>An authenticator.</returns>
         static AuthenticationRequest FromPasswordRequest(HttpContext ctx, LoginAccountRequestJson jsonData)
@@ -71,7 +71,7 @@ namespace Weedwacker.WebServer.Authentication
         ///<summary>
         ///Generates an authentication request from a <see cref="LoginTokenRequestJson"/> object.
         ///</summary>
-        ///<param name="ctx">The Ceen context.</param>
+        ///<param name="ctx">The http context.</param>
         ///<param name="jsonData">The JSON data.</param>
         ///<returns>An authenticator.</returns>
         static AuthenticationRequest FromTokenRequest(HttpContext ctx, LoginTokenRequestJson jsonData)
@@ -82,7 +82,7 @@ namespace Weedwacker.WebServer.Authentication
         ///<summary>
         ///Generates an authentication request from a <see cref="ComboTokenReqJson"/> object.
         ///</summary>
-        ///<param name="ctx">The Ceen context.</param>
+        ///<param name="ctx">The http context.</param>
         ///<param name="jsonData">The JSON data.</param>
         ///<returns>An authenticator.</returns>
         static AuthenticationRequest FromComboTokenRequest(HttpContext ctx, ComboTokenReqJson jsonData,
@@ -94,7 +94,7 @@ namespace Weedwacker.WebServer.Authentication
         ///<summary>
         ///Generates an authentication request from a <see cref="HttpContext"/> object.
         ///</summary>
-        ///<param name="ctx">The Ceen context.</param>
+        ///<param name="ctx">The http context.</param>
         ///<returns>An authentication request.</returns>
         static AuthenticationRequest FromExternalRequest(HttpContext ctx)
         {

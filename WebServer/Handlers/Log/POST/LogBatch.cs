@@ -9,7 +9,7 @@ namespace Weedwacker.WebServer.Handlers
         {
             public string data { get; set; }//ginormous
         }
-        public class LogBatchResJson
+        public class LogBatchRspJson
         {
             public int retcode { get; set; } = 0;
             public string message { get; set; } = "success";
@@ -22,7 +22,7 @@ namespace Weedwacker.WebServer.Handlers
 
         public async Task<bool> HandleAsync(HttpContext context)
         {
-            await context.Response.WriteAsJsonAsync(new LogBatchResJson());
+            await context.Response.WriteAsJsonAsync(new LogBatchRspJson());
             return true;
         }
     }

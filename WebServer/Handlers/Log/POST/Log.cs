@@ -34,13 +34,13 @@ namespace Weedwacker.WebServer.Handlers
             public string auid { get; set; }
             public string buildUrl { get; set; }
         }
-        public class LogResJson
+        public class LogRspJson
         {
             public int code { get; set; } = 0;
         }
         public async Task<bool> HandleAsync(HttpContext context)
         {
-            await context.Response.WriteAsJsonAsync(new LogResJson());
+            await context.Response.WriteAsJsonAsync(new LogRspJson());
             return true;
         }
     }

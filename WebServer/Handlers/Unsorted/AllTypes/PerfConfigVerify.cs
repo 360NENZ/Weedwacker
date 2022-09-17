@@ -6,7 +6,7 @@ namespace Weedwacker.WebServer.Handlers
     // Known Queries: device_id=REDACTED&platform=2&name=REDACTED HTTP/1.1
     internal class PerfConfigVerify : IHandler
     {
-        public class PerfConfigVerifyResJson
+        public class PerfConfigVerifyRspJson
         {
             public int code { get; set; } = 0;//,-1
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
@@ -15,7 +15,7 @@ namespace Weedwacker.WebServer.Handlers
 
         public async Task<bool> HandleAsync(HttpContext context)
         {
-            await context.Response.WriteAsJsonAsync(new PerfConfigVerifyResJson());
+            await context.Response.WriteAsJsonAsync(new PerfConfigVerifyRspJson());
             return true;
         }
     }

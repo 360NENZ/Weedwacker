@@ -4,7 +4,7 @@ namespace Weedwacker.WebServer.Handlers
 {
     internal class ListPriceTier :IHandler
     {
-        public class ListPriceTiersResJson
+        public class ListPriceTiersRspJson
         {
             public int retcode { get; set; } = 0;
             public string message { get; set; } = "OK";
@@ -17,7 +17,7 @@ namespace Weedwacker.WebServer.Handlers
         }
         public async Task<bool> HandleAsync(HttpContext context)
         {
-            await context.Response.WriteAsJsonAsync(new ListPriceTiersResJson());
+            await context.Response.WriteAsJsonAsync(new ListPriceTiersRspJson());
             return true;
         }
     }

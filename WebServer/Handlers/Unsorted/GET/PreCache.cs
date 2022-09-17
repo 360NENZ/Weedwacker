@@ -5,7 +5,7 @@ namespace Weedwacker.WebServer.Handlers
     internal class PreCache : IHandler
     {
         // Known Queries: biz=hk4e_global&client=3
-        public class PreCacheResJson
+        public class PreCacheRspJson
         {
             public int retcode { get; set; } = 0;
             public string message { get; set; } = "OK";
@@ -22,7 +22,7 @@ namespace Weedwacker.WebServer.Handlers
         }
         public async Task<bool> HandleAsync(HttpContext context)
         {
-            await context.Response.WriteAsJsonAsync(new PreCacheResJson());
+            await context.Response.WriteAsJsonAsync(new PreCacheRspJson());
             return true;
         }
     }

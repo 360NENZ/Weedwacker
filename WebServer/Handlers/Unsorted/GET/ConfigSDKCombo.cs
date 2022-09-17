@@ -6,7 +6,7 @@ namespace Weedwacker.WebServer.Handlers
     // Known Queries: biz_key=hk4e_global&client_type=3 
     internal class ConfigSDKCombo : IHandler
     {
-        public class ConfigSDKComboResJson
+        public class ConfigSDKComboRspJson
         {
             public int retcode { get; set; } = 0;
             public string message { get; set; } = "OK";
@@ -48,9 +48,7 @@ namespace Weedwacker.WebServer.Handlers
         }
         public async Task<bool> HandleAsync(HttpContext context)
         {
-            //For some reason official behaviour sends a malformed json string
-            //await context.Response.WriteAsJsonAsync("{\"retcode\":0,\"message\":\"OK\",\"data\":{\"vals\":{\"disable_email_bind_skip\":\"false\",\"email_bind_remind_interval\":\"7\",\"email_bind_remind\":\"true\"}}}");
-            await context.Response.WriteAsJsonAsync(new ConfigSDKComboResJson());
+            await context.Response.WriteAsJsonAsync(new ConfigSDKComboRspJson());
             return true;
         }
     }

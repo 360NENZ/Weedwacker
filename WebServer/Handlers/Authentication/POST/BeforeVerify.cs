@@ -19,7 +19,7 @@ namespace Weedwacker.WebServer.Handlers
             }
 
         }
-        public class BeforeVerifyResJson
+        public class BeforeVerifyRspJson
         {
             public int retcode { get; set; } = 0;
             public string message { get; set; } = "OK";
@@ -33,7 +33,7 @@ namespace Weedwacker.WebServer.Handlers
         }
         public async Task<bool> HandleAsync(HttpContext context)
         {
-            await context.Response.WriteAsJsonAsync(new BeforeVerifyResJson());
+            await context.Response.WriteAsJsonAsync(new BeforeVerifyRspJson());
             return true;
         }
     }

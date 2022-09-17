@@ -5,7 +5,7 @@ namespace Weedwacker.WebServer.Handlers
     // Known Queries: biz_key=hk4e_global&country_code=REDACTED&token=REDACTED&uid=REDACTED HTTP/1.1
     internal class GetAgreementInfo : IHandler
     {
-        public class GetAgreementInfoResJson
+        public class GetAgreementInfoRspJson
         {
             public int retcode { get; set; } = 0;
             public string message { get; set; } = "OK";
@@ -17,7 +17,7 @@ namespace Weedwacker.WebServer.Handlers
         }
         public async Task<bool> HandleAsync(HttpContext context)
         {
-            await context.Response.WriteAsJsonAsync(new GetAgreementInfoResJson());
+            await context.Response.WriteAsJsonAsync(new GetAgreementInfoRspJson());
             return true;
         }
     }

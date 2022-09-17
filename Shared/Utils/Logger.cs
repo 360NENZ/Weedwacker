@@ -15,7 +15,7 @@ namespace Weedwacker.Shared.Utils
             StackTrace stackTrace = new StackTrace();           // get call stack
             StackFrame[] stackFrames = stackTrace.GetFrames();  // get method calls (frames)
 
-            StackFrame callingFrame = stackFrames[1];
+            StackFrame callingFrame = stackFrames[2];
             string method = callingFrame.GetMethod().DeclaringType.Name;
 
             return $"[{DateTime.UtcNow:yy-MM-dd HH:mm:ss}]<{method}> {message}";

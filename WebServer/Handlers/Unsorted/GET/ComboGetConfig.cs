@@ -6,7 +6,7 @@ namespace Weedwacker.WebServer.Handlers
     // Known Queries: app_id=4&channel_id=1&client_type=3
     internal class ComboGetConfig : IHandler
     {
-        public class ComboGetConfigResJson
+        public class ComboGetConfigRspJson
         {
             public int retcode { get; set; } = 0;
             public string message { get; set; } = "OK";
@@ -24,7 +24,7 @@ namespace Weedwacker.WebServer.Handlers
         }
         public async Task<bool> HandleAsync(HttpContext context)
         {
-            await context.Response.WriteAsJsonAsync(new ComboGetConfigResJson());
+            await context.Response.WriteAsJsonAsync(new ComboGetConfigRspJson());
             return true;
         }
     }

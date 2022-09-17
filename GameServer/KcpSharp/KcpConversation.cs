@@ -21,7 +21,7 @@ namespace KcpSharp
     {
         private readonly IKcpBufferPool _bufferPool;
         private readonly IKcpTransport _transport;
-        private readonly uint? _id;
+        private readonly ulong? _id;
 
         private readonly int _mtu;
         private readonly int _mss;
@@ -108,11 +108,11 @@ namespace KcpSharp
         /// <param name="transport">The underlying transport.</param>
         /// <param name="conversationId">The conversation ID.</param>
         /// <param name="options">The options of the <see cref="KcpConversation"/>.</param>
-        public KcpConversation(IKcpTransport transport, int conversationId, KcpConversationOptions? options)
-            : this(transport, (uint)conversationId, options)
+        public KcpConversation(IKcpTransport transport, long conversationId, KcpConversationOptions? options)
+            : this(transport, (ulong)conversationId, options)
         { }
 
-        private KcpConversation(IKcpTransport transport, uint? conversationId, KcpConversationOptions? options)
+        private KcpConversation(IKcpTransport transport, ulong? conversationId, KcpConversationOptions? options)
         {
             _bufferPool = options?.BufferPool ?? DefaultArrayPoolBufferAllocator.Default;
             _transport = transport;

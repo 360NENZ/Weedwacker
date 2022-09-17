@@ -50,7 +50,7 @@ namespace KcpSharp
                 );
         }
 
-        internal void EncodeHeader(uint? conversationId, int payloadLength, Span<byte> destination, out int bytesWritten)
+        internal void EncodeHeader(ulong? conversationId, int payloadLength, Span<byte> destination, out int bytesWritten)
         {
             Debug.Assert(destination.Length >= 20);
             if (conversationId.HasValue)

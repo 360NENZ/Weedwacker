@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,25 +9,32 @@ namespace GameServer
 {
     internal static class Extensions
     {
-        public static int GetNextAvailableIndex<T>(this SortedList<int, T> sortedList)
+        public static long GetNextAvailableIndex<T>(this SortedList<long, T> sortedList)
         {
-            int key = 1;
-            int count = sortedList.Count;
-            int counter = 0;
+            long key = 1;
+            long count = sortedList.Count;
+            long counter = 0;
             do
             {
                 if (count == 0) break;
-                int nextKeyInList = sortedList.Keys[counter++];
+                long nextKeyInList = sortedList.Keys.ElementAt((Index)(counter++));
                 if (key != nextKeyInList) break;
                 key = nextKeyInList + 1;
-            } while (count != 1 && counter != count && key == sortedList.Keys[counter]);
+            } while (count != 1 && counter != count && key == sortedList.Keys.ElementAt((Index)counter));
             return key;
         }
-        public static int AddNext<T>(this SortedList<int, T> sortedList, T item)
+        public static long AddNext<T>(this SortedList<long, T> sortedList, T item)
         {
-            int key = sortedList.GetNextAvailableIndex();
+            long key = sortedList.GetNextAvailableIndex();
             sortedList.Add(key, item);
             return key;
+        }
+        public static int ReadInt32BE(this BinaryReader br) => BinaryPrimitives.ReadInt32BigEndian(br.ReadBytes(4));
+        public static void WriteInt32BE(this BinaryWriter bw, int value)
+        {
+            var data = new byte[4];
+            BinaryPrimitives.WriteInt32BigEndian(data, value);
+            bw.Write(data);
         }
     }
 }

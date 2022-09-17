@@ -12,7 +12,7 @@ namespace KcpSharp
     {
         private readonly IKcpBufferPool _bufferPool;
         private readonly IKcpTransport _transport;
-        private readonly uint? _id;
+        private readonly ulong? _id;
         private readonly int _mtu;
         private readonly int _preBufferSize;
         private readonly int _postBufferSize;
@@ -40,11 +40,11 @@ namespace KcpSharp
         /// <param name="transport">The underlying transport.</param>
         /// <param name="conversationId">The conversation ID.</param>
         /// <param name="options">The options of the <see cref="KcpRawChannel"/>.</param>
-        public KcpRawChannel(IKcpTransport transport, int conversationId, KcpRawChannelOptions? options)
-            : this(transport, (uint)conversationId, options)
+        public KcpRawChannel(IKcpTransport transport, long conversationId, KcpRawChannelOptions? options)
+            : this(transport, (ulong)conversationId, options)
         { }
 
-        private KcpRawChannel(IKcpTransport transport, uint? conversationId, KcpRawChannelOptions? options)
+        private KcpRawChannel(IKcpTransport transport, ulong? conversationId, KcpRawChannelOptions? options)
         {
             _bufferPool = options?.BufferPool ?? DefaultArrayPoolBufferAllocator.Default;
             _transport = transport;
@@ -115,7 +115,7 @@ namespace KcpSharp
         /// <summary>
         /// Get the ID of the current conversation.
         /// </summary>
-        public int? ConversationId => (int?)_id;
+        public long? ConversationId => (long?)_id;
 
         /// <summary>
         /// Get whether the transport is marked as closed.
@@ -161,7 +161,7 @@ namespace KcpSharp
             int mss = _mtu - _preBufferSize - _postBufferSize;
             if (_id.HasValue)
             {
-                mss -= 4;
+                mss -= 8;
             }
 
             try
@@ -183,7 +183,7 @@ namespace KcpSharp
                     int overhead = _preBufferSize + _postBufferSize;
                     if (_id.HasValue)
                     {
-                        overhead += 4;
+                        overhead += 8;
                     }
                     {
                         using KcpRentedBuffer owner = _bufferPool.Rent(new KcpBufferPoolRentOptions(payloadSize + overhead, true));
@@ -197,8 +197,8 @@ namespace KcpSharp
                         }
                         if (_id.HasValue)
                         {
-                            BinaryPrimitives.WriteUInt32LittleEndian(memory.Span, _id.GetValueOrDefault());
-                            memory = memory.Slice(4);
+                            BinaryPrimitives.WriteUInt64LittleEndian(memory.Span, _id.GetValueOrDefault());
+                            memory = memory.Slice(8);
                         }
                         if (!sendOperation.TryConsume(memory, out int bytesWritten))
                         {
@@ -265,18 +265,18 @@ namespace KcpSharp
         public ValueTask InputPakcetAsync(ReadOnlyMemory<byte> packet, CancellationToken cancellationToken = default)
         {
             ReadOnlySpan<byte> span = packet.Span;
-            int overhead = _id.HasValue ? 4 : 0;
+            int overhead = _id.HasValue ? 8 : 0;
             if (span.Length < overhead || span.Length > _mtu)
             {
                 return default;
             }
             if (_id.HasValue)
             {
-                if (BinaryPrimitives.ReadUInt32LittleEndian(span) != _id.GetValueOrDefault())
+                if (BinaryPrimitives.ReadUInt32BigEndian(span) != _id.GetValueOrDefault())
                 {
                     return default;
                 }
-                span = span.Slice(4);
+                span = span.Slice(8);
             }
             _receiveQueue.Enqueue(span);
             return default;

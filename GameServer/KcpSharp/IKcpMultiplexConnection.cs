@@ -12,7 +12,7 @@ namespace KcpSharp
         /// </summary>
         /// <param name="id">The conversation ID.</param>
         /// <returns>True if the multiplex connection contains the specified conversation. Otherwise false.</returns>
-        bool Contains(int id);
+        bool Contains(long id);
 
         /// <summary>
         /// Create a raw channel with the specified conversation ID.
@@ -22,7 +22,7 @@ namespace KcpSharp
         /// <returns>The raw channel created.</returns>
         /// <exception cref="ObjectDisposedException">The current instance is disposed.</exception>
         /// <exception cref="InvalidOperationException">Another channel or conversation with the same ID was already registered.</exception>
-        KcpRawChannel CreateRawChannel(int id, KcpRawChannelOptions? options = null);
+        KcpRawChannel CreateRawChannel(long id, KcpRawChannelOptions? options = null);
 
         /// <summary>
         /// Create a conversation with the specified conversation ID.
@@ -32,7 +32,7 @@ namespace KcpSharp
         /// <returns>The KCP conversation created.</returns>
         /// <exception cref="ObjectDisposedException">The current instance is disposed.</exception>
         /// <exception cref="InvalidOperationException">Another channel or conversation with the same ID was already registered.</exception>
-        KcpConversation CreateConversation(int id, KcpConversationOptions? options = null);
+        KcpConversation CreateConversation(long id, KcpConversationOptions? options = null);
 
         /// <summary>
         /// Register a conversation or channel with the specified conversation ID and user state.
@@ -42,7 +42,7 @@ namespace KcpSharp
         /// <exception cref="ArgumentNullException"><paramref name="conversation"/> is not provided.</exception>
         /// <exception cref="ObjectDisposedException">The current instance is disposed.</exception>
         /// <exception cref="InvalidOperationException">Another channel or conversation with the same ID was already registered.</exception>
-        void RegisterConversation(IKcpConversation conversation, int id);
+        void RegisterConversation(IKcpConversation conversation, long id);
 
 
         /// <summary>
@@ -50,6 +50,6 @@ namespace KcpSharp
         /// </summary>
         /// <param name="id">The conversation ID.</param>
         /// <returns>The conversation unregistered. Returns null when the conversation with the specified ID is not found.</returns>
-        IKcpConversation? UnregisterConversation(int id);
+        IKcpConversation? UnregisterConversation(long id);
     }
 }

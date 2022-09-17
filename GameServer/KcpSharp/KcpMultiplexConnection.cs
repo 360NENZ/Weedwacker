@@ -14,7 +14,7 @@ namespace KcpSharp
     {
         private readonly IKcpTransport _transport;
 
-        private readonly ConcurrentDictionary<int, (IKcpConversation Conversation, T? State)> _conversations = new();
+        private readonly ConcurrentDictionary<long, (IKcpConversation Conversation, T? State)> _conversations = new();
         private bool _transportClosed;
         private bool _disposed;
 
@@ -63,7 +63,7 @@ namespace KcpSharp
         public ValueTask InputPakcetAsync(ReadOnlyMemory<byte> packet, CancellationToken cancellationToken = default)
         {
             ReadOnlySpan<byte> span = packet.Span;
-            if (span.Length < 4)
+            if (span.Length < 8)
             {
                 return default;
             }
@@ -71,7 +71,7 @@ namespace KcpSharp
             {
                 return default;
             }
-            int id = (int)BinaryPrimitives.ReadUInt32LittleEndian(span);
+            long id = BinaryPrimitives.ReadUInt32BigEndian(span);
             if (_conversations.TryGetValue(id, out (IKcpConversation Conversation, T? State) value))
             {
                 return value.Conversation.InputPakcetAsync(packet, cancellationToken);
@@ -84,7 +84,7 @@ namespace KcpSharp
         /// </summary>
         /// <param name="id">The conversation ID.</param>
         /// <returns>True if the multiplex connection contains the specified conversation. Otherwise false.</returns>
-        public bool Contains(int id)
+        public bool Contains(long id)
         {
             CheckDispose();
             return _conversations.ContainsKey(id);
@@ -98,7 +98,7 @@ namespace KcpSharp
         /// <returns>The raw channel created.</returns>
         /// <exception cref="ObjectDisposedException">The current instance is disposed.</exception>
         /// <exception cref="InvalidOperationException">Another channel or conversation with the same ID was already registered.</exception>
-        public KcpRawChannel CreateRawChannel(int id, KcpRawChannelOptions? options = null)
+        public KcpRawChannel CreateRawChannel(long id, KcpRawChannelOptions? options = null)
         {
             KcpRawChannel? channel = new KcpRawChannel(this, id, options);
             try
@@ -128,7 +128,7 @@ namespace KcpSharp
         /// <returns>The raw channel created.</returns>
         /// <exception cref="ObjectDisposedException">The current instance is disposed.</exception>
         /// <exception cref="InvalidOperationException">Another channel or conversation with the same ID was already registered.</exception>
-        public KcpRawChannel CreateRawChannel(int id, T state, KcpRawChannelOptions? options = null)
+        public KcpRawChannel CreateRawChannel(long id, T state, KcpRawChannelOptions? options = null)
         {
             var channel = new KcpRawChannel(this, id, options);
             try
@@ -157,7 +157,7 @@ namespace KcpSharp
         /// <returns>The KCP conversation created.</returns>
         /// <exception cref="ObjectDisposedException">The current instance is disposed.</exception>
         /// <exception cref="InvalidOperationException">Another channel or conversation with the same ID was already registered.</exception>
-        public KcpConversation CreateConversation(int id, KcpConversationOptions? options = null)
+        public KcpConversation CreateConversation(long id, KcpConversationOptions? options = null)
         {
             var conversation = new KcpConversation(this, id, options);
             try
@@ -187,7 +187,7 @@ namespace KcpSharp
         /// <returns>The KCP conversation created.</returns>
         /// <exception cref="ObjectDisposedException">The current instance is disposed.</exception>
         /// <exception cref="InvalidOperationException">Another channel or conversation with the same ID was already registered.</exception>
-        public KcpConversation CreateConversation(int id, T state, KcpConversationOptions? options = null)
+        public KcpConversation CreateConversation(long id, T state, KcpConversationOptions? options = null)
         {
             var conversation = new KcpConversation(this, id, options);
             try
@@ -216,7 +216,7 @@ namespace KcpSharp
         /// <exception cref="ArgumentNullException"><paramref name="conversation"/> is not provided.</exception>
         /// <exception cref="ObjectDisposedException">The current instance is disposed.</exception>
         /// <exception cref="InvalidOperationException">Another channel or conversation with the same ID was already registered.</exception>
-        public void RegisterConversation(IKcpConversation conversation, int id)
+        public void RegisterConversation(IKcpConversation conversation, long id)
             => RegisterConversation(conversation, id, default);
 
         /// <summary>
@@ -228,7 +228,7 @@ namespace KcpSharp
         /// <exception cref="ArgumentNullException"><paramref name="conversation"/> is not provided.</exception>
         /// <exception cref="ObjectDisposedException">The current instance is disposed.</exception>
         /// <exception cref="InvalidOperationException">Another channel or conversation with the same ID was already registered.</exception>
-        public void RegisterConversation(IKcpConversation conversation, int id, T? state)
+        public void RegisterConversation(IKcpConversation conversation, long id, T? state)
         {
             if (conversation is null)
             {
@@ -256,7 +256,7 @@ namespace KcpSharp
         /// </summary>
         /// <param name="id">The conversation ID.</param>
         /// <returns>The conversation unregistered. Returns null when the conversation with the specified ID is not found.</returns>
-        public IKcpConversation? UnregisterConversation(int id)
+        public IKcpConversation? UnregisterConversation(long id)
         {
             return UnregisterConversation(id, out _);
         }
@@ -267,7 +267,7 @@ namespace KcpSharp
         /// <param name="id">The conversation ID.</param>
         /// <param name="state">The user state.</param>
         /// <returns>The conversation unregistered. Returns null when the conversation with the specified ID is not found.</returns>
-        public IKcpConversation? UnregisterConversation(int id, out T? state)
+        public IKcpConversation? UnregisterConversation(long id, out T? state)
         {
             if (!_transportClosed && !_disposed && _conversations.TryRemove(id, out (IKcpConversation Conversation, T? State) value))
             {
@@ -314,7 +314,7 @@ namespace KcpSharp
             _disposed = true;
             while (!_conversations.IsEmpty)
             {
-                foreach (int id in _conversations.Keys)
+                foreach (var id in _conversations.Keys)
                 {
                     if (_conversations.TryRemove(id, out (IKcpConversation Conversation, T? State) value))
                     {

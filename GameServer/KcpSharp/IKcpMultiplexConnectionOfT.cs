@@ -16,7 +16,7 @@ namespace KcpSharp
         /// <returns>The raw channel created.</returns>
         /// <exception cref="ObjectDisposedException">The current instance is disposed.</exception>
         /// <exception cref="InvalidOperationException">Another channel or conversation with the same ID was already registered.</exception>
-        KcpRawChannel CreateRawChannel(int id, T state, KcpRawChannelOptions? options = null);
+        KcpRawChannel CreateRawChannel(long id, T state, KcpRawChannelOptions? options = null);
 
         /// <summary>
         /// Create a conversation with the specified conversation ID.
@@ -27,7 +27,7 @@ namespace KcpSharp
         /// <returns>The KCP conversation created.</returns>
         /// <exception cref="ObjectDisposedException">The current instance is disposed.</exception>
         /// <exception cref="InvalidOperationException">Another channel or conversation with the same ID was already registered.</exception>
-        KcpConversation CreateConversation(int id, T state, KcpConversationOptions? options = null);
+        KcpConversation CreateConversation(long id, T state, KcpConversationOptions? options = null);
 
         /// <summary>
         /// Register a conversation or channel with the specified conversation ID and user state.
@@ -38,7 +38,7 @@ namespace KcpSharp
         /// <exception cref="ArgumentNullException"><paramref name="conversation"/> is not provided.</exception>
         /// <exception cref="ObjectDisposedException">The current instance is disposed.</exception>
         /// <exception cref="InvalidOperationException">Another channel or conversation with the same ID was already registered.</exception>
-        void RegisterConversation(IKcpConversation conversation, int id, T? state);
+        void RegisterConversation(IKcpConversation conversation, long id, T? state);
 
         /// <summary>
         /// Unregister a conversation or channel with the specified conversation ID.
@@ -46,6 +46,6 @@ namespace KcpSharp
         /// <param name="id">The conversation ID.</param>
         /// <param name="state">The user state.</param>
         /// <returns>The conversation unregistered with the user state. Returns default when the conversation with the specified ID is not found.</returns>
-        IKcpConversation? UnregisterConversation(int id, out T? state);
+        IKcpConversation? UnregisterConversation(long id, out T? state);
     }
 }

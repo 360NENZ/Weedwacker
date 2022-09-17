@@ -10,25 +10,18 @@ namespace GameServer
     internal class Listener
     {
         public const int MAX_MSG_SIZE = 16384;
-        static readonly byte[] FIRST_RCV_PKT = new byte[] { 0, 0, 0, 255, 0, 0, 0, 0, 0, 0, 0, 0, 73, 150, 2, 210, 255, 255, 255, 255 };
         public const int HANDSHAKE_SIZE = 20;
-        public static bool IsHandShake(params byte[] data) => FIRST_RCV_PKT.SequenceEqual(data);
         static Socket? UDPListener => UDPClient?.Client;
         static UdpClient? UDPClient;
         static IPEndPoint? ListenAddress;
         static IKcpTransport<IKcpMultiplexConnection>? KCPTransport;
         static readonly CancellationTokenSource CancelToken = new CancellationTokenSource();
         static IKcpMultiplexConnection? Multiplex => KCPTransport?.Connection;
-        static readonly SortedList<int, Connection> Connections = new();
-        static readonly KcpConversationOptions ConvOpt = new()
+        static readonly SortedList<long, Connection> Connections = new();
+        public static Connection? GetConnectionByEndPoint(IPEndPoint ep) => Connections.Values.FirstOrDefault(c => c.RemoteEndPoint.Equals(ep));
+        static readonly KcpRawChannelOptions ConvOpt = new()
         {
-            StreamMode = false,
-            Mtu = 1400,
-            ReceiveWindow = 256,
-            SendWindow = 256,
-            NoDelay = true,
-            UpdateInterval = 100,
-            KeepAliveOptions = new(1000, 30000)
+            Mtu = 1400
         };
         const int PORT = 22102;
         public static void StartListener()
@@ -42,7 +35,7 @@ namespace GameServer
         static void RegisterConnection(Connection con)
         {
             if (!con.ConversationID.HasValue) return;
-            Connections[con.ConversationID.Value] = con;
+            Connections[con.ConversationID.Value] = con;            
         }
         public static void UnregisterConnection(Connection con)
         {
@@ -50,36 +43,80 @@ namespace GameServer
             if (Connections.Remove(con.ConversationID.Value))
                 Logger.WriteLine($"Connection with {con.RemoteEndPoint} has been closed");
         }
-        public static async Task AcceptConnection(SocketReceiveFromResult rcv)
+        public static async Task HandleHandshake(byte[] data, SocketReceiveFromResult rcv)
         {
-            int convId = Connections.GetNextAvailableIndex();
-            var convo = Multiplex?.CreateRawChannel(convId);
-            if (convo == null) return;
-            var user = (IPEndPoint)rcv.RemoteEndPoint;
-            var con = new Connection(convo, user);
-            RegisterConnection(con);
-            var resp = await CreateHandshakeResponse(convId);
-            if (UDPClient == null) return;
-            await UDPClient.SendAsync(resp, resp.Length, user);
+            try
+            {
+                var con = GetConnectionByEndPoint((IPEndPoint)rcv.RemoteEndPoint);
+                await using var ms = new MemoryStream(data);
+                using var br = new BinaryReader(ms);
+                int code = br.ReadInt32BE();
+                br.ReadUInt32();
+                br.ReadUInt32();
+                int enet = br.ReadInt32BE();
+                br.ReadUInt32();
+                switch (code)
+                {
+                    case 255:
+                        if (con != null)
+                        {
+                            Logger.WriteLine($"Duplicate handshake from {con.RemoteEndPoint}");
+                            return;
+                        }
+                        await AcceptConnection(rcv, enet);
+                        break;
+                    case 404:
+                        if (con == null)
+                        {
+                            Logger.WriteLine($"Inexistent connection asked for disconnect from {rcv.RemoteEndPoint}");
+                            return;
+                        }
+                        await SendDisconnectPacket(con, 5);
+                        break;
+                    default:
+                        Logger.WriteErrorLine($"Invalid handshake code received {code}");
+                        return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteErrorLine($"Failed to handle handshake: {ex}");
+            }
         }
-        public static async Task<byte[]> CreateHandshakeResponse(int convId)
+        static async Task AcceptConnection(SocketReceiveFromResult rcv, int enet)
         {
+            var convId = Connections.GetNextAvailableIndex();
+            var convo = Multiplex?.CreateRawChannel(convId, ConvOpt);
+            if (convo == null) return;
+            var con = new Connection(convo, (IPEndPoint)rcv.RemoteEndPoint);
+            RegisterConnection(con);
+            await SendHandshakeResponse(con, enet);
+        }
+        static async Task SendHandshakeResponse(Connection user, int enet)
+        {
+            if (user == null || UDPClient == null || !user.ConversationID.HasValue) return;
+            long convId = user.ConversationID.Value;
             await using var ms = new MemoryStream();
             using var bw = new BinaryWriter(ms);
-            bw.Write((byte)0x0);
-            bw.Write((byte)0x0);
-            bw.Write((byte)0x1);
-            bw.Write((byte)0x45);
-            bw.Write((ulong)convId);
-            bw.Write((byte)0x49);
-            bw.Write((byte)0x96);
-            bw.Write((byte)0x02);
-            bw.Write((byte)0xd2);
-            bw.Write((byte)0x14);
-            bw.Write((byte)0x51);
-            bw.Write((byte)0x45);
-            bw.Write((byte)0x45);
-            return ms.ToArray();
+            bw.WriteInt32BE(325);
+            bw.Write(convId);
+            bw.WriteInt32BE(enet);
+            bw.WriteInt32BE(340870469);
+            var data = ms.ToArray();
+            await UDPClient.SendAsync(data, data.Length, user.RemoteEndPoint);
+        }
+        public static async Task SendDisconnectPacket(Connection user, int code)
+        {
+            if (user == null || UDPClient == null || !user.ConversationID.HasValue) return;
+            long convId = user.ConversationID.Value;
+            await using var ms = new MemoryStream();
+            using var bw = new BinaryWriter(ms);
+            bw.WriteInt32BE(404);
+            bw.Write(convId);
+            bw.WriteInt32BE(code);
+            bw.WriteInt32BE(423728276);
+            var data = ms.ToArray();
+            await UDPClient.SendAsync(data, data.Length, user.RemoteEndPoint);
         }
     }
 }

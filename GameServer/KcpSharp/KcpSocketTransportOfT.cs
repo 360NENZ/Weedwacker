@@ -246,9 +246,8 @@ namespace KcpSharp
                     if (bytesReceived != 0 && bytesReceived <= _mtu)
                     {
                         var data = memory[..bytesReceived];
-                        Logger.WriteLine($"Received: ({string.Join(", ", data.ToArray())})");
-                        if (bytesReceived == Listener.HANDSHAKE_SIZE && Listener.IsHandShake(data.ToArray()))
-                            await Listener.AcceptConnection(result);
+                        if (bytesReceived == Listener.HANDSHAKE_SIZE)
+                            await Listener.HandleHandshake(data.ToArray(), result);
                         else
                             await connection.InputPakcetAsync(data, cancellationToken).ConfigureAwait(false);
                     }

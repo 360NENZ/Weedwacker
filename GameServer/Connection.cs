@@ -9,7 +9,7 @@ namespace GameServer
 {
     internal class Connection
     {
-        public int? ConversationID => Conversation.ConversationId;
+        public long? ConversationID => Conversation.ConversationId;
         readonly KcpRawChannel Conversation;
         readonly CancellationTokenSource CancelToken;
         public readonly IPEndPoint RemoteEndPoint;
@@ -77,6 +77,7 @@ namespace GameServer
         // DO THE PROCESSING OF THE PACKET
         async Task ProcessMessageAsync(Memory<byte> data)
         {
+            Logger.WriteLine("No processing logic coded");
             throw new NotImplementedException();
         }
     }

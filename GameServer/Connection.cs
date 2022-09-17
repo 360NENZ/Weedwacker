@@ -10,10 +10,10 @@ namespace GameServer
     internal class Connection
     {
         public int? ConversationID => Conversation.ConversationId;
-        readonly KcpConversation Conversation;
+        readonly KcpRawChannel Conversation;
         readonly CancellationTokenSource CancelToken;
         public readonly IPEndPoint RemoteEndPoint;
-        public Connection(KcpConversation conversation, IPEndPoint remote)
+        public Connection(KcpRawChannel conversation, IPEndPoint remote)
         {
             Conversation = conversation;
             RemoteEndPoint = remote;
@@ -40,11 +40,13 @@ namespace GameServer
                 KcpConversationReceiveResult result = await Conversation.WaitToReceiveAsync(CancelToken.Token);
                 if (result.TransportClosed)
                 {
+                    Logger.WriteErrorLine("Transport was closed");
                     break;
                 }
                 if (result.BytesReceived > Listener.MAX_MSG_SIZE)
                 {
                     // The message is too large.
+                    Logger.WriteErrorLine("Packet too large");
                     Conversation.SetTransportClosed();
                     break;
                 }
@@ -56,6 +58,7 @@ namespace GameServer
                     // So we don't need to check for result.TransportClosed.
                     if (!Conversation.TryReceive(buffer, out result))
                     {
+                        Logger.WriteErrorLine("Transport was closed");
                         break;
                     }
                     await ProcessMessageAsync(buffer.AsMemory(0, result.BytesReceived));

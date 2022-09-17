@@ -53,7 +53,7 @@ namespace GameServer
         public static async Task AcceptConnection(SocketReceiveFromResult rcv)
         {
             int convId = Connections.GetNextAvailableIndex();
-            var convo = Multiplex?.CreateConversation(convId, ConvOpt);
+            var convo = Multiplex?.CreateRawChannel(convId);
             if (convo == null) return;
             var user = (IPEndPoint)rcv.RemoteEndPoint;
             var con = new Connection(convo, user);

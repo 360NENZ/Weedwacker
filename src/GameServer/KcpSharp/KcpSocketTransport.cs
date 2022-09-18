@@ -18,7 +18,7 @@ namespace KcpSharp
         /// <param name="conversationId">The conversation ID.</param>
         /// <param name="options">The options of the <see cref="KcpConversation"/>.</param>
         /// <returns>The created socket transport instance.</returns>
-        public static IKcpTransport<KcpConversation> CreateConversation(Socket socket, EndPoint endPoint, int conversationId, KcpConversationOptions? options)
+        public static IKcpTransport<KcpConversation> CreateConversation(Socket socket, EndPoint endPoint, long conversationId, KcpConversationOptions? options)
         {
             if (socket is null)
             {
@@ -61,7 +61,7 @@ namespace KcpSharp
         /// <param name="conversationId">The conversation ID.</param>
         /// <param name="options">The options of the <see cref="KcpRawChannel"/>.</param>
         /// <returns>The created socket transport instance.</returns>
-        public static IKcpTransport<KcpRawChannel> CreateRawChannel(Socket socket, EndPoint endPoint, int conversationId, KcpRawChannelOptions? options)
+        public static IKcpTransport<KcpRawChannel> CreateRawChannel(Socket socket, EndPoint endPoint, long conversationId, KcpRawChannelOptions? options)
         {
             if (socket is null)
             {

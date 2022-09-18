@@ -9,14 +9,14 @@ namespace KcpSharp
     /// </summary>
     internal sealed class KcpSocketTransportForConversation : KcpSocketTransport<KcpConversation>, IKcpTransport<KcpConversation>
     {
-        private readonly int? _conversationId;
+        private readonly long? _conversationId;
         private readonly KcpConversationOptions? _options;
 
         private Func<Exception, IKcpTransport<KcpConversation>, object?, bool>? _exceptionHandler;
         private object? _exceptionHandlerState;
 
 
-        internal KcpSocketTransportForConversation(Socket socket, EndPoint endPoint, int? conversationId, KcpConversationOptions? options)
+        internal KcpSocketTransportForConversation(Socket socket, EndPoint endPoint, long? conversationId, KcpConversationOptions? options)
             : base(socket, endPoint, options?.Mtu ?? KcpConversationOptions.MtuDefaultValue)
         {
             _conversationId = conversationId;

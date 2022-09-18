@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
+using System.Net;
 
 namespace Weedwacker.WebServer
 {
@@ -91,8 +92,19 @@ namespace Weedwacker.WebServer
             });
 
             builder.Services.AddRazorPages();
+
+
+            builder.Services.AddHttpsRedirection(options =>
+            {
+                options.RedirectStatusCode = (int)HttpStatusCode.PermanentRedirect;
+                options.HttpsPort = int.Parse(Configuration.Kestrel.Endpoints.Https.Url.Split(":")[2]);
+            });
             var app = builder.Build();
-            foreach(var routing in AllRoutingTypes)
+            if (Configuration.Server.EnforceEncryption)
+            {
+                app.UseHttpsRedirection();
+            }
+            foreach (var routing in AllRoutingTypes)
             {
                 app.Map(routing.Key, async (HttpContext context) => await routing.Value.HandleAsync(context));
             }
@@ -106,7 +118,7 @@ namespace Weedwacker.WebServer
             }
             ServerTask = app.RunAsync();
             await ServerTask;
-            
+
         }
     }
 }

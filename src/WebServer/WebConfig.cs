@@ -11,21 +11,30 @@ namespace Weedwacker.WebServer
         public class KestrelJson
         {
             [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
-            public List<Endpoint> Endpoints = new() { new Endpoint() };
-            public class Endpoint
+            public EndpointsJson Endpoints = new();
+            public class EndpointsJson
             {
-
-                public CertificateJson Certificate = new();
-
-                public string Url = "https://127.0.0.1:443";
-                public string ClientCertificateMode = "NoCertificate";
-                public string[] SslProtocols = new string[] { "Tls12", "Tls13" };
-                public class CertificateJson
+                public HttpsJson Https = new();
+                public HttpJson Http = new();
+                public class HttpsJson
                 {
-                    public string Path = "../../../keystore.p12";
-                    public string Password = "123456";
-                }
 
+                    public CertificateJson Certificate = new();
+
+                    public string Url = "https://127.0.0.1:443";
+                    public string ClientCertificateMode = "NoCertificate";
+                    public string[] SslProtocols = new string[] { "Tls12", "Tls13" };
+                    public class CertificateJson
+                    {
+                        public string Path = "../../../keystore.p12";
+                        public string Password = "123456";
+                    }
+
+                }
+                public class HttpJson
+                {
+                    public string Url = "http://127.0.0.1:5000";
+                }
             }
         }
 
@@ -41,7 +50,7 @@ namespace Weedwacker.WebServer
 
         public class ServerJson
         {
-
+            public bool EnforceEncryption = true;
             public bool LogCommands = false;
             public PoliciesJson Policies = new();
             public FilesJson Files = new();

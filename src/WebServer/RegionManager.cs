@@ -40,7 +40,7 @@ namespace Weedwacker.WebServer
             List<RegionSimpleInfo> servers = new();
             List<string> usedNames = new(); // List to check for potential naming conflicts.
 
-            string dispatchDomain = kestrel.Endpoints.First().Url;
+            string dispatchDomain = WebServer.Configuration.Server.EnforceEncryption ? kestrel.Endpoints.Https.Url : kestrel.Endpoints.Http.Url;
 
             List<WebConfig.Region> configuredRegions = WebServer.Configuration.Server.Dispatch.Regions;
 

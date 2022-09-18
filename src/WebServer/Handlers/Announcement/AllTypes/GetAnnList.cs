@@ -121,7 +121,7 @@ namespace Weedwacker.WebServer.Handlers
 
             if (!File.Exists(WebServer.Configuration.structure.data + "GameAnnouncementList.json"))
             {
-                string dispatchDomain = WebServer.Configuration.Kestrel.Endpoints.First().Url;
+                string dispatchDomain = WebServer.Configuration.Server.EnforceEncryption ? WebServer.Configuration.Kestrel.Endpoints.Https.Url : WebServer.Configuration.Kestrel.Endpoints.Http.Url;
                 GetAnnListRspJson.Data.AnnList.Announcement ann1 = new("<strong>Welcome to Weedwacker!</strong>", "Welcome!", "1.jpg", dispatchDomain, "System");
                 GetAnnListRspJson.Data.AnnList.Announcement ann2 = new("<strong>How to use announcements</strong>", "How to use announcements", "2.jpg", dispatchDomain, "System");
                 data = new(new List<GetAnnListRspJson.Data.AnnList.Announcement>() { ann1, ann2 });

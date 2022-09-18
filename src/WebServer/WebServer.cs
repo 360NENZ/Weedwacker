@@ -64,7 +64,7 @@ namespace Weedwacker.WebServer
             {"/hk4e_global/combo/granter/login/v2/login", new SessionKeyLogin()},
             {"/hk4e_global/combo/granter/login/beforeVerify", new BeforeVerify()},
             {"/hk4e_global/combo/red_dot/list", new RedDotList()},
-            {"/hk4e_global/mdk/shield/api/verify", new TokenLogin()},
+            {"/hk4e_global/mdk/shield/api/verify", new TokenVerify()},
             {"/authentication/register", new AuthenticationRegister()},
             {"/authentication/login", new AuthenticationLogin()},
             {"/authentication/change_password", new AuthenticationChangePassword()},

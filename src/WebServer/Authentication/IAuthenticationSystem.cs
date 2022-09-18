@@ -1,5 +1,6 @@
 ﻿using Weedwacker.WebServer.Database;
 using Weedwacker.WebServer.Authentication.Objects;
+using Weedwacker.Shared.Authentication;
 using Microsoft.AspNetCore.Http;
 
 namespace Weedwacker.WebServer.Authentication
@@ -69,12 +70,12 @@ namespace Weedwacker.WebServer.Authentication
         }
 
         ///<summary>
-        ///Generates an authentication request from a <see cref="LoginTokenRequestJson"/> object.
+        ///Generates an authentication request from a <see cref="VerifyTokenRequestJson"/> object.
         ///</summary>
         ///<param name="ctx">The http context.</param>
         ///<param name="jsonData">The JSON data.</param>
         ///<returns>An authenticator.</returns>
-        static AuthenticationRequest FromTokenRequest(HttpContext ctx, LoginTokenRequestJson jsonData)
+        static AuthenticationRequest FromTokenRequest(HttpContext ctx, VerifyTokenRequestJson jsonData)
         {
             return new AuthenticationRequest(ctx, jsonData); ;
         }

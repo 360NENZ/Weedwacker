@@ -1,4 +1,4 @@
-﻿namespace Weedwacker.WebServer.Authentication.Objects
+﻿namespace Weedwacker.Shared.Authentication
 {
 	public class LoginResultJson
 	{

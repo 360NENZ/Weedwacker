@@ -1,17 +1,18 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
 using Weedwacker.Shared.Utils;
+using Weedwacker.Shared.Authentication;
 using Weedwacker.WebServer.Authentication;
-using Weedwacker.WebServer.Authentication.Objects;
 
 namespace Weedwacker.WebServer.Handlers
 {
-    internal class TokenLogin : IHandler
+    /*Token verification request may be sent either from a client, or a Game Server */
+    internal class TokenVerify : IHandler
     {
         public async Task<bool> HandleAsync(HttpContext context)
         {
+            //if(context.Request.Quer)
             // Parse body data.
-            var bodyData = await context.Request.ReadFromJsonAsync<LoginTokenRequestJson>();
+            var bodyData = await context.Request.ReadFromJsonAsync<VerifyTokenRequestJson>();
             // Validate body data.
             if (bodyData == null)
                 return false;
@@ -24,7 +25,7 @@ namespace Weedwacker.WebServer.Handlers
             await context.Response.WriteAsJsonAsync(responseData);
 
             // Log to console.
-            Logger.WriteLine(string.Format("Client {0} is trying to log in.", context.Connection.RemoteIpAddress.ToString()));
+            Logger.WriteLine(string.Format("Verifying token from {0}", context.Connection.RemoteIpAddress.ToString()));
             return true;
         }
     }

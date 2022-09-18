@@ -1,6 +1,7 @@
 ﻿using Weedwacker.WebServer.Authentication.Objects;
 using Weedwacker.WebServer.Database;
 using Weedwacker.Shared.Utils;
+using Weedwacker.Shared.Authentication;
 using Microsoft.AspNetCore.Http;
 
 namespace Weedwacker.WebServer.Authentication
@@ -82,6 +83,7 @@ namespace Weedwacker.WebServer.Authentication
 
     /// <summary>
     /// Handles the authentication request from the game when using a registry token.
+    /// Token authenticatino may be requested either from a client, or a Game Server 
     /// </summary>
     public class TokenAuthenticator : IAuthenticator<LoginResultJson>
     {
@@ -96,10 +98,9 @@ namespace Weedwacker.WebServer.Authentication
             string loggerMessage;
 
             // Log the attempt.
-            Logger.WriteLine(string.Format("Client {0} is trying to log in via token.", address));
+            Logger.WriteLine(string.Format("Verifying token from {0}", address));
 
-            if (WebServer.Configuration.Server.Account.MaxAccount <= -1)
-            {
+
 
                 // Get account from database.
                 Account? account = DatabaseManager.GetAccountById(requestData.uid);
@@ -116,7 +117,7 @@ namespace Weedwacker.WebServer.Authentication
                     response.data.account.email = account.Email;
 
                     // Log the login.
-                    loggerMessage = string.Format("Client {0} logged in via token as {0}.", address, requestData.uid);
+                    loggerMessage = string.Format("Successfully Verified token for uid: {0}", requestData.uid);
                 }
                 else
                 {
@@ -125,17 +126,10 @@ namespace Weedwacker.WebServer.Authentication
                     response.data = null;
 
                     // Log the failure.
-                    loggerMessage = string.Format("Client {0} failed to log in via token.", address);
+                    loggerMessage = string.Format("failed verify token from: {0}.", address);
                 }
 
-            }
-            else
-            {
-                response.retcode = -201;
-                response.message = "Max account limit reached, create failed";
-
-                loggerMessage = string.Format("Client {0} failed to log in: Max account limit reached", address);
-            }
+            
 
             Logger.WriteLine(loggerMessage);
             return response;

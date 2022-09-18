@@ -45,6 +45,9 @@ namespace Weedwacker.GameServer
             /* Controls whether packets should be logged in console or not */
             public Shared.Enums.ServerDebugMode logPackets = Shared.Enums.ServerDebugMode.NONE;
 
+            /* needed for authentication, and for some game systems */
+            public string WebServerUrl = "https://127.0.0.1";
+
             public GameOptions gameOptions = new GameOptions();
             public JoinOptions joinOptions = new JoinOptions();
             public ConsoleAccount serverAccount = new ConsoleAccount();

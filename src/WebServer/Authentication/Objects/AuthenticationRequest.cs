@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Weedwacker.Shared.Authentication;
+using Microsoft.AspNetCore.Http;
 
 namespace Weedwacker.WebServer.Authentication.Objects
 {
@@ -10,7 +11,7 @@ namespace Weedwacker.WebServer.Authentication.Objects
 
         public readonly HttpContext? Context;
         public readonly LoginAccountRequestJson? PasswordRequest;
-        public readonly LoginTokenRequestJson? TokenRequest;
+        public readonly VerifyTokenRequestJson? TokenRequest;
         public readonly ComboTokenReqJson? SessionKeyRequest;
         public readonly ComboTokenReqJson.LoginTokenData? SessionKeyData;
 
@@ -21,7 +22,7 @@ namespace Weedwacker.WebServer.Authentication.Objects
             SessionKeyData = sessionKeyData;
         }
 
-        public AuthenticationRequest(HttpContext context, LoginTokenRequestJson tokenRequest)
+        public AuthenticationRequest(HttpContext context, VerifyTokenRequestJson tokenRequest)
         {
             Context = context;
             TokenRequest = tokenRequest;

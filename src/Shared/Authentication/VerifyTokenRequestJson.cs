@@ -1,6 +1,6 @@
-﻿namespace Weedwacker.WebServer.Authentication.Objects
+﻿namespace Weedwacker.Shared.Authentication
 {
-    public class LoginTokenRequestJson
+    public class VerifyTokenRequestJson
     {
         public string uid { get; set; }
         public string token { get; set; }

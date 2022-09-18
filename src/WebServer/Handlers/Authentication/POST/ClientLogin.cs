@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Weedwacker.Shared.Utils;
 using Weedwacker.WebServer.Authentication;
+using Weedwacker.Shared.Authentication;
 using Weedwacker.WebServer.Authentication.Objects;
 
 namespace Weedwacker.WebServer.Handlers;

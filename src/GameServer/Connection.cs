@@ -58,7 +58,7 @@ namespace Weedwacker.GameServer
                     // So we don't need to check for result.TransportClosed.
                     if (!Conversation.TryReceive(buffer, out result))
                     {
-                        Logger.WriteErrorLine("Transport was closed");
+                        Logger.WriteErrorLine("Failed to receive packet");
                         break;
                     }
                     await ProcessMessageAsync(buffer.AsMemory(0, result.BytesReceived));

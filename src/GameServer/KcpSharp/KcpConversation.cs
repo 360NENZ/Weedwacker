@@ -568,7 +568,14 @@ namespace KcpSharp
             if (size > preBufferSize)
             {
                 buffer.Span.Slice(size, postBufferSize).Clear();
-                await _transport.SendPacketAsync(buffer.Slice(0, size + postBufferSize), cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    await _transport.SendPacketAsync(buffer.Slice(0, size + postBufferSize), cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    Logger.WriteErrorLine("transport send error", ex);
+                }
                 _lastSendTick = GetTimestamp();
             }
 

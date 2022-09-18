@@ -32,7 +32,7 @@ namespace Weedwacker.GameServer
         const int PORT = 22102;
         public static void StartListener()
         {
-            ListenAddress = new(IPAddress.Any, PORT);
+            ListenAddress = new(IPAddress.Loopback, PORT);
             UDPClient = new(ListenAddress);        
             if (UDPListener == null) return;
             KCPTransport = KcpSocketTransport.CreateMultiplexConnection(UDPListener, ListenAddress, 1400);

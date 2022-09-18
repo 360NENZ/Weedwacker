@@ -19,9 +19,15 @@ namespace Weedwacker.GameServer
         static IKcpMultiplexConnection? Multiplex => KCPTransport?.Connection;
         static readonly SortedList<long, Connection> Connections = new();
         public static Connection? GetConnectionByEndPoint(IPEndPoint ep) => Connections.Values.FirstOrDefault(c => c.RemoteEndPoint.Equals(ep));
-        static readonly KcpRawChannelOptions ConvOpt = new()
+        static readonly KcpConversationOptions ConvOpt = new()
         {
-            Mtu = 1400
+            StreamMode = false,
+            Mtu = 1400,
+            ReceiveWindow = 256,
+            SendWindow = 256,
+            NoDelay = true,
+            UpdateInterval = 100,
+            KeepAliveOptions = new(1000, 30000)
         };
         const int PORT = 22102;
         public static void StartListener()
@@ -40,8 +46,12 @@ namespace Weedwacker.GameServer
         public static void UnregisterConnection(Connection con)
         {
             if (!con.ConversationID.HasValue) return;
-            if (Connections.Remove(con.ConversationID.Value))
+            var convId = con.ConversationID.Value;
+            if (Connections.Remove(convId))
+            {
+                Multiplex?.UnregisterConversation(convId);
                 Logger.WriteLine($"Connection with {con.RemoteEndPoint} has been closed");
+            }
         }
         public static async Task HandleHandshake(byte[] data, SocketReceiveFromResult rcv)
         {
@@ -85,8 +95,8 @@ namespace Weedwacker.GameServer
         }
         static async Task AcceptConnection(SocketReceiveFromResult rcv, int enet)
         {
-            var convId = Connections.GetNextAvailableIndex();
-            var convo = Multiplex?.CreateRawChannel(convId, ConvOpt);
+            var convId = 1234567890123;//Connections.GetNextAvailableIndex();
+            var convo = Multiplex?.CreateConversation(convId, ConvOpt);
             if (convo == null) return;
             var con = new Connection(convo, (IPEndPoint)rcv.RemoteEndPoint);
             RegisterConnection(con);
@@ -99,7 +109,7 @@ namespace Weedwacker.GameServer
             await using var ms = new MemoryStream();
             using var bw = new BinaryWriter(ms);
             bw.WriteInt32BE(325);
-            bw.Write(convId);
+            bw.WriteConvID(convId);
             bw.WriteInt32BE(enet);
             bw.WriteInt32BE(340870469);
             var data = ms.ToArray();
@@ -112,7 +122,7 @@ namespace Weedwacker.GameServer
             await using var ms = new MemoryStream();
             using var bw = new BinaryWriter(ms);
             bw.WriteInt32BE(404);
-            bw.Write(convId);
+            bw.WriteConvID(convId);
             bw.WriteInt32BE(code);
             bw.WriteInt32BE(423728276);
             var data = ms.ToArray();

@@ -9,6 +9,19 @@ namespace Weedwacker.GameServer
 {
     internal static class Extensions
     {
+        public static string JoinFormat<T>(this IEnumerable<T> list, string separator,
+                                   string formatString)
+        {
+            formatString = string.IsNullOrWhiteSpace(formatString) ? "{0}" : formatString;
+            return string.Join(separator,
+                               list.Select(item => string.Format(formatString, item)));
+        }
+        public static void WriteConvID(this BinaryWriter bw, long convId)
+        {
+            //bw.Write(convId);
+            bw.Write((int)(convId >> 32));
+            bw.Write((int)(convId & 0xFFFFFFFF));
+        }
         public static long GetNextAvailableIndex<T>(this SortedList<long, T> sortedList)
         {
             long key = 1;

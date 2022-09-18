@@ -5,7 +5,7 @@ namespace Weedwacker.GameServer
     internal class GameConfig : ConfigFile
     {
         public Server server = new();
-        public class Database
+        public new class Database
         {
             public DataStore game = new DataStore();
             public class DataStore
@@ -14,7 +14,7 @@ namespace Weedwacker.GameServer
                 public string database = "weedwacker";
             }
         }
-        public class Structure
+        public new class Structure
         {
             public string resources = "../../../resources/";
             public string scripts = "../../../resources/Scripts/";
@@ -134,7 +134,7 @@ namespace Weedwacker.GameServer
 
         /* Objects. */
 
-        public class Region
+        public new class Region
         {
             public Region() { }
 

@@ -3,6 +3,8 @@ using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Weedwacker.GameServer;
+using Weedwacker.Shared.Utils;
 
 #if NEED_LINKEDLIST_SHIM
 using LinkedListOfBufferItem = KcpSharp.NetstandardShim.LinkedList<KcpSharp.KcpSendReceiveBufferItem>;
@@ -227,7 +229,7 @@ namespace KcpSharp
         /// <summary>
         /// Get the ID of the current conversation.
         /// </summary>
-        public int? ConversationId => (int?)_id;
+        public long? ConversationId => (long?)_id;
 
         /// <summary>
         /// Get whether the transport is marked as closed.
@@ -710,7 +712,14 @@ namespace KcpSharp
                     ReadOnlyMemory<byte> packet = notification.Packet;
                     if (!packet.IsEmpty)
                     {
-                        update = SetInput(packet.Span);
+                        try
+                        {
+                            update = SetInput(packet.Span);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.WriteErrorLine("Update error", ex);
+                        }
                     }
 
                     if (_transportClosed)
@@ -800,7 +809,7 @@ namespace KcpSharp
             {
                 return new ValueTask(Task.FromCanceled(cancellationToken));
             }
-            int packetHeaderSize = _id.HasValue ? 24 : 20;
+            int packetHeaderSize = _id.HasValue ? 28 : 20;
             if (packet.Length < packetHeaderSize)
             {
                 return default;
@@ -809,12 +818,12 @@ namespace KcpSharp
             ReadOnlySpan<byte> packetSpan = packet.Span;
             if (_id.HasValue)
             {
-                uint conversationId = BinaryPrimitives.ReadUInt32LittleEndian(packet.Span);
+                var conversationId = BinaryPrimitives.ReadUInt64BigEndian(packet.Span);
                 if (conversationId != _id.GetValueOrDefault())
                 {
                     return default;
                 }
-                packetSpan = packetSpan.Slice(4);
+                packetSpan = packetSpan.Slice(8);
             }
 
             uint length = BinaryPrimitives.ReadUInt32LittleEndian(packetSpan.Slice(16));
@@ -835,7 +844,7 @@ namespace KcpSharp
         private bool SetInput(ReadOnlySpan<byte> packet)
         {
             uint current = GetTimestamp();
-            int packetHeaderSize = _id.HasValue ? 24 : 20;
+            int packetHeaderSize = _id.HasValue ? 28 : 20;
 
             uint prev_una = _snd_una;
             uint maxack = 0, latest_ts = 0;
@@ -851,7 +860,7 @@ namespace KcpSharp
 
                 if (_id.HasValue)
                 {
-                    if (BinaryPrimitives.ReadUInt64LittleEndian(packet) != _id.GetValueOrDefault())
+                    if (BinaryPrimitives.ReadUInt64BigEndian(packet) != _id.GetValueOrDefault())
                     {
                         return mutated;
                     }

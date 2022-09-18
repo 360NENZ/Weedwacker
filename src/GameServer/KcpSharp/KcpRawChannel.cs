@@ -2,6 +2,7 @@
 using System.Buffers.Binary;
 using System.Threading;
 using System.Threading.Tasks;
+using Weedwacker.GameServer;
 
 namespace KcpSharp
 {
@@ -272,7 +273,7 @@ namespace KcpSharp
             }
             if (_id.HasValue)
             {
-                if (BinaryPrimitives.ReadUInt32BigEndian(span) != _id.GetValueOrDefault())
+                if (BinaryPrimitives.ReadUInt64BigEndian(span) != _id.GetValueOrDefault())
                 {
                     return default;
                 }

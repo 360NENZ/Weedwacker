@@ -10,10 +10,10 @@ namespace Weedwacker.GameServer
     internal class Connection
     {
         public long? ConversationID => Conversation.ConversationId;
-        readonly KcpRawChannel Conversation;
+        readonly KcpConversation Conversation;
         readonly CancellationTokenSource CancelToken;
         public readonly IPEndPoint RemoteEndPoint;
-        public Connection(KcpRawChannel conversation, IPEndPoint remote)
+        public Connection(KcpConversation conversation, IPEndPoint remote)
         {
             Conversation = conversation;
             RemoteEndPoint = remote;
@@ -77,8 +77,7 @@ namespace Weedwacker.GameServer
         // DO THE PROCESSING OF THE PACKET
         async Task ProcessMessageAsync(Memory<byte> data)
         {
-            Logger.WriteLine("No processing logic coded");
-            throw new NotImplementedException();
+            Logger.WriteLine(data.ToArray().JoinFormat("", "{0:X}"));
         }
     }
 }

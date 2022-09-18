@@ -3,6 +3,7 @@ using System.Buffers.Binary;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using Weedwacker.GameServer;
 
 namespace KcpSharp
 {
@@ -71,7 +72,7 @@ namespace KcpSharp
             {
                 return default;
             }
-            long id = BinaryPrimitives.ReadUInt32BigEndian(span);
+            var id = BinaryPrimitives.ReadInt64BigEndian(span);
             if (_conversations.TryGetValue(id, out (IKcpConversation Conversation, T? State) value))
             {
                 return value.Conversation.InputPakcetAsync(packet, cancellationToken);

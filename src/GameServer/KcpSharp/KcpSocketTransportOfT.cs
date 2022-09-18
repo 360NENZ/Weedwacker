@@ -223,7 +223,8 @@ namespace KcpSharp
                 Memory<byte> memory = memoryOwner.Memory;
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    int bytesReceived;
+                    int bytesReceived = 0;
+                    bool error = false;
                     SocketReceiveFromResult result = default;
                     try
                     {
@@ -240,7 +241,7 @@ namespace KcpSharp
                         {
                             break;
                         }
-                        bytesReceived = 0;
+                        error = true;
                     }
 
                     if (bytesReceived != 0 && bytesReceived <= _mtu)
@@ -248,7 +249,7 @@ namespace KcpSharp
                         var data = memory[..bytesReceived];
                         if (bytesReceived == Listener.HANDSHAKE_SIZE)
                             await Listener.HandleHandshake(data.ToArray(), result);
-                        else
+                        else if (!error)
                             await connection.InputPakcetAsync(data, cancellationToken).ConfigureAwait(false);
                     }
                 }

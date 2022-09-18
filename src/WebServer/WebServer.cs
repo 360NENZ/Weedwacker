@@ -77,7 +77,7 @@ namespace Weedwacker.WebServer
         };
         public static async void Start()
         {
-            Configuration = await Config.Load<WebConfig>();
+            Configuration = await Config.Load<WebConfig>("WebConfig.json");
             Crypto.LoadKeys(Configuration.structure.keys);
             RegionManager.Initialize();
             DatabaseManager.Initialize();
@@ -85,7 +85,7 @@ namespace Weedwacker.WebServer
 
             builder.Host.ConfigureAppConfiguration((hostingContext, config) =>
             {
-                config.AddJsonFile("./config.json",
+                config.AddJsonFile("./WebConfig.json",
                                    optional: false,
                                    reloadOnChange: true);
             });

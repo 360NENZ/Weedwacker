@@ -16,8 +16,8 @@ namespace Weedwacker.GameServer
         }
         public class Structure
         {
-            public string resources = "./resources/";
-            public string scripts = "./resources/Scripts/";
+            public string resources = "../../../resources/";
+            public string scripts = "../../../resources/Scripts/";
 
 
             // UNUSED (potentially added later?)

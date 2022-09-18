@@ -5,7 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using Weedwacker.Shared.Utils;
 
-namespace GameServer
+namespace Weedwacker.GameServer
 {
     internal class Listener
     {

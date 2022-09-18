@@ -5,21 +5,21 @@ namespace Weedwacker.Shared.Utils.Configuration
     public static class Config
     {
 
-        public static async Task<T> Load<T>()
+        public static async Task<T> Load<T>(string jsonName)
         {
 
             
-            if (!File.Exists("config.json"))
+            if (!File.Exists(jsonName))
             {
                 T config = (T)Activator.CreateInstance(typeof(T));
-                Logger.WriteLine("config.json not found. Generating default config.json");
+                Logger.WriteLine(jsonName + "not found. Generating default " + jsonName);
                 string jsonString = JsonConvert.SerializeObject(config, Formatting.Indented);
-                await File.WriteAllTextAsync("config.json", jsonString);
+                await File.WriteAllTextAsync(jsonName, jsonString);
                 return config;
             }
             else
             {
-                T config = JsonConvert.DeserializeObject<T>(File.ReadAllText("config.json"));
+                T config = JsonConvert.DeserializeObject<T>(File.ReadAllText(jsonName));
                 return config;
             }
 

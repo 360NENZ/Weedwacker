@@ -16,10 +16,9 @@ namespace Weedwacker.Shared.Utils.Configuration
         }
         public class Structure
         {
-            public string data = "./data/";
-            public string packets = "./packets/";
-            public string plugins = "./plugins/";
-            public string keys = "./keys/";
+            public string data = "../../../data/";
+            public string plugins = "../../../plugins/";
+            public string keys = "../../../keys/";
 
             // UNUSED (potentially added later?)
             // public String dumps = "./dumps/";

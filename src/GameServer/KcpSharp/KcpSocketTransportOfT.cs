@@ -1,4 +1,4 @@
-﻿using GameServer;
+﻿using Weedwacker.GameServer;
 using System;
 using System.Buffers;
 using System.Net;

@@ -22,7 +22,7 @@ namespace Weedwacker.WebServer
                 public string[] SslProtocols = new string[] { "Tls12", "Tls13" };
                 public class CertificateJson
                 {
-                    public string Path = "./keystore.p12";
+                    public string Path = "../../../keystore.p12";
                     public string Password = "123456";
                 }
 

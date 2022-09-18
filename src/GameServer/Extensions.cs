@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GameServer
+namespace Weedwacker.GameServer
 {
     internal static class Extensions
     {

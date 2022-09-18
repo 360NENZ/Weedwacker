@@ -147,12 +147,12 @@ namespace KcpSharp
             {
                 throw new ArgumentException("The sum of PreBufferSize and PostBufferSize is too large. There is not enough space in the packet for the KCP header.", nameof(options));
             }
-            if (conversationId.HasValue && (uint)(_preBufferSize + _postBufferSize) >= (uint)(_mtu - 24))
+            if (conversationId.HasValue && (uint)(_preBufferSize + _postBufferSize) >= (uint)(_mtu - 28))
             {
                 throw new ArgumentException("The sum of PreBufferSize and PostBufferSize is too large. There is not enough space in the packet for the KCP header.", nameof(options));
             }
 
-            _mss = conversationId.HasValue ? _mtu - 24 : _mtu - 20;
+            _mss = conversationId.HasValue ? _mtu - 28 : _mtu - 20;
             _mss = _mss - _preBufferSize - _postBufferSize;
 
             _ssthresh = 2;
@@ -352,7 +352,7 @@ namespace KcpSharp
         {
             int preBufferSize = _preBufferSize;
             int postBufferSize = _postBufferSize;
-            int packetHeaderSize = _id.HasValue ? 24 : 20;
+            int packetHeaderSize = _id.HasValue ? 28 : 20;
             int sizeLimitBeforePostBuffer = _mtu - _postBufferSize;
             bool anyPacketSent = false;
 

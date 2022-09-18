@@ -95,7 +95,7 @@ namespace Weedwacker.GameServer
         }
         static async Task AcceptConnection(SocketReceiveFromResult rcv, int enet)
         {
-            var convId = 1234567890123;//Connections.GetNextAvailableIndex();
+            var convId = Connections.GetNextAvailableIndex();
             var convo = Multiplex?.CreateConversation(convId, ConvOpt);
             if (convo == null) return;
             var con = new Connection(convo, (IPEndPoint)rcv.RemoteEndPoint);

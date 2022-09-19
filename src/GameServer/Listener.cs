@@ -29,10 +29,10 @@ namespace Weedwacker.GameServer
             UpdateInterval = 100,
             KeepAliveOptions = new(1000, 30000)
         };
-        const int PORT = 22102;
+        private static readonly int PORT = GameServer.Configuration.Server.AccessPort;
         public static void StartListener()
         {
-            ListenAddress = new(IPAddress.Loopback, PORT);
+            ListenAddress = new(IPAddress.Parse(GameServer.Configuration.Server.AccessAddress), PORT);
             UDPClient = new(ListenAddress);        
             if (UDPListener == null) return;
             KCPTransport = KcpSocketTransport.CreateMultiplexConnection(UDPListener, ListenAddress, 1400);
@@ -67,15 +67,14 @@ namespace Weedwacker.GameServer
                 br.ReadUInt32();
                 switch (code)
                 {
-                    case 255:
+                    case 0x000000FF:
                         if (con != null)
                         {
                             Logger.WriteLine($"Duplicate handshake from {con.RemoteEndPoint}");
                             return;
-                        }
-                        await AcceptConnection(rcv, enet);
+                        }                     
                         break;
-                    case 404:
+                    case 0x00000194:
                         if (con == null)
                         {
                             Logger.WriteLine($"Inexistent connection asked for disconnect from {rcv.RemoteEndPoint}");
@@ -108,10 +107,10 @@ namespace Weedwacker.GameServer
             long convId = user.ConversationID.Value;
             await using var ms = new MemoryStream();
             using var bw = new BinaryWriter(ms);
-            bw.WriteInt32BE(325);
+            bw.WriteInt32BE(0x00000145);
             bw.WriteConvID(convId);
             bw.WriteInt32BE(enet);
-            bw.WriteInt32BE(340870469);
+            bw.WriteInt32BE(0x14514545);
             var data = ms.ToArray();
             await UDPClient.SendAsync(data, data.Length, user.RemoteEndPoint);
         }
@@ -121,10 +120,10 @@ namespace Weedwacker.GameServer
             long convId = user.ConversationID.Value;
             await using var ms = new MemoryStream();
             using var bw = new BinaryWriter(ms);
-            bw.WriteInt32BE(404);
+            bw.WriteInt32BE(0x00000194);
             bw.WriteConvID(convId);
             bw.WriteInt32BE(code);
-            bw.WriteInt32BE(423728276);
+            bw.WriteInt32BE(0x19419494);
             var data = ms.ToArray();
             await UDPClient.SendAsync(data, data.Length, user.RemoteEndPoint);
         }

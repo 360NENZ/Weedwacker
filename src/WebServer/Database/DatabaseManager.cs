@@ -12,9 +12,9 @@ namespace Weedwacker.WebServer.Database
         static DatabaseProperties Properties;
         public static void Initialize()
         {
-            DbClient = new MongoClient(WebServer.Configuration.database.connectionUri);
+            DbClient = new MongoClient(WebServer.Configuration.Database.ConnectionUri);
             // Databases and collections are implicitly created
-            Database = DbClient.GetDatabase(WebServer.Configuration.database.database);
+            Database = DbClient.GetDatabase(WebServer.Configuration.Database.Database);
             Accounts = Database.GetCollection<Account>("accounts");
 
             if(Database.GetCollection<DatabaseProperties>("dbProperties").Find(w => true).FirstOrDefault() == null)
@@ -65,9 +65,10 @@ namespace Weedwacker.WebServer.Database
 
         }
 
-        public static Account? GetAccountById(string uid)
+        public static async Task<Account?> GetAccountByIdAsync(string uid)
         {
-                return Accounts.Find(w => w.Id == uid).FirstOrDefault();
+            var matches = await Accounts.FindAsync(w => w.Id == uid);
+                return matches.FirstOrDefault();
         }
 
         public static async Task<Account?> GetAccountByNameAsync(string name)

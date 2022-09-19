@@ -1,3 +1,3 @@
 ﻿using Weedwacker.GameServer;
-Listener.StartListener();
+await GameServer.Start();
 Console.ReadLine(); // wait here (later make this be console command handler)

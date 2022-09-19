@@ -4,53 +4,49 @@ namespace Weedwacker.GameServer
 {
     internal class GameConfig : ConfigFile
     {
-        public Server server = new();
-        public new class Database
+        public ServerJson Server = new();
+        public DatabaseJson Database = new();
+        public new class DatabaseJson
         {
-            public DataStore game = new DataStore();
-            public class DataStore
-            {
-                public string connectionUri = "mongodb://localhost:27017";
-                public string database = "weedwacker";
-            }
+            public string ConnectionUri = "mongodb://localhost:27017";
+            public string Database = "weedwackerGame";
         }
         public new class Structure
         {
-            public string resources = "../../../resources/";
-            public string scripts = "../../../resources/Scripts/";
+            public string Resources = "../../../resources/";
+            public string Scripts = "../../../resources/Scripts/";
 
 
             // UNUSED (potentially added later?)
             // public String dumps = "./dumps/";
         }
-        public class Server
+        public class ServerJson
         {
-            public HashSet<string> debugWhitelist = new HashSet<string>();
-            public HashSet<string> debugBlacklist = new HashSet<string>();
-            public string bindAddress = "0.0.0.0";
-            public int bindPort = 22102;
-
+#if DEBUG
+            public HashSet<string> DebugWhitelist = new HashSet<string>();
+            public HashSet<string> DebugBlacklist = new HashSet<string>();
+#endif
             /* This is the address used in the default region. */
-            public string accessAddress = "127.0.0.1";
+            public string AccessAddress = "127.0.0.1";
             /* This is the port used in the default region. */
-            public int accessPort = 0;
+            public int AccessPort = 22102;
 
+            public int MaxOnlinePlayers = 1000;
             /* Entities within a certain range will be loaded for the player */
-            public int loadEntitiesForPlayerRange = 100;
-            public bool enableScriptInBigWorld = false;
-            public bool enableConsole = true;
+            public int LoadEntitiesForPlayerRange = 100;
+            public bool EnableConsole = true;
 
             /* Kcp internal work interval (milliseconds) */
-            public int kcpInterval = 20;
+            public int KcpInterval = 20;
             /* Controls whether packets should be logged in console or not */
-            public Shared.Enums.ServerDebugMode logPackets = Shared.Enums.ServerDebugMode.NONE;
+            public Shared.Enums.ServerDebugMode LogPackets = Shared.Enums.ServerDebugMode.NONE;
 
             /* needed for authentication, and for some game systems */
             public string WebServerUrl = "https://127.0.0.1";
 
-            public GameOptions gameOptions = new GameOptions();
-            public JoinOptions joinOptions = new JoinOptions();
-            public ConsoleAccount serverAccount = new ConsoleAccount();
+            public GameOptions GameOptions = new GameOptions();
+            public JoinOptions JoinOptions = new JoinOptions();
+            public ConsoleAccount ServerAccount = new ConsoleAccount();
         }
 
 
@@ -81,7 +77,7 @@ namespace Weedwacker.GameServer
                 public int Furniture = 2000;
                 public int All = 30000;
             }
-            
+
             public class AvatarLimitsJson
             {
                 public int SinglePlayerTeam = 4;

@@ -12,7 +12,7 @@ namespace Weedwacker.Shared.Utils.Configuration
             if (!File.Exists(jsonName))
             {
                 T config = (T)Activator.CreateInstance(typeof(T));
-                Logger.WriteLine(jsonName + "not found. Generating default " + jsonName);
+                Logger.WriteLine(jsonName + " not found. Generating default " + jsonName);
                 string jsonString = JsonConvert.SerializeObject(config, Formatting.Indented);
                 await File.WriteAllTextAsync(jsonName, jsonString);
                 return config;

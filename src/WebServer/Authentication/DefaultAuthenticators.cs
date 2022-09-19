@@ -103,7 +103,7 @@ namespace Weedwacker.WebServer.Authentication
 
 
                 // Get account from database.
-                Account? account = DatabaseManager.GetAccountById(requestData.uid);
+                Account? account = await DatabaseManager.GetAccountByIdAsync(requestData.uid);
 
                 // Check if account exists/token is valid.
                 successfulLogin = account != null && account.SessionKey.Equals(requestData.token);
@@ -155,7 +155,7 @@ namespace Weedwacker.WebServer.Authentication
             if (WebServer.Configuration.Server.Account.MaxAccount <= -1)
             {
                 // Get account from database.
-                Account? account = DatabaseManager.GetAccountById(loginData.uid);
+                Account? account = await DatabaseManager.GetAccountByIdAsync(loginData.uid);
 
                 // Check if account exists/token is valid.
                 successfulLogin = account != null && account.SessionKey.Equals(loginData.token);

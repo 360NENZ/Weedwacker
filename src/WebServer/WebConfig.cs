@@ -7,6 +7,7 @@ namespace Weedwacker.WebServer
     {
         public KestrelJson Kestrel = new();
         public ServerJson Server = new();
+        public DatabaseJson Database = new();
 
         public class KestrelJson
         {
@@ -38,14 +39,10 @@ namespace Weedwacker.WebServer
             }
         }
 
-        public class Database
+        public new class DatabaseJson
         {
-            public DataStore Server = new DataStore();
-            public class DataStore
-            {
-                public string ConnectionUri = "mongodb://localhost:27017";
-                public string Database = "weedwacker";
-            }
+            public string ConnectionUri = "mongodb://localhost:27017";
+            public string Database = "weedwacker";
         }
 
         public class ServerJson
@@ -72,7 +69,7 @@ namespace Weedwacker.WebServer
         public class DispatchJson
         {
             [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
-            public List<Region> Regions = new() {new Region()};
+            public List<Region> Regions = new() { new Region() };
             public string DefaultName = "Weedwacker";
 
         }

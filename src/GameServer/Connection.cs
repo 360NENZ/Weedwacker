@@ -4,6 +4,7 @@ using System.Buffers;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
+using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet;
 using Weedwacker.Shared.Utils;
@@ -16,8 +17,13 @@ namespace Weedwacker.GameServer
         readonly KcpConversation Conversation;
         readonly CancellationTokenSource CancelToken;
         public readonly IPEndPoint RemoteEndPoint;
-        public SessionState State { get; private set; } = SessionState.INACTIVE;
-        private bool UseSecretKey = false;
+        public SessionState State { get; set; } = SessionState.INACTIVE;
+        public bool UseSecretKey { get; set; } = false;
+        public Player? Player { get; set; }
+        private int ClientTime;
+        private long LastPingTime;
+        private uint LastClientSeq = 10;
+        public static readonly List<OpCode> BANNED_PACKETS  = new List<OpCode>(){ OpCode.WindSeedClientNotify, OpCode.PlayerLuaShellNotify };
         public Connection(KcpConversation conversation, IPEndPoint remote)
         {
             Conversation = conversation;
@@ -39,7 +45,7 @@ namespace Weedwacker.GameServer
             CancelToken.Dispose();
         }
 #if DEBUG
-        void LogPacket(string sendOrRecv, ushort opcode, byte[] payload)
+        static void LogPacket(string sendOrRecv, ushort opcode, byte[] payload)
         {
             Logger.DebugWriteLine(sendOrRecv + ": " + Enum.GetName(typeof(OpCode), opcode) + " (" + opcode + ")");
             Logger.DebugWriteLine(Convert.ToHexString(payload));
@@ -101,7 +107,7 @@ namespace Weedwacker.GameServer
             try
             {
 #if DEBUG
-                bool allDebug = GameServer.Configuration.server.logPackets == Shared.Enums.ServerDebugMode.ALL;
+                bool allDebug = GameServer.Configuration.Server.LogPackets == Shared.Enums.ServerDebugMode.ALL;
 #endif
                 while (br.BaseStream.Position< br.BaseStream.Length)
                 {
@@ -143,7 +149,7 @@ namespace Weedwacker.GameServer
                     }
 #if DEBUG
                     // Log packet
-                    switch (GameServer.Configuration.server.logPackets)
+                    switch (GameServer.Configuration.Server.LogPackets)
                     {
                         case Shared.Enums.ServerDebugMode.ALL:
                             {
@@ -152,7 +158,7 @@ namespace Weedwacker.GameServer
                             }
                         case Shared.Enums.ServerDebugMode.WHITELIST: 
                             {
-                                if (GameServer.Configuration.server.debugWhitelist.Contains(Enum.GetName(typeof(OpCode), opcode)))
+                                if (GameServer.Configuration.Server.DebugWhitelist.Contains(Enum.GetName(typeof(OpCode), opcode)))
                                 {
                                     LogPacket("RECV", opcode, payload);
                                 }
@@ -160,7 +166,7 @@ namespace Weedwacker.GameServer
                             }
                         case Shared.Enums.ServerDebugMode.BLACKLIST: 
                             {
-                                if (!GameServer.Configuration.server.debugBlacklist.Contains(Enum.GetName(typeof(OpCode), opcode)))
+                                if (!GameServer.Configuration.Server.DebugBlacklist.Contains(Enum.GetName(typeof(OpCode), opcode)))
                                 {
                                     LogPacket("RECV", opcode, payload);
                                 }
@@ -213,7 +219,7 @@ namespace Weedwacker.GameServer
                     }
 #if DEBUG
                     // Log unhandled packets
-                    if (GameServer.Configuration.server.logPackets == Shared.Enums.ServerDebugMode.MISSING)
+                    if (GameServer.Configuration.Server.LogPackets == Shared.Enums.ServerDebugMode.MISSING)
                     {
                         Logger.DebugWriteLine("Unhandled packet (" + opcode + "): " + Enum.GetName(typeof(OpCode), opcode));
                     }
@@ -229,6 +235,58 @@ namespace Weedwacker.GameServer
             {
                 await ms.DisposeAsync();
             }
+        }
+    
+        public async Task SendPacketAsync(BasePacket packet)
+        {
+            // Test
+            if (packet.Opcode <= 0)
+            {
+                Logger.DebugWriteLine("Tried to send packet with missing cmd id!");
+                return;
+            }
+
+            // DO NOT REMOVE (unless we find a way to validate code before sending to client which I don't think we can)
+            // Stop WindSeedClientNotify from being sent for security purposes.
+            if (BANNED_PACKETS.Contains((OpCode)packet.Opcode))
+            {
+                return;
+            }
+
+            // Header
+            if (packet.ShouldBuildHeader)
+            {
+                packet.BuildHeader(++LastClientSeq);
+            }
+#if DEBUG
+            // Log
+            switch (GameServer.Configuration.Server.LogPackets)
+            {
+                case Shared.Enums.ServerDebugMode.ALL:
+                    {
+                        LogPacket("SEND", packet.Opcode, packet.Data);
+                        break;
+                    }
+                case Shared.Enums.ServerDebugMode.WHITELIST:
+                    {
+                        if (GameServer.Configuration.Server.DebugWhitelist.Contains(Enum.GetName(typeof(OpCode), packet.Opcode)))
+                        {
+                            LogPacket("SEND", packet.Opcode, packet.Data);
+                        }
+                        break;
+                    }
+                case Shared.Enums.ServerDebugMode.BLACKLIST:
+                    {
+                        if (!GameServer.Configuration.Server.DebugBlacklist.Contains(Enum.GetName(typeof(OpCode), packet.Opcode)))
+                        {
+                            LogPacket("SEND", packet.Opcode, packet.Data);
+                        }
+                        break;
+                    }
+            }
+#endif
+            // TODO SendPacketEvent event.
+            await Conversation.SendAsync(await packet.BuildPacketAsync(), CancelToken.Token);  
         }
     }
 }

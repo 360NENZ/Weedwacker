@@ -15,8 +15,4 @@
 	<ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Packet\Send\" />
-  </ItemGroup>
-
 </Project>

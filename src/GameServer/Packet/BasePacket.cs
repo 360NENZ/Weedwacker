@@ -1,38 +1,39 @@
 ﻿using Google.Protobuf;
+using Weedwacker.GameServer.Enums;
 using Weedwacker.Shared.Network.Proto;
 using Weedwacker.Shared.Utils;
 
-namespace Weedwacker.GameServer.Packets
+namespace Weedwacker.GameServer.Packet
 {
     internal class BasePacket
     {
-        private static readonly ushort Magic1 = 0x4567;
-        private static readonly ushort Magic2 = 0x89ab;
+        const ushort Magic1 = 0x4567;
+        const ushort Magic2 = 0x89ab;
 
-        public ushort Opcode { get; private set; }
-        public bool ShouldBuildHeader { get; private set; } = false;
+        public ushort Opcode { get; protected set; }
+        public bool ShouldBuildHeader { get; protected set; } = false;
 
         private byte[] Header = Array.Empty<byte>();
-        public byte[] Data { get; private set; } = Array.Empty<byte>();
+        public byte[] Data { get; protected set; } = Array.Empty<byte>();
 
         // Encryption
-        private readonly bool UseDispatchKey;
-        public bool ShouldEncrypt = true;
+        protected bool UseDispatchKey;
+        protected bool ShouldEncrypt = true;
 
-        public BasePacket(ushort opcode)
+        public BasePacket(OpCode opcode)
         {
-            Opcode = opcode;
+            Opcode = (ushort)opcode;
         }
 
-        public BasePacket(ushort opcode, uint clientSequence)
+        public BasePacket(OpCode opcode, uint clientSequence)
         {
-            Opcode = opcode;
+            Opcode = (ushort)opcode;
             BuildHeader(clientSequence);
         }
 
-        public BasePacket(ushort opcode, bool buildHeader)
+        public BasePacket(OpCode opcode, bool buildHeader)
         {
-            Opcode = opcode;
+            Opcode = (ushort)opcode;
             ShouldBuildHeader = buildHeader;
         }
 

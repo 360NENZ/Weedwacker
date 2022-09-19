@@ -58,19 +58,23 @@ namespace Weedwacker.WebServer
                         return;
                     }
                     // Create a region identifier.
-                    var identifier = new RegionSimpleInfo();
-                    identifier.Name = region.Name;
-                    identifier.Title = region.Title;
-                    identifier.Type = "DEV_PUBLIC";
-                    identifier.DispatchUrl = dispatchDomain + "/query_cur_region/" + region.Name;
+                    var identifier = new RegionSimpleInfo()
+                    {
+                        Name = region.Name,
+                        Title = region.Title,
+                        Type = "DEV_PUBLIC",
+                        DispatchUrl = dispatchDomain + "/query_cur_region/" + region.Name
+                    };
                     usedNames.Add(region.Name);
                     servers.Add(identifier);
 
                     // Create a region info object.
-                    var regionInfo = new RegionInfo();
-                    regionInfo.GateserverIp = region.Ip;
-                    regionInfo.GateserverPort = region.Port;
-                    regionInfo.SecretKey = ByteString.CopyFrom(Crypto.DISPATCH_SEED); ;
+                    var regionInfo = new RegionInfo()
+                    {
+                        GateserverIp = region.Ip,
+                        GateserverPort = region.Port,
+                        SecretKey = ByteString.CopyFrom(Crypto.DISPATCH_SEED)
+                    };
 
                     // Create an updated region query.
                     var updatedQuery = new QueryCurrRegionHttpRsp();

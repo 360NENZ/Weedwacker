@@ -4,15 +4,14 @@ namespace Weedwacker.Shared.Utils.Configuration
 {
     public class ConfigFile
     {
-        public Database database = new();
         public Structure structure = new();
         public Language language = new();
         public int version = 1;
 
-        public class Database
+        public abstract class DatabaseJson
         {
-                public string connectionUri = "mongodb://localhost:27017";
-                public string database = "weedwacker";
+                public string connectionUri;
+                public string database;
         }
         public class Structure
         {

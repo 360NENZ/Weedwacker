@@ -72,7 +72,8 @@ namespace Weedwacker.GameServer
                         {
                             Logger.WriteLine($"Duplicate handshake from {con.RemoteEndPoint}");
                             return;
-                        }                     
+                        }
+                        await AcceptConnection(rcv, enet);
                         break;
                     case 0x00000194:
                         if (con == null)

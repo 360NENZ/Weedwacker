@@ -45,10 +45,22 @@ namespace Weedwacker.GameServer
         public static int ReadInt32BE(this BinaryReader br) => BinaryPrimitives.ReadInt32BigEndian(br.ReadBytes(4));
         public static uint ReadUInt32BE(this BinaryReader br) => BinaryPrimitives.ReadUInt32BigEndian(br.ReadBytes(4));
         public static ushort ReadUInt16BE(this BinaryReader br) => BinaryPrimitives.ReadUInt16BigEndian(br.ReadBytes(2));
+        public static void WriteUInt16BE(this BinaryWriter bw, ushort value)
+        {
+            var data = new byte[2];
+            BinaryPrimitives.WriteUInt16BigEndian(data, value);
+            bw.Write(data);
+        }
         public static void WriteInt32BE(this BinaryWriter bw, int value)
         {
             var data = new byte[4];
             BinaryPrimitives.WriteInt32BigEndian(data, value);
+            bw.Write(data);
+        }
+        public static void WriteUInt32BE(this BinaryWriter bw, uint value)
+        {
+            var data = new byte[4];
+            BinaryPrimitives.WriteUInt32BigEndian(data, value);
             bw.Write(data);
         }
     }

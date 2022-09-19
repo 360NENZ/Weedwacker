@@ -106,7 +106,7 @@ namespace Weedwacker.WebServer.Authentication
                 Account? account = await DatabaseManager.GetAccountByIdAsync(requestData.uid);
 
                 // Check if account exists/token is valid.
-                successfulLogin = account != null && account.SessionKey.Equals(requestData.token);
+                successfulLogin = account != null && account.Token.Equals(requestData.token);
 
                 // Set response data.
                 if (successfulLogin)

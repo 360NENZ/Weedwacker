@@ -2,6 +2,7 @@
 using Weedwacker.GameServer.Enums;
 using Weedwacker.Shared.Network.Proto;
 using Weedwacker.Shared.Utils;
+using static Weedwacker.GameServer.Extensions;
 
 namespace Weedwacker.GameServer.Packet
 {
@@ -65,13 +66,13 @@ namespace Weedwacker.GameServer.Packet
             await using var ms = new MemoryStream();
             using var bw = new BinaryWriter(ms);
 
-            bw.Write(Magic1);
-            bw.Write(Opcode);
-            bw.Write((ushort)Header.Length);
-            bw.Write(Data.Length);
+            bw.WriteUInt16BE(Magic1);
+            bw.WriteUInt16BE(Opcode);
+            bw.WriteUInt16BE((ushort)Header.Length);
+            bw.WriteUInt32BE((uint)Data.Length);
             bw.Write(Header);
             bw.Write(Data);
-            bw.Write(Magic2);
+            bw.WriteUInt16BE(Magic2);
 
             byte[] packet = ms.ToArray();
 

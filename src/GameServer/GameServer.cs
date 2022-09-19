@@ -19,7 +19,7 @@ namespace Weedwacker.GameServer
         {
             var req = JsonConvert.SerializeObject(new VerifyTokenRequestJson() { uid = accountUid, token = token });
             var contentData = new StringContent(req, Encoding.UTF8, "application/json");
-            var rsp = await client.PostAsync(Configuration.Server.WebServerUrl, contentData);
+            var rsp = await client.PostAsync(Configuration.Server.WebServerUrl + "/hk4e_global/mdk/shield/api/verify", contentData);
             var result = JsonConvert.DeserializeObject<LoginResultJson>(await rsp.Content.ReadAsStringAsync());
             if(result.message == "OK")
             {

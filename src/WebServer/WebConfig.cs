@@ -42,7 +42,7 @@ namespace Weedwacker.WebServer
         public new class DatabaseJson
         {
             public string ConnectionUri = "mongodb://localhost:27017";
-            public string Database = "weedwacker";
+            public string Database = "weedwackerWeb";
         }
 
         public class ServerJson

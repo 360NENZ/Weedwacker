@@ -7,6 +7,7 @@ using System.Reflection;
 using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet;
+using static Weedwacker.GameServer.Extensions;
 using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer
@@ -117,7 +118,7 @@ namespace Weedwacker.GameServer
                         return;
                     }
                     // Packet sanity check
-                    ushort Magic1 = br.ReadUInt16();
+                    ushort Magic1 = br.ReadUInt16BE();
                     if (Magic1 != 0x4567)
                     {
 #if DEBUG
@@ -129,14 +130,14 @@ namespace Weedwacker.GameServer
                         return; // Bad packet
                     }
                     // Data
-                    ushort opcode = br.ReadUInt16();
-                    ushort headerLength = br.ReadUInt16();
-                    uint payloadLength = br.ReadUInt32();
+                    ushort opcode = br.ReadUInt16BE();
+                    ushort headerLength = br.ReadUInt16BE();
+                    uint payloadLength = br.ReadUInt32BE();
                     byte[] header = br.ReadBytes(headerLength);
                     byte[] payload = br.ReadBytes((int)payloadLength);
 
                     // Sanity check #2
-                    ushort Magic2 = br.ReadUInt16();
+                    ushort Magic2 = br.ReadUInt16BE();
                     if (Magic2 != 0x89ab)
                     {
 #if DEBUG

@@ -13,14 +13,14 @@ namespace Weedwacker.GameServer.Enums
         public readonly int OpCodeNum;
         public readonly string OpCodeName;
 
-        public OpCodeAttribute(int value)
+        public OpCodeAttribute(ushort value)
         {
             OpCodeNum = value;
             OpCodeName = Enum.GetName(typeof(OpCode), value);
         }
         public OpCodeAttribute(string name)
         {
-            OpCodeNum = (int)Enum.Parse(typeof(OpCode), name);
+            OpCodeNum = (ushort)Enum.Parse(typeof(OpCode), name);
             OpCodeName = name;
         }
     }

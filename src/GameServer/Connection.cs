@@ -99,7 +99,7 @@ namespace Weedwacker.GameServer
             byte[] gamePacket = data.ToArray();
             // Decrypt and turn back into a packet
             Crypto.Xor(gamePacket, UseSecretKey ? Crypto.ENCRYPT_KEY : Crypto.DISPATCH_KEY);
-            await using var ms = new MemoryStream(gamePacket.Length);
+            await using var ms = new MemoryStream(gamePacket);
             using var br = new BinaryReader(ms);
             // Log
             //logPacket(packet);

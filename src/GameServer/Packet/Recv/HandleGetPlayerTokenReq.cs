@@ -22,15 +22,16 @@ namespace Weedwacker.GameServer.Packet.Recv
 
             // Authenticate
             if (! await GameServer.VerifyToken(req.AccountUid, req.AccountToken)) return;
-
+            
             bool kicked = false;
+            // If the account doesn't have a player for this server, creates a new one
             session.Player = await DatabaseManager.GetPlayerByAccountUidAsync(req.AccountUid);
-
+            session.Player.Token = req.AccountToken;
             // Checks if the player is banned
             if (session.Player.IsBanned)
             {
                 await session.SendPacketAsync(new PacketGetPlayerTokenRsp(session, 21, "FORBID_CHEATING_PLUGINS", session.Player.BanEndTime));
-                Listener.UnregisterConnection(session);
+                session.Stop();
                 return;
             }
 
@@ -38,12 +39,12 @@ namespace Weedwacker.GameServer.Packet.Recv
             if (GameServer.OnlinePlayers.ContainsKey(session.Player.GameUid))
             {
                 // Kill the previous session, and replace it with the new one. Similar to Official behaviour
-                Listener.UnregisterConnection(GameServer.OnlinePlayers[session.Player.GameUid]);
+                GameServer.OnlinePlayers[session.Player.GameUid].Stop();
                 GameServer.OnlinePlayers[session.Player.GameUid] = session;
             }
             else if (GameServer.OnlinePlayers.Count >= GameServer.Configuration.Server.MaxOnlinePlayers)
             {
-                Listener.UnregisterConnection(session);
+                session.Stop();
                 return;
             }
 

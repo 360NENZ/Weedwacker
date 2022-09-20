@@ -1,4 +1,7 @@
-﻿namespace Weedwacker.GameServer.Enums
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
+namespace Weedwacker.GameServer.Enums
 {
 
     [AttributeUsage(AttributeTargets.Class)]
@@ -18,6 +21,7 @@
             QuestTriggerName = name;
         }
     }
+    [JsonConverter(typeof(StringEnumConverter))]
     internal enum QuestTrigger
     {
         QUEST_COND_NONE = 0,

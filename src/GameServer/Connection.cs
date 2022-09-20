@@ -38,7 +38,7 @@ namespace Weedwacker.GameServer
             State = SessionState.WAITING_FOR_TOKEN;
             await ReceiveLoop();
         }
-        void Stop()
+        public void Stop()
         {
             Listener.UnregisterConnection(this);
             Conversation.Dispose();

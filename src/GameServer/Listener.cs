@@ -17,7 +17,7 @@ namespace Weedwacker.GameServer
         static IKcpTransport<IKcpMultiplexConnection>? KCPTransport;
         static readonly CancellationTokenSource CancelToken = new CancellationTokenSource();
         static IKcpMultiplexConnection? Multiplex => KCPTransport?.Connection;
-        static readonly SortedList<long, Connection> Connections = new();
+        public static readonly SortedList<long, Connection> Connections = new();
         public static Connection? GetConnectionByEndPoint(IPEndPoint ep) => Connections.Values.FirstOrDefault(c => c.RemoteEndPoint.Equals(ep));
         static readonly KcpConversationOptions ConvOpt = new()
         {

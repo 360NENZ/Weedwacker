@@ -1,16 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Weedwacker.Shared.Utils
+﻿namespace Weedwacker.Shared.Utils
 {
-
-    public class Utils
+    public static class Utils
     {
-
+        public static int AbilityHash(string str)
+        {
+            int v7 = 0;
+            int v8 = 0;
+            char[] toChar = str.ToCharArray();
+            while (v8 < str.Length)
+            {
+                v7 = toChar[v8++] + 131 * v7;
+            }
+            return v7;
+        }
     }
 
 }

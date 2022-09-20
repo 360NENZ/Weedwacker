@@ -2,7 +2,7 @@
 using Weedwacker.GameServer.Enums;
 using Weedwacker.Shared.Network.Proto;
 using Weedwacker.Shared.Utils;
-using static Weedwacker.GameServer.Extensions;
+
 
 namespace Weedwacker.GameServer.Packet
 {

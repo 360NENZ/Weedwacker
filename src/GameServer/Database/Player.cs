@@ -1,5 +1,5 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
-using Weedwacker.GameServer.Systems.Player;
+//using Weedwacker.GameServer.Systems.Player;
 
 namespace Weedwacker.GameServer.Database
 {
@@ -22,7 +22,7 @@ namespace Weedwacker.GameServer.Database
             HeroName = heroName;
             AccountUid = accountUid;
             GameUid = gameUid;
-            Avatars = new AvatarManager(this);
+            //Avatars = new AvatarManager(this);
         }
 
         public void OnLogin()

@@ -42,7 +42,7 @@ namespace Weedwacker.GameServer
         {
             Configuration = await Config.Load<GameConfig>("GameConfig.json");
             Shared.Utils.Crypto.LoadKeys(Configuration.structure.keys);
-            await Database.DatabaseManager.Initialize();
+            Database.DatabaseManager.Initialize();
             Listener.StartListener();
         }
     }

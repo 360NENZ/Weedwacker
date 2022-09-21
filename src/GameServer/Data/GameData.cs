@@ -46,7 +46,7 @@ namespace Weedwacker.GameServer.Data
         static ResourceAttribute? GetResourceData(this Type res) => Attribute.GetCustomAttribute(res, typeof(ResourceAttribute)) as ResourceAttribute;
         public static async Task LoadAllResourcesAsync(string resourcesPath = "./resources/ExcelBinOutput")
         {
-            var tasks = new List<Task>
+            await Task.WhenAll(new Task[]
             {
                 LoadData(resourcesPath, o => o.id, AvatarDataMap),
                 LoadData(resourcesPath, o => o.Level, AvatarLevelDataMap),
@@ -61,8 +61,7 @@ namespace Weedwacker.GameServer.Data
                 LoadData(resourcesPath, o => o.sortId, AvatarCodexDataMap),
                 LoadData(resourcesPath, o => o.proudSkillId, ProudSkillDataMap),
                 LoadData(resourcesPath, o => ????, PlayerElementAbilityMap), // TODO
-            };
-            await Task.WhenAll(tasks);
+            });
         }
     }
 }

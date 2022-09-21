@@ -2,6 +2,7 @@
 
 namespace Weedwacker.GameServer.Data.Excel
 {
+    [Resource("AvatarCodexExcelConfigData.json")]
     internal class AvatarCodexData : GameResource
     {
         [JsonProperty]

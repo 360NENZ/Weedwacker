@@ -1,4 +1,5 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
+using Weedwacker.GameServer.Systems.Player;
 
 namespace Weedwacker.GameServer.Database
 {
@@ -13,12 +14,20 @@ namespace Weedwacker.GameServer.Database
         public string BanReason { get; private set; }
         public int BanEndTime { get; private set; }
         public int BanStartTime { get; private set; }
-
+        [BsonIgnore]
+        public string Token { get; set; } // Obtained and used When Logging in
+        //public readonly AvatarManager Avatars;
         public Player(string heroName, string accountUid, int gameUid)
         {
             HeroName = heroName;
             AccountUid = accountUid;
             GameUid = gameUid;
+            Avatars = new AvatarManager(this);
+        }
+
+        public void OnLogin()
+        {
+
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Weedwacker.GameServer.Systems.Avatar;
 using Weedwacker.Shared.Authentication;
 using Weedwacker.Shared.Utils.Configuration;
 
@@ -14,7 +15,7 @@ namespace Weedwacker.GameServer
         private static readonly HttpClient client = new HttpClient();
         public static GameConfig Configuration;
         public static SortedList<int,Connection> OnlinePlayers = new(); // <gameUid,connection>
-
+        public static SortedList<int, AvatarCompiledInfo> AvatarInfo; // <avatarId,data>
         public static async Task<bool> VerifyToken(string accountUid, string token)
         {
             var req = JsonConvert.SerializeObject(new VerifyTokenRequestJson() { uid = accountUid, token = token });
@@ -28,11 +29,20 @@ namespace Weedwacker.GameServer
             return false;
         }
 
+        public static AvatarCompiledInfo GetAvatarInfo(int avatarId)
+        {
+            if(!AvatarInfo.ContainsKey(avatarId))
+            {
+                AvatarInfo.Add(avatarId, new AvatarCompiledInfo(avatarId));
+            }
+            return AvatarInfo[avatarId];
+        }
+
         public static async Task Start()
         {
             Configuration = await Config.Load<GameConfig>("GameConfig.json");
             Shared.Utils.Crypto.LoadKeys(Configuration.structure.keys);
-            Database.DatabaseManager.Initialize();
+            await Database.DatabaseManager.Initialize();
             Listener.StartListener();
         }
     }

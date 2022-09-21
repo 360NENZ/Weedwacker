@@ -1,4 +1,5 @@
-﻿using Weedwacker.GameServer.Data.Excel;
+﻿using Weedwacker.GameServer.Data.BinOut.AbilityGroup;
+using Weedwacker.GameServer.Data.Excel;
 
 namespace Weedwacker.GameServer.Data
 {
@@ -14,7 +15,8 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<int, AvatarTalentData> AvatarTalentDataMap = new(); // talentId
         public readonly static SortedList<int, AvatarFlycloakData> AvatarFlycloakDataMap = new(); // flycloakId
         public readonly static SortedList<int, AvatarCostumeData> AvatarCostumeDataMap = new(); // costumeId
-        public readonly static SortedList<int, AvatarCodexData> AvatarCodexDataMap = new();  // sortId
+        public readonly static SortedList<int, AvatarCodexData> AvatarCodexDataMap = new(); // sortId
         public readonly static SortedList<int, ProudSkillData> ProudSkillDataMap = new(); // proudSkillId
+        public readonly static SortedList<string, PlayerElementAbilityData> PlayerElementAbilityMap = new(); //skillDepotAbilityGroup
     }
 }

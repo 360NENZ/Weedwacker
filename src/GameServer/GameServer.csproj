@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Data\BinOut\" />
+    <Folder Include="Data\BinOut\Avatar\" />
   </ItemGroup>
 
 </Project>

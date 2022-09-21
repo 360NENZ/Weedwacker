@@ -33,7 +33,7 @@ namespace Weedwacker.GameServer.Data.Excel
         [JsonProperty]
         public readonly double staminaRecoverSpeed;
         [JsonProperty]
-        public readonly List<string>? candSkillDepotIds;
+        public readonly List<int>? candSkillDepotIds;
         [JsonProperty]
         public readonly int manekinMotionConfig;
         [JsonProperty]

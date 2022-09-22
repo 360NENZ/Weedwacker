@@ -6,7 +6,7 @@ using static Weedwacker.GameServer.Data.ResourceAttribute;
 namespace Weedwacker.GameServer.Data.Excel
 {
     [Resource("AvatarExcelConfigData.json", LoadPriority.LOW)]
-    internal class AvatarData : GameResource
+    internal class AvatarData
     {
         [JsonProperty]
         public readonly string? iconName;
@@ -33,7 +33,7 @@ namespace Weedwacker.GameServer.Data.Excel
         [JsonProperty]
         public readonly double staminaRecoverSpeed;
         [JsonProperty]
-        public readonly List<int>? candSkillDepotIds;
+        public readonly int[] candSkillDepotIds;
         [JsonProperty]
         public readonly int manekinMotionConfig;
         [JsonProperty]

@@ -3,7 +3,7 @@
 namespace Weedwacker.GameServer.Data.Excel
 {
     [Resource("AvatarCodexExcelConfigData.json")]
-    internal class AvatarCodexData : GameResource
+    internal class AvatarCodexData
     {
         [JsonProperty]
         public readonly int sortId;

@@ -3,7 +3,7 @@
 namespace Weedwacker.GameServer.Data.Excel
 {
 	[Resource("AvatarFettersLevelExcelConfigData.json")]
-	public class AvatarFetterLevelData : GameResource
+	public class AvatarFetterLevelData
 	{
         [JsonProperty]
 		public readonly int fetterLevel;

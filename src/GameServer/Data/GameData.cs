@@ -20,6 +20,13 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<int, AvatarCodexData> AvatarCodexDataMap = new(); // sortId
         public readonly static SortedList<int, ProudSkillData> ProudSkillDataMap = new(); // proudSkillId
         public readonly static SortedList<string, PlayerElementAbilityData> PlayerElementAbilityMap = new(); //skillDepotAbilityGroup
+        public readonly static SortedList<int, FetterCharacterCardData> FetterCharacterCardDataMap = new(); // avatarId
+        public readonly static SortedList<int, FetterInfoData> FetterInfoDataMap = new(); // fetterId
+        public readonly static SortedList<int, FettersData> FettersDataMap = new(); // fetterId
+        public readonly static SortedList<int, FetterStoryData> FetterStoryDataMap = new(); // fetterId
+        public readonly static SortedList<int, PhotographPosenameData> PhotographPosenameDataMap = new(); // fetterId
+        public readonly static SortedList<int, PhotographExpressionData> PhotographExpressionDataMap = new(); // fetterId
+
         static readonly JsonSerializer Serializer = new();
         static async Task LoadData<Obj, Key>(string path, Func<Obj, Key> keySelector, SortedList<Key, Obj> map) where Key : notnull
         {

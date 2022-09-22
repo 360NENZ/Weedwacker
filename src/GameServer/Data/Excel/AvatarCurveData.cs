@@ -5,8 +5,8 @@ using Weedwacker.Shared.Utils;
 namespace Weedwacker.GameServer.Data
 {
 	[Resource("AvatarCurveExcelConfigData.json")]
-	public class AvatarCurveData : GameResource
-	{
+	public class AvatarCurveData
+	{ 
 		[JsonProperty]
 		public readonly int level;
 		[JsonProperty]

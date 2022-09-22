@@ -2,6 +2,7 @@
 
 namespace Weedwacker.GameServer.Data.BinOut.AbilityGroup
 {
+    [Resource("AbilityGroup_Other_PlayerElementAbility.json")]
     internal class PlayerElementAbilityData : GameResource
     {
         [JsonProperty]

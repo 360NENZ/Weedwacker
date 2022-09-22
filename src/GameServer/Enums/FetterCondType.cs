@@ -7,6 +7,7 @@ namespace Weedwacker.GameServer.Enums
     public enum FetterCondType
     {
         // In no particular order
+        FETTER_COND_NONE, // Pseudo condition to handle empty conditions
         FETTER_COND_NOT_OPEN,
         FETTER_COND_FINISH_PARENT_QUEST,
         FETTER_COND_FINISH_QUEST,

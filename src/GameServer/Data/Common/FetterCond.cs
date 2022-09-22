@@ -1,11 +1,12 @@
 ﻿using Newtonsoft.Json;
+using Weedwacker.GameServer.Enums;
 
 namespace Weedwacker.GameServer.Data.Common
 {
-    public class FetterOpenCond
+    public class FetterCond
     {
         [JsonProperty]
-        public readonly string condType;
+        public readonly FetterCondType condType;
         [JsonProperty]
         public readonly int[] paramList;
     }

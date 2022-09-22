@@ -5,7 +5,7 @@ using static Weedwacker.GameServer.Data.ResourceAttribute;
 namespace Weedwacker.GameServer.Data.Excel
 {
     [Resource("AvatarTalentExcelConfigData.json", LoadPriority.HIGHEST)]
-    public class AvatarTalentData : GameResource
+    public class AvatarTalentData
     {
         [JsonProperty]
         public readonly int talentId;

@@ -15,7 +15,7 @@ namespace Weedwacker.GameServer
         private static readonly HttpClient client = new HttpClient();
         public static GameConfig Configuration;
         public static SortedList<int,Connection> OnlinePlayers = new(); // <gameUid,connection>
-        public static SortedList<int, AvatarCompiledInfo> AvatarInfo; // <avatarId,data>
+        public static SortedList<int, AvatarCompiledData> AvatarInfo; // <avatarId,data>
         public static async Task<bool> VerifyToken(string accountUid, string token)
         {
             var req = JsonConvert.SerializeObject(new VerifyTokenRequestJson() { uid = accountUid, token = token });
@@ -29,11 +29,11 @@ namespace Weedwacker.GameServer
             return false;
         }
 
-        public static AvatarCompiledInfo GetAvatarInfo(int avatarId)
+        public static AvatarCompiledData GetAvatarInfo(int avatarId)
         {
             if(!AvatarInfo.ContainsKey(avatarId))
             {
-                AvatarInfo.Add(avatarId, new AvatarCompiledInfo(avatarId));
+                AvatarInfo.Add(avatarId, new AvatarCompiledData(avatarId));
             }
             return AvatarInfo[avatarId];
         }

@@ -3,7 +3,7 @@
 namespace Weedwacker.GameServer.Data.Excel
 {
     [Resource("AvatarFlycloakExcelConfigData.json")]
-    public class AvatarFlycloakData : GameResource
+    public class AvatarFlycloakData
     {
         [JsonProperty]
         public readonly int flycloakId;

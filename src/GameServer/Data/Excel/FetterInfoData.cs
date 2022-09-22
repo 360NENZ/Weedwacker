@@ -4,7 +4,7 @@ using Weedwacker.GameServer.Data.Common;
 namespace Weedwacker.GameServer.Data.Excel
 {
     [Resource("FetterInfoExcelConfigData.json")]
-    internal class FetterInfoData
+    internal class FetterInfoData : FetterBaseClass
     {
         [JsonProperty]
         public readonly int infoBirthMonth;
@@ -39,6 +39,8 @@ namespace Weedwacker.GameServer.Data.Excel
         [JsonProperty]
         public readonly int avatarId;
         [JsonProperty]
-        public readonly FetterOpenCond[] openConds; 
+        public new readonly FetterCond[] openConds;
+        [JsonProperty]
+        public new readonly FetterCond[] finishConds;
     }
 }

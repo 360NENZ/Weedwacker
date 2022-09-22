@@ -5,7 +5,7 @@ using Weedwacker.GameServer.Data.Common;
 namespace Weedwacker.GameServer.Data.Excel
 {
     [Resource("AvatarPromoteExcelConfigData.json")]
-    public class AvatarPromoteData : GameResource
+    public class AvatarPromoteData
     {
         [JsonProperty]
         public readonly int avatarPromoteId;

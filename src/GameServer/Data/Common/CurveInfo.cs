@@ -9,6 +9,6 @@ namespace Weedwacker.GameServer.Data.Common
 		[JsonProperty]
 		public readonly string arith;
 		[JsonProperty]
-		public readonly double value;
+		public readonly float value;
 	}
 }

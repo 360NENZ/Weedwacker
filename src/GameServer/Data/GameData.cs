@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Weedwacker.GameServer.Data.BinOut.AbilityGroup;
+using Weedwacker.GameServer.Data.BinOut.Talent.AvatarTalents;
 using Weedwacker.GameServer.Data.Excel;
 
 namespace Weedwacker.GameServer.Data
@@ -15,6 +16,7 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<int, AvatarFetterLevelData> AvatarFetterLevelDataMap = new(); // level
         public readonly static SortedList<int, SortedList<int,AvatarPromoteData>> AvatarPromoteDataMap = new(); // <PromoteId,<level,Data>>
         public readonly static SortedList<int, AvatarTalentData> AvatarTalentDataMap = new(); // talentId
+        public readonly static SortedList<string, AvatarTalentConfigData> AvatarTalentConfigDataMap = new(); // openConfig
         public readonly static SortedList<int, AvatarFlycloakData> AvatarFlycloakDataMap = new(); // flycloakId
         public readonly static SortedList<int, AvatarCostumeData> AvatarCostumeDataMap = new(); // costumeId
         public readonly static SortedList<int, AvatarCodexData> AvatarCodexDataMap = new(); // sortId
@@ -26,6 +28,8 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<int, FetterStoryData> FetterStoryDataMap = new(); // fetterId
         public readonly static SortedList<int, PhotographPosenameData> PhotographPosenameDataMap = new(); // fetterId
         public readonly static SortedList<int, PhotographExpressionData> PhotographExpressionDataMap = new(); // fetterId
+        public readonly static SortedList<int, RewardData> RewardDataMap = new(); // RewardId
+        public readonly static SortedList<int, EquipAffixData> EquipAffixDataMap = new(); // affixId
 
         static readonly JsonSerializer Serializer = new();
         static async Task LoadData<Obj, Key>(string path, Func<Obj, Key> keySelector, SortedList<Key, Obj> map) where Key : notnull

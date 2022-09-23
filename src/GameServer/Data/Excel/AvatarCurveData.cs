@@ -12,7 +12,7 @@ namespace Weedwacker.GameServer.Data
 		[JsonProperty]
 		public readonly CurveInfo[] curveInfos;
 
-		public double GetMultiplier(string type)
+		public float GetMultiplier(string type)
 		{
 			foreach (CurveInfo curveInfo in curveInfos)
 			{

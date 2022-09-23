@@ -47,15 +47,15 @@ namespace Weedwacker.GameServer.Data.Excel
         [JsonProperty]
         public readonly long nameTextMapHash;
         [JsonProperty]
-        public readonly double hpBase;
+        public readonly float hpBase;
         [JsonProperty]
-        public readonly double attackBase;
+        public readonly float attackBase;
         [JsonProperty]
-        public readonly double defenseBase;
+        public readonly float defenseBase;
         [JsonProperty]
-        public readonly double critical;
+        public readonly float critical;
         [JsonProperty]
-        public readonly double criticalHurt;
+        public readonly float criticalHurt;
         [JsonProperty]
         public readonly List<PropGrowCurve>? propGrowCurves;
         [JsonProperty]

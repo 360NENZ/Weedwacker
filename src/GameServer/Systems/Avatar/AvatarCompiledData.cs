@@ -32,9 +32,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
         public readonly SortedList<int, PhotographExpressionData> PhotographExpressionData; // fetterId
         public static readonly SortedList<int, AvatarFetterLevelData> FetterLevelData = GameData.AvatarFetterLevelDataMap; // level Friendship exp breakpoints
 
-        public readonly double[] HpGrowthCurve;
-        public readonly double[] AttackGrowthCurve;
-        public readonly double[] DefenseGrowthCurve;
+        public readonly float[] HpGrowthCurve;
+        public readonly float[] AttackGrowthCurve;
+        public readonly float[] DefenseGrowthCurve;
 
 
 
@@ -104,9 +104,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
             var dictionary6 = GameData.PhotographExpressionDataMap.Where(w => w.Value.avatarId == avatarId).ToDictionary(w => w.Key, w => w.Value);
             PhotographExpressionData = new SortedList<int, PhotographExpressionData>(dictionary6);
 
-            HpGrowthCurve = new double[CurveData.Count];
-            AttackGrowthCurve = new double[CurveData.Count];
-            DefenseGrowthCurve = new double[CurveData.Count];
+            HpGrowthCurve = new float[CurveData.Count];
+            AttackGrowthCurve = new float[CurveData.Count];
+            DefenseGrowthCurve = new float[CurveData.Count];
             foreach (AvatarCurveData curveData in CurveData.Values)
             {
                 int level = curveData.level - 1;
@@ -132,7 +132,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         }
 
 
-        public double GetBaseHp(int level)
+        public float GetBaseHp(int level)
         {
             try
             {
@@ -144,7 +144,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             }
         }
 
-        public double GetBaseAttack(int level)
+        public float GetBaseAttack(int level)
         {
             try
             {
@@ -156,7 +156,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             }
         }
 
-        public double GetBaseDefense(int level)
+        public float GetBaseDefense(int level)
         {
             try
             {
@@ -168,29 +168,15 @@ namespace Weedwacker.GameServer.Systems.Avatar
             }
         }
 
-        public double GetBaseCritical()
+        public float GetBaseCritical()
         {
             return GeneralData.critical;
         }
 
-        public double GetBaseCriticalHurt()
+        public float GetBaseCriticalHurt()
         {
             return GeneralData.criticalHurt;
         }
 
-
-
-        ProudSkillData public Iterable<ItemParamData> getTotalCostItems()
-        {
-            if (this.totalCostItems == null)
-            {
-                ArrayList<ItemParamData> total = (this.costItems != null) ? new ArrayList<>(this.costItems) : new ArrayList<>(1);
-                if (this.coinCost > 0)
-                    total.add(new ItemParamData(202, this.coinCost));
-                this.totalCostItems = total;
-                }
-        return this.totalCostItems;
-            }
-        }
     }
 }

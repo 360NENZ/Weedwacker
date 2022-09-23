@@ -48,6 +48,8 @@ namespace Weedwacker.GameServer.Systems.Avatar
             {
                 FetterStates.Add(expressionData.fetterId, new FetterData() { FetterId = (uint)expressionData.fetterId, FetterState = DEFAULT_STATE });
             }
+
+            Initialize();
         }
 
         public async Task Initialize()

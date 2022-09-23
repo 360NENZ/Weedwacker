@@ -1,21 +1,36 @@
 ﻿using MongoDB.Driver;
+using Weedwacker.GameServer.Systems.Inventory;
 using Weedwacker.Shared.Utils;
-using Weedwacker.Shared.Utils.Configuration;
 
 namespace Weedwacker.GameServer.Database
 {
-    internal class DatabaseManager
+    internal static class DatabaseManager
     {
         static MongoClient DbClient;
         static IMongoDatabase Database;
         static IMongoCollection<Player> Players;
+        static IMongoCollection<Avatar> Avatars;
+        static IMongoCollection<GameItem> Items;
         static DatabaseProperties Properties;
-        public static void Initialize()
+        public static async Task Initialize()
         {
             DbClient = new MongoClient(GameServer.Configuration.Database.ConnectionUri);
             // Databases and collections are implicitly created
             Database = DbClient.GetDatabase(GameServer.Configuration.Database.Database);
             Players = Database.GetCollection<Player>("players");
+            Avatars = Database.GetCollection<Avatar>("avatars");
+            Items = Database.GetCollection<GameItem>("items");
+            if (Avatars.Indexes.List().ToList().Count == 1)
+            {
+                var indexKeysDefine = Builders<Avatar>.IndexKeys.Ascending(indexKey => indexKey.OwnerId);
+                await Avatars.Indexes.CreateOneAsync(new CreateIndexModel<Avatar>(indexKeysDefine));
+            }
+            if (Items.Indexes.List().ToList().Count == 1)
+            {
+                var indexKeysDefine = Builders<GameItem>.IndexKeys.Ascending(indexKey => indexKey.OwnerId);
+                await Items.Indexes.CreateOneAsync(new CreateIndexModel<GameItem>(indexKeysDefine));
+            }
+
 
             if (Database.GetCollection<DatabaseProperties>("dbProperties").Find(w => true).FirstOrDefault() == null)
             {
@@ -32,7 +47,7 @@ namespace Weedwacker.GameServer.Database
         public static async Task<Player?> CreatePlayerFromAccountUidAsync( string accountUid, string heroName = "", int gameUid = 0)
         {
             //Make sure there are no name or id collisions
-            var queryResult = Players.Find(w => w.HeroName == heroName || w.AccountUid == accountUid || w.GameUid == gameUid);
+            var queryResult = await Players.FindAsync(w => w.HeroName == heroName || w.AccountUid == accountUid || w.GameUid == gameUid);
             if (queryResult.ToList().Count > 0)
             {
                 return null;

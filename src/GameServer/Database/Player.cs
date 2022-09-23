@@ -1,4 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
+using Weedwacker.GameServer.Packet;
+using Weedwacker.GameServer.Systems.Player;
 //using Weedwacker.GameServer.Systems.Player;
 
 namespace Weedwacker.GameServer.Database
@@ -16,18 +18,27 @@ namespace Weedwacker.GameServer.Database
         public int BanStartTime { get; private set; }
         [BsonIgnore]
         public string Token { get; set; } // Obtained and used When Logging in
-        //public readonly AvatarManager Avatars;
+        [BsonIgnore]
+        public bool HasSentLoginPackets { get; private set; }
+        public List<int> FlyCloakList { get; private set; } = new() { 140001 };
+        public Dictionary<int, int> PlayerProperties;
+        public readonly AvatarManager Avatars;
         public Player(string heroName, string accountUid, int gameUid)
         {
             HeroName = heroName;
             AccountUid = accountUid;
             GameUid = gameUid;
-            //Avatars = new AvatarManager(this);
+            Avatars = new AvatarManager(this);
         }
 
         public void OnLogin()
         {
 
+        }
+
+        public async Task SendPacketAsync(BasePacket packet)
+        {
+            await GameServer.OnlinePlayers[GameUid].SendPacketAsync(packet);
         }
     }
 }

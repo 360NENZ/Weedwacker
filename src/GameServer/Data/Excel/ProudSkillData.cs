@@ -4,7 +4,7 @@ using Weedwacker.GameServer.Data.Common;
 namespace Weedwacker.GameServer.Data.Excel
 {
     [Resource("ProudSkillExcelConfigData.json")]
-    public class ProudSkillData : GameResource
+    public class ProudSkillData
     {
         [JsonProperty]
         public readonly int proudSkillId;

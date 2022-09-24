@@ -44,12 +44,12 @@ namespace Weedwacker.GameServer.Database
         public Avatar(int avatarId, Player owner)
         {
             Data = GameServer.GetAvatarInfo(avatarId);
-            
-            if(Data.GeneralData.candSkillDepotIds.Count() > 0)
+
+            if (Data.GeneralData.candSkillDepotIds.Count() > 0)
             {
-                foreach(int depotId in Data.GeneralData.candSkillDepotIds)
+                foreach (int depotId in Data.GeneralData.candSkillDepotIds)
                 {
-                    SkillDepots.Add(depotId, new SkillDepot(avatarId,depotId));
+                    SkillDepots.Add(depotId, new SkillDepot(avatarId, depotId));
                 }
             }
             else
@@ -63,7 +63,7 @@ namespace Weedwacker.GameServer.Database
             BornTime = (int)(DateTimeOffset.Now.ToUnixTimeMilliseconds() / 1000);
 
             // Combat properties
-            foreach(FightProperty property in (FightProperty[])Enum.GetValues(typeof(FightProperty)))
+            foreach (FightProperty property in (FightProperty[])Enum.GetValues(typeof(FightProperty)))
             {
                 if ((int)property > 0 && (int)property < 3000) FightProp.Add(property, 0f);
             }
@@ -176,10 +176,10 @@ namespace Weedwacker.GameServer.Database
             float hpPercent = FightProp[FightProperty.FIGHT_PROP_MAX_HP] == 0 ? 1f : FightProp[FightProperty.FIGHT_PROP_CUR_HP] / FightProp[FightProperty.FIGHT_PROP_MAX_HP];
 
             // Store current energy value for later
-            float currentEnergy =  FightProp[GetCurSkillDepot().Element.CurEnergyProp];
+            float currentEnergy = FightProp[GetCurSkillDepot().Element.CurEnergyProp];
 
             // Clear properties
-            foreach(FightProperty prop in FightProp.Keys)
+            foreach (FightProperty prop in FightProp.Keys)
             {
                 FightProp[prop] = 0f;
             }
@@ -193,9 +193,9 @@ namespace Weedwacker.GameServer.Database
             FightProp[FightProperty.FIGHT_PROP_CHARGE_EFFICIENCY] = 1f;
 
 
-            foreach(FightPropData fightPropData in promoteData.addProps)
+            foreach (FightPropData fightPropData in promoteData.addProps)
             {
-                 AddToFightProperty(fightPropData.propType, fightPropData.value);
+                AddToFightProperty(fightPropData.propType, fightPropData.value);
             }
 
             // Set energy usage
@@ -204,10 +204,10 @@ namespace Weedwacker.GameServer.Database
             //TODO Artifacts, Weapons 
 
             // Proud skills
-            foreach(ProudSkillData proudSkill in GetCurSkillDepot().InherentProudSkillOpens)
+            foreach (ProudSkillData proudSkill in GetCurSkillDepot().InherentProudSkillOpens)
             {
                 // Add properties from this proud skill to our avatar
-                foreach(FightPropData prop in proudSkill.addProps)
+                foreach (FightPropData prop in proudSkill.addProps)
                 {
                     FightProp[prop.propType] += prop.value;
                 }
@@ -216,7 +216,7 @@ namespace Weedwacker.GameServer.Database
             // Set % stats
             FightProp[FightProperty.FIGHT_PROP_MAX_HP] =
                 (FightProp[FightProperty.FIGHT_PROP_BASE_HP] * (1f + FightProp[FightProperty.FIGHT_PROP_HP_PERCENT])) + FightProp[FightProperty.FIGHT_PROP_HP];
-            FightProp[FightProperty.FIGHT_PROP_CUR_ATTACK] = 
+            FightProp[FightProperty.FIGHT_PROP_CUR_ATTACK] =
                 FightProp[FightProperty.FIGHT_PROP_BASE_ATTACK] * (1f + FightProp[FightProperty.FIGHT_PROP_ATTACK_PERCENT]) + FightProp[FightProperty.FIGHT_PROP_ATTACK];
             FightProp[FightProperty.FIGHT_PROP_CUR_DEFENSE] =
                 FightProp[FightProperty.FIGHT_PROP_BASE_DEFENSE] * (1f + FightProp[FightProperty.FIGHT_PROP_DEFENSE_PERCENT]) + FightProp[FightProperty.FIGHT_PROP_DEFENSE];
@@ -340,34 +340,26 @@ namespace Weedwacker.GameServer.Database
             showAvatarInfo.PropMap.Add((uint)PlayerProperty.PROP_BREAK_LEVEL, new PropValue() { Type = (uint)PlayerProperty.PROP_BREAK_LEVEL, Val = (uint)PromoteLevel });
             showAvatarInfo.PropMap.Add((uint)PlayerProperty.PROP_SATIATION_VAL, new PropValue() { Type = (uint)PlayerProperty.PROP_SATIATION_VAL, Val = (uint)Satiation });
             showAvatarInfo.PropMap.Add((uint)PlayerProperty.PROP_SATIATION_PENALTY_TIME, new PropValue() { Type = (uint)PlayerProperty.PROP_SATIATION_VAL, Val = (uint)SatiationPenalty });
-            int maxStamina = Owner.PlayerProperties(PlayerProperty.PROP_MAX_STAMINA);
-            showAvatarInfo.PropMap.Add(PlayerProperty.PROP_MAX_STAMINA.getId(), new PropValue() { Type = (uint)PlayerProperty.PROP_MAX_STAMINA, maxStamina));
+            int maxStamina = Owner.PlayerProperties[PlayerProperty.PROP_MAX_STAMINA];
+            showAvatarInfo.PropMap.Add((uint)PlayerProperty.PROP_MAX_STAMINA, new PropValue() { Type = (uint)PlayerProperty.PROP_MAX_STAMINA, Val = (uint)maxStamina });
 
-            foreach(EquipItem item in Equips.Values)
+            foreach (ReliquaryItem item in Equips.Values)
             {
-                if (item.getItemType() == ItemType.ITEM_RELIQUARY)
+                showAvatarInfo.EquipList.Add(new ShowEquip()
                 {
-                    ReliquaryItem asRelic = (ReliquaryItem)item;
-                    showAvatarInfo.EquipList.Add(new ShowEquip()
-                    {
-                        ItemId = (uint)item.ItemId,
-                        Reliquary = asRelic.ToReliquaryProto()
-                    });
-                }
-                else if (item.getItemType() == ItemType.ITEM_WEAPON)
-                {
-                    WeaponItem asWeapon = (WeaponItem)item;
-                    showAvatarInfo.EquipList.Add(new ShowEquip()
-                    {
-                        ItemId = (uint)asWeapon.ItemId,
-                        Weapon = asWeapon.ToWeaponProto()
-                    });
-                }
+                    ItemId = (uint)item.ItemId,
+                    Reliquary = item.ToReliquaryProto()
+                });
             }
+
+            WeaponItem weapon = (WeaponItem)Equips[EquipType.EQUIP_WEAPON];
+            showAvatarInfo.EquipList.Add(new ShowEquip()
+            {
+                ItemId = (uint)weapon.ItemId,
+                Weapon = weapon.ToWeaponProto()
+            });
 
             return showAvatarInfo;
         }
-
-
     }
 }

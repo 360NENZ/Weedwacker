@@ -1,4 +1,5 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
+using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet;
 using Weedwacker.GameServer.Systems.Player;
 //using Weedwacker.GameServer.Systems.Player;
@@ -21,7 +22,7 @@ namespace Weedwacker.GameServer.Database
         [BsonIgnore]
         public bool HasSentLoginPackets { get; private set; }
         public List<int> FlyCloakList { get; private set; } = new() { 140001 };
-        public Dictionary<int, int> PlayerProperties;
+        public Dictionary<PlayerProperty, int> PlayerProperties;
         public readonly AvatarManager Avatars;
         public Player(string heroName, string accountUid, int gameUid)
         {

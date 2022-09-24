@@ -6,12 +6,13 @@ namespace Weedwacker.GameServer
     {
         public ServerJson Server = new();
         public DatabaseJson Database = new();
+        public new StructureJson Structure = new();
         public new class DatabaseJson
         {
             public string ConnectionUri = "mongodb://localhost:27017";
             public string Database = "weedwackerGame";
         }
-        public new class Structure
+        public new class StructureJson
         {
             public string Resources = "../../../resources/";
             public string Scripts = "../../../resources/Scripts/";

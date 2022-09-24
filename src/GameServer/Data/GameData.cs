@@ -55,21 +55,21 @@ namespace Weedwacker.GameServer.Data
             return fi.Exists;
         }
         static ResourceAttribute? GetResourceData(this Type res) => Attribute.GetCustomAttribute(res, typeof(ResourceAttribute)) as ResourceAttribute;
-        public static async Task LoadAllResourcesAsync(string resourcesPath = "./resources/ExcelBinOutput") => await Task.WhenAll(new Task[]
+        public static async Task LoadAllResourcesAsync(string resourcesPath) => await Task.WhenAll(new Task[]
             {
-                LoadData(resourcesPath, o => o.id, AvatarDataMap),
-                LoadData(resourcesPath, o => o.Level, AvatarLevelDataMap),
-                LoadData(resourcesPath, o => o.id, AvatarSkillDepotDataMap),
-                LoadData(resourcesPath, o => o.id, AvatarSkillDataMap),
-                LoadData(resourcesPath, o => o.level, AvatarCurveDataMap),
-                LoadData(resourcesPath, o => o.fetterLevel, AvatarFetterLevelDataMap),
-                LoadData(resourcesPath, o => ????, AvatarPromoteDataMap), // TODO
-                LoadData(resourcesPath, o => o.talentId, AvatarTalentDataMap),
-                LoadData(resourcesPath, o => o.flycloakId, AvatarFlycloakDataMap),
-                LoadData(resourcesPath, o => o.costumeId, AvatarCostumeDataMap),
-                LoadData(resourcesPath, o => o.sortId, AvatarCodexDataMap),
-                LoadData(resourcesPath, o => o.proudSkillId, ProudSkillDataMap),
-                LoadData(resourcesPath, o => ????, PlayerElementAbilityMap), // TODO
+                LoadData(resourcesPath + "ExcelBinOutput", o => o.id, AvatarDataMap),
+                LoadData(resourcesPath + "ExcelBinOutput", o => o.Level, AvatarLevelDataMap),
+                LoadData(resourcesPath + "ExcelBinOutput", o => o.id, AvatarSkillDepotDataMap),
+                LoadData(resourcesPath + "ExcelBinOutput", o => o.id, AvatarSkillDataMap),
+                LoadData(resourcesPath + "ExcelBinOutput", o => o.level, AvatarCurveDataMap),
+                LoadData(resourcesPath + "ExcelBinOutput", o => o.fetterLevel, AvatarFetterLevelDataMap),
+//                LoadData(resourcesPath + "ExcelBinOutput", o => ????, AvatarPromoteDataMap), // TODO
+                LoadData(resourcesPath + "ExcelBinOutput", o => o.talentId, AvatarTalentDataMap),
+                LoadData(resourcesPath + "ExcelBinOutput", o => o.flycloakId, AvatarFlycloakDataMap),
+                LoadData(resourcesPath + "ExcelBinOutput", o => o.costumeId, AvatarCostumeDataMap),
+                LoadData(resourcesPath + "ExcelBinOutput", o => o.sortId, AvatarCodexDataMap),
+                LoadData(resourcesPath + "ExcelBinOutput", o => o.proudSkillId, ProudSkillDataMap),
+//                LoadData(resourcesPath + "BinOutput/AbilityGroup", o => ????, PlayerElementAbilityMap), // TODO
             });
     }
 }

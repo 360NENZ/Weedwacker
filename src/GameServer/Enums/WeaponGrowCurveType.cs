@@ -18,7 +18,7 @@ namespace Weedwacker.GameServer.Enums
         GROW_CURVE_ATTACK_301,
         GROW_CURVE_ATTACK_302,
         GROW_CURVE_ATTACK_303,
-        GROW_CURVE_ATTACK_304
+        GROW_CURVE_ATTACK_304,
         GROW_CURVE_CRITICAL_301
     }
 }

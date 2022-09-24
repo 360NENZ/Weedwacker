@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Systems.Avatar;
 using Weedwacker.Shared.Authentication;
 using Weedwacker.Shared.Utils.Configuration;
@@ -41,8 +42,9 @@ namespace Weedwacker.GameServer
         public static async Task Start()
         {
             Configuration = await Config.Load<GameConfig>("GameConfig.json");
+            await GameData.LoadAllResourcesAsync(Configuration.Structure.Resources);
             Shared.Utils.Crypto.LoadKeys(Configuration.structure.keys);
-            Database.DatabaseManager.Initialize();
+            await Database.DatabaseManager.Initialize();
             Listener.StartListener();
         }
     }

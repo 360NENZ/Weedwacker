@@ -3,63 +3,64 @@ using MongoDB.Bson.Serialization.Attributes;
 using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Data.Common;
 using Weedwacker.GameServer.Data.Excel;
+using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet;
 using Weedwacker.GameServer.Packet.Send;
 using Weedwacker.GameServer.Systems.Avatar;
 using Weedwacker.GameServer.Systems.Inventory;
+using Weedwacker.GameServer.Systems.Player;
 using Weedwacker.Shared.Network.Proto;
 
-namespace Weedwacker.GameServer.Database
+namespace Weedwacker.GameServer.Systems.Avatar
 {
     internal class Avatar
     {
         [BsonId]
-        public readonly ObjectId id;
-        public readonly int OwnerId;   // Id of player that this avatar belongs to
-        public readonly int BornTime;
-        public readonly int AvatarId;           // Id of avatar
+        private ObjectId id;
+        public int BornTime { get; private set; }
+        public int AvatarId { get; private set; }           // Id of avatar
         [BsonIgnore]
-        public Player Owner { get; private set; }
+        public Player.Player Owner { get; private set; } // Loaded by DatabaseManager
         [BsonIgnore]
-        public AvatarCompiledData Data { get; private set; }
+        public AvatarCompiledData Data { get; private set; } // Loaded by DatabaseManager
         [BsonIgnore]
         public long Guid { get; private set; }           // Player unique Avatar id. Generated each session
 
-        public int Level = 1;
+        public int Level { get; private set; } = 1;
         public int Exp;
-        public int PromoteLevel;
+        public int PromoteLevel { get; private set; } = 0;
         public int Satiation; // ?
         public int SatiationPenalty; // ?
-        public LifeState Life = LifeState.LIFE_ALIVE;
+        public LifeState Life { get; private set; } = LifeState.LIFE_ALIVE;
         public int CurrentDepotId { get; private set; }
         public Dictionary<int, SkillDepot> SkillDepots { get; private set; } = new();
-        public readonly FetterSystem Fetters;
-        public readonly Dictionary<EquipType, GameItem> Equips = new();
-        public readonly Dictionary<FightProperty, float> FightProp = new();
+        public FetterSystem Fetters { get; private set; }
+        public Dictionary<EquipType, GameItem> Equips { get; private set; } = new();
+        public Dictionary<FightProperty, float> FightProp { get; private set; } = new();
 
         public int FlyCloak { get; private set; } = 140001;
         public int Costume { get; private set; }
 
-        public Avatar(int avatarId, Player owner)
+        public Avatar(int avatarId, Player.Player owner)
         {
+            AvatarId = avatarId;
             Data = GameServer.GetAvatarInfo(avatarId);
 
-            if (Data.GeneralData.candSkillDepotIds.Count() > 0)
+            if (Data.GeneralData.candSkillDepotIds.Length > 0)
             {
                 foreach (int depotId in Data.GeneralData.candSkillDepotIds)
                 {
-                    SkillDepots.Add(depotId, new SkillDepot(avatarId, depotId));
+                    SkillDepots.Add(depotId, new SkillDepot(this, depotId, owner));
                 }
             }
             else
             {
-                SkillDepots.Add(Data.GeneralData.skillDepotId, new SkillDepot(avatarId, Data.GeneralData.skillDepotId));
+                SkillDepots.Add(Data.GeneralData.skillDepotId, new SkillDepot(this, Data.GeneralData.skillDepotId, owner));
             }
             CurrentDepotId = Data.GeneralData.skillDepotId;
-            Fetters = new(avatarId);
+            Fetters = new(this, owner);
             Owner = owner;
-            OwnerId = owner.GameUid;
             BornTime = (int)(DateTimeOffset.Now.ToUnixTimeMilliseconds() / 1000);
 
             // Combat properties
@@ -69,10 +70,25 @@ namespace Weedwacker.GameServer.Database
             }
 
             // Set stats
-            RecalcStats();
+            RecalcStatsAsync();
             SetCurrentHp(FightProp[FightProperty.FIGHT_PROP_MAX_HP]);
         }
 
+        public async Task OnLoadAsync(Player.Player owner)
+        {
+            Owner = owner;
+            Guid = owner.GetNextGameGuid();
+            Data = GameServer.GetAvatarInfo(AvatarId);
+            var tasks = new List<Task>
+            {
+                Fetters.OnLoadAsync(owner, this)
+            };
+            foreach (SkillDepot depot in SkillDepots.Values)
+            {
+                tasks.Add(depot.OnLoadAsync(owner, this));
+            }
+            await Task.WhenAll(tasks);
+        }
         public void SetCurrentHp(float value)
         {
             FightProp[FightProperty.FIGHT_PROP_CUR_HP] = value;
@@ -81,7 +97,7 @@ namespace Weedwacker.GameServer.Database
         {
             return SkillDepots[CurrentDepotId];
         }
-        public async Task<bool> SetFlyCloak(int cloakId)
+        public async Task<bool> SetFlyCloakAsync(int cloakId)
         {
             if (!Owner.FlyCloakList.Contains(cloakId))
             {
@@ -89,9 +105,14 @@ namespace Weedwacker.GameServer.Database
             }
             FlyCloak = cloakId;
             // Update
+            var updateQuery = new UpdateQueryBuilder<AvatarManager>();
+            updateQuery.SetFilter(w => w.OwnerId == Owner.GameUid);
+            updateQuery.AddValueToSet(w => w.Avatars[AvatarId].FlyCloak, FlyCloak);
+            Tuple<string, string> updateString = updateQuery.Build();
+            var result = await DatabaseManager.UpdateAvatarsAsync(updateString);
             await Owner.SendPacketAsync(new PacketAvatarFlycloakChangeNotify(this));
 
-            return true;
+            return result.IsAcknowledged;
         }
 
         static public int GetMinPromoteLevel(int level)
@@ -161,12 +182,12 @@ namespace Weedwacker.GameServer.Database
             return false;
         }
 
-        public async Task RecalcStats()
+        public async Task RecalcStatsAsync()
         {
-            await RecalcStats(false);
+            await RecalcStatsAsync(false);
         }
 
-        public async Task RecalcStats(bool forceSendAbilityChange)
+        public async Task RecalcStatsAsync(bool forceSendAbilityChange)
         {
             // Setup
             AvatarCompiledData data = GameServer.AvatarInfo[AvatarId];

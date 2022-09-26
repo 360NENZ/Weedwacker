@@ -6,41 +6,49 @@ namespace Weedwacker.GameServer.Systems.Avatar
 {
     internal class SkillDepot
     {
-        public int OwnerId;
-        public readonly int DepotId;
+        public int DepotId { get; private set; }
         [BsonIgnore]
-        public readonly Database.Player Owner;
-        public readonly int EnergySkill; // Ultimate elemental ability (Q)
-        public readonly int EnergySkillLevel;
-        public  ElementType Element; // Stores current and max energy
-        public int[] Abilities; // Just the hashes
-        public readonly SortedList<int, int> Skills; // <skillId,level>
-        public readonly SortedList<int, int> SubSkills; // <skillId,level>
-        public readonly Dictionary<int, int> SkillExtraChargeMap = new(); // Charges
-        public readonly List<ProudSkillData> InherentProudSkillOpens = new(); // proudSkillId
-        public readonly List<AvatarTalentData> Talents = new(); // last digit of id = constellationRank
-        public readonly Dictionary<string, AvatarTalentConfigData> TalentConfigs = new();
-        public readonly Dictionary<int, int> proudSkillExtraLevelMap; // <groupId,extraLevels>
-        public readonly Dictionary<int, int> proudSkillBonusMap; // <groupId,extraLevels>
-
-        public SkillDepot(int avatarId, int depotId)
+        private Player.Player Owner; // Loaded by DatabaseManager
+        [BsonIgnore]
+        private Avatar Avatar; // Loaded by DatabaseManager
+        public int EnergySkill { get; private set; } // Ultimate elemental ability (Q)
+        public int EnergySkillLevel { get; private set; }
+        public ElementType Element { get; private set; } // Stores current and max energy
+        public int[] Abilities { get; private set; } // Just the hashes
+        public SortedList<int, int> Skills { get; private set; } // <skillId,level>
+        public SortedList<int, int> SubSkills { get; private set; } // <skillId,level>
+        public Dictionary<int, int> SkillExtraChargeMap { get; private set; } = new(); // Charges
+        public List<ProudSkillData> InherentProudSkillOpens { get; private set; } = new(); // proudSkillId
+        public List<AvatarTalentData> Talents { get; private set; } = new(); // last digit of id = constellationRank
+        public Dictionary<string, AvatarTalentConfigData> TalentConfigs { get; private set; } = new();
+        public Dictionary<int, int> proudSkillExtraLevelMap { get; private set; } // <groupId,extraLevels>
+        public Dictionary<int, int> proudSkillBonusMap { get; private set; }
+        public SkillDepot(Avatar avatar, int depotId, Player.Player owner)
         {
+            Owner = owner;
+            Avatar = avatar;
             DepotId = depotId;
-            var avatar = GameServer.AvatarInfo[avatarId];
-            EnergySkill = avatar.SkillDepotData[depotId].energySkill;
+            var avatarInfo = GameServer.AvatarInfo[avatar.AvatarId];
+            EnergySkill = avatarInfo.SkillDepotData[depotId].energySkill;
             EnergySkillLevel = 1;
-            Element = (ElementType)Activator.CreateInstance(Type.GetType(avatar.SkillData[depotId][EnergySkill].costElemType));
-            Element.MaxEnergy = avatar.SkillData[depotId][EnergySkill].costElemVal;
-            Abilities = avatar.AbilityNameHashes[depotId];
-            var inherentProudSkillGroups = avatar.SkillDepotData[depotId].inherentProudSkillOpens.Where(w => w.needAvatarPromoteLevel <= 1).ToDictionary(q => q.proudSkillGroupId).Keys.ToList();
+            Element = (ElementType)Activator.CreateInstance(Type.GetType(avatarInfo.SkillData[depotId][EnergySkill].costElemType));
+            Element.MaxEnergy = avatarInfo.SkillData[depotId][EnergySkill].costElemVal;
+            Abilities = avatarInfo.AbilityNameHashes[depotId];
+            var inherentProudSkillGroups = avatarInfo.SkillDepotData[depotId].inherentProudSkillOpens.Where(w => w.needAvatarPromoteLevel <= 1).ToDictionary(q => q.proudSkillGroupId).Keys.ToList();
             foreach (int group in inherentProudSkillGroups)
             {
-                var idList = avatar.ProudSkillData[depotId].Where(w => w.Value.proudSkillGroupId == group).ToDictionary(q => q.Key).Keys.ToList();
+                var idList = avatarInfo.ProudSkillData[depotId].Where(w => w.Value.proudSkillGroupId == group).ToDictionary(q => q.Key).Keys.ToList();
                 foreach (int id in idList)
                 {
-                    InherentProudSkillOpens.Add(avatar.ProudSkillData[depotId][id]);
+                    InherentProudSkillOpens.Add(avatarInfo.ProudSkillData[depotId][id]);
                 }
             }
+        }
+
+        public async Task OnLoadAsync(Player.Player owner, Avatar avatar)
+        {
+            await Task.Run(() => Owner = owner);
+            await Task.Run(() => Avatar = avatar);
         }
         public uint GetCoreProudSkillLevel()
         {

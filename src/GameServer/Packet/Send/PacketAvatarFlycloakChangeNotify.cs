@@ -1,12 +1,13 @@
 ﻿using Google.Protobuf;
 using Weedwacker.GameServer.Enums;
+using Weedwacker.GameServer.Systems.Avatar;
 using Weedwacker.Shared.Network.Proto;
 
 namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketAvatarFlycloakChangeNotify : BasePacket
     {
-		public PacketAvatarFlycloakChangeNotify(Database.Avatar avatar) : base(OpCode.AvatarFlycloakChangeNotify)
+		public PacketAvatarFlycloakChangeNotify(Avatar avatar) : base(OpCode.AvatarFlycloakChangeNotify)
 		{
 			AvatarFlycloakChangeNotify proto = new()
 			{

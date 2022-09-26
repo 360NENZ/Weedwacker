@@ -1,5 +1,9 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson.IO;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
+using MongoDB.Driver;
 using Weedwacker.GameServer.Systems.Inventory;
+using Weedwacker.GameServer.Systems.Player;
 using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Database
@@ -9,28 +13,17 @@ namespace Weedwacker.GameServer.Database
         static MongoClient DbClient;
         static IMongoDatabase Database;
         static IMongoCollection<Player> Players;
-        static IMongoCollection<Avatar> Avatars;
+        static IMongoCollection<AvatarManager> Avatars;
         static IMongoCollection<GameItem> Items;
         static DatabaseProperties Properties;
+
         public static async Task Initialize()
         {
             DbClient = new MongoClient(GameServer.Configuration.Database.ConnectionUri);
             // Databases and collections are implicitly created
             Database = DbClient.GetDatabase(GameServer.Configuration.Database.Database);
             Players = Database.GetCollection<Player>("players");
-            Avatars = Database.GetCollection<Avatar>("avatars");
-            Items = Database.GetCollection<GameItem>("items");
-            if (Avatars.Indexes.List().ToList().Count == 1)
-            {
-                var indexKeysDefine = Builders<Avatar>.IndexKeys.Ascending(indexKey => indexKey.OwnerId);
-                await Avatars.Indexes.CreateOneAsync(new CreateIndexModel<Avatar>(indexKeysDefine));
-            }
-            if (Items.Indexes.List().ToList().Count == 1)
-            {
-                var indexKeysDefine = Builders<GameItem>.IndexKeys.Ascending(indexKey => indexKey.OwnerId);
-                await Items.Indexes.CreateOneAsync(new CreateIndexModel<GameItem>(indexKeysDefine));
-            }
-
+            Avatars = Database.GetCollection<AvatarManager>("avatars");
 
             if (Database.GetCollection<DatabaseProperties>("dbProperties").Find(w => true).FirstOrDefault() == null)
             {
@@ -64,7 +57,7 @@ namespace Weedwacker.GameServer.Database
                 await Database.GetCollection<DatabaseProperties>("dbProperties").UpdateOneAsync(filter, update);
             }
             Player player = new(heroName, accountUid, gameUid);
-            Players.InsertOne(player);
+            await Players.InsertOneAsync(player);
             return player;
         }
 
@@ -74,27 +67,65 @@ namespace Weedwacker.GameServer.Database
             await Players.ReplaceOneAsync<Player>(w => w.AccountUid == player.AccountUid, player);
         }
 
-        public static void UpdatePlayer(string field, params string[] args)
+        public static async Task UpdatePlayerAsync(Tuple<string?,string> queryFilterAndUpdate)
         {
 
-        }
+            string? filterString = queryFilterAndUpdate.Item1;
+            var filter = filterString == null ? Builders<Player>.Filter.And(filterString) : Builders<Player>.Filter.Empty;
 
-        public static async Task<Player?> GetPlayerByGameUidAsync(int uid)
-        {
-            var matches = await Players.FindAsync(w => w.GameUid == uid);
-            return matches.FirstOrDefault();
-        }
+            string updateString = queryFilterAndUpdate.Item2;
+            var pipeline = new EmptyPipelineDefinition<Player>().AppendStage<Player, Player, Player>(updateString);
+            var update = Builders<Player>.Update.Pipeline(pipeline);
 
+            await Players.UpdateOneAsync(filter, update);
+        }
         public static async Task<Player?> GetPlayerByAccountUidAsync(string uid)
         {
             var matches = await Players.FindAsync(w => w.AccountUid == uid);
-            return matches.FirstOrDefault() ?? await CreatePlayerFromAccountUidAsync(uid);
+            var player = await matches.FirstOrDefaultAsync() ?? await CreatePlayerFromAccountUidAsync(uid);
+            //Attach player systems to the player
+            player.Avatars = await GetAvatarsByPlayerAsync(player) ?? new AvatarManager(player);
+
+            return player;
         }
 
-        public static async Task<Player?> GetPlayerByNameAsync(string name)
+        public static async Task<AvatarManager?> CreateAvatarStorageAsync(Player player)
         {
-            var matches = await Players.FindAsync(w => w.HeroName == name);
-            return matches.FirstOrDefault();
+            //Make sure there are no id collisions
+            var queryResult = await Avatars.FindAsync(w => w.OwnerId == player.GameUid);
+            if (queryResult.ToList().Count > 0)
+            {
+                return null;
+            }
+            AvatarManager avatars = new(player);
+            await Avatars.InsertOneAsync(avatars);
+            return avatars;
+        }
+        public static async Task SaveAvatarsAsync(AvatarManager avatars)
+        {
+            await Avatars.ReplaceOneAsync<AvatarManager>(w => w.OwnerId == avatars.OwnerId, avatars);
+        }
+
+        public static async Task<UpdateResult> UpdateAvatarsAsync(Tuple<string?, string> queryFilterAndUpdate)
+        {
+
+            string? filterString = queryFilterAndUpdate.Item1;
+            var filter = filterString == null ? Builders<AvatarManager>.Filter.And(filterString) : Builders<AvatarManager>.Filter.Empty;
+
+            string updateString = queryFilterAndUpdate.Item2;
+            var pipeline = new EmptyPipelineDefinition<AvatarManager>().AppendStage<AvatarManager, AvatarManager, AvatarManager>(updateString);
+            var update = Builders<AvatarManager>.Update.Pipeline(pipeline);
+
+            return await Avatars.UpdateOneAsync(filter, update);
+        }
+
+
+
+        private static async Task<AvatarManager?> GetAvatarsByPlayerAsync(Player owner)
+        {
+            AvatarManager avatars = await Database.GetCollection<AvatarManager>("avatars").Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
+            if (avatars != null) await avatars.OnLoadAsync(owner);
+            return avatars;
         }
     }
 }

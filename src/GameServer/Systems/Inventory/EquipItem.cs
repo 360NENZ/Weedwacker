@@ -1,6 +1,9 @@
-﻿namespace Weedwacker.GameServer.Systems.Inventory
+﻿using MongoDB.Bson.Serialization.Attributes;
+
+namespace Weedwacker.GameServer.Systems.Inventory
 {
-    internal class EquipItem : GameItem
+	[BsonKnownTypes(typeof(WeaponItem), typeof(ReliquaryItem))]
+	internal class EquipItem : GameItem
     {
 		// Equips
 		public int Level { get; protected set; }

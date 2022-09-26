@@ -1,7 +1,9 @@
-﻿using Weedwacker.GameServer.Data;
+﻿using MongoDB.Bson.Serialization.Attributes;
+using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Data.Common;
 using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.GameServer.Enums;
+using Weedwacker.GameServer.Packet.Send;
 using Weedwacker.Shared.Network.Proto;
 using Weedwacker.Shared.Utils;
 
@@ -10,26 +12,33 @@ namespace Weedwacker.GameServer.Systems.Avatar
     internal class FetterSystem
     {
         public const uint DEFAULT_STATE = (uint)FetterState.NOT_OPEN;
-        public readonly FetterCharacterCardData CardData;
-        public readonly FetterInfoData FetterInfoData; // General info
-        public readonly SortedList<int, FetterStoryData> FetterStoryData; // fetterId
-        public readonly SortedList<int, FettersData> FettersData; // fetterId
-        public readonly SortedList<int, PhotographPosenameData> PhotographPosenameData; // fetterId
-        public readonly SortedList<int, PhotographExpressionData> PhotographExpressionData; // fetterId
+        [BsonIgnore]
+        private Player.Player Owner; // Loaded by DatabaseManager
+        [BsonIgnore]
+        private Avatar Avatar; // Loaded by DatabaseManager
+        public FetterCharacterCardData CardData;
+        public FetterInfoData FetterInfoData; // General info
+        public SortedList<int, FetterStoryData> FetterStoryData; // fetterId
+        public SortedList<int, FettersData> FettersData; // fetterId
+        public SortedList<int, PhotographPosenameData> PhotographPosenameData; // fetterId
+        public SortedList<int, PhotographExpressionData> PhotographExpressionData; // fetterId
+        [BsonIgnore]
         public static readonly SortedList<int, AvatarFetterLevelData> FetterLevelData = GameData.AvatarFetterLevelDataMap; // level Friendship exp breakpoints
         public int FetterLevel { get; private set; } = 1;
         public int FetterExp { get; private set; } = 0;
         public SortedList<int, FetterData> FetterStates { get; private set; } = new();
 
 
-        public FetterSystem(int avatarId)
+        public FetterSystem(Avatar avatar, Player.Player owner)
         {
-            CardData = GameServer.AvatarInfo[avatarId].CardData;
-            FetterInfoData = GameServer.AvatarInfo[avatarId].FetterInfoData;
-            FetterStoryData = GameServer.AvatarInfo[avatarId].FetterStoryData;
-            FettersData = GameServer.AvatarInfo[avatarId].FettersData;
-            PhotographPosenameData = GameServer.AvatarInfo[avatarId].PhotographPosenameData;
-            PhotographExpressionData = GameServer.AvatarInfo[avatarId].PhotographExpressionData;
+            Owner = owner;
+            Avatar = avatar;
+            CardData = GameServer.AvatarInfo[avatar.AvatarId].CardData;
+            FetterInfoData = GameServer.AvatarInfo[avatar.AvatarId].FetterInfoData;
+            FetterStoryData = GameServer.AvatarInfo[avatar.AvatarId].FetterStoryData;
+            FettersData = GameServer.AvatarInfo[avatar.AvatarId].FettersData;
+            PhotographPosenameData = GameServer.AvatarInfo[avatar.AvatarId].PhotographPosenameData;
+            PhotographExpressionData = GameServer.AvatarInfo[avatar.AvatarId].PhotographExpressionData;
 
             FetterStates.Add(FetterInfoData.fetterId, new FetterData() { FetterId = (uint)FetterInfoData.fetterId, FetterState = DEFAULT_STATE });
             foreach(FetterStoryData storyData in FetterStoryData.Values)
@@ -52,20 +61,26 @@ namespace Weedwacker.GameServer.Systems.Avatar
             Initialize();
         }
 
+        public async Task OnLoadAsync(Player.Player owner, Avatar avatar)
+        {
+            await Task.Run(() => Owner = owner);
+            await Task.Run(() => Avatar = avatar);
+        }
+
         public async Task Initialize()
         {
             var allFetters = FetterStoryData.Values.Concat<FetterBaseClass>(FettersData.Values).Concat(PhotographPosenameData.Values).Concat(PhotographExpressionData.Values).Append(FetterInfoData);
             foreach (FetterBaseClass fetter in allFetters.Where(w => FetterStates[w.fetterId].FetterState == 1))
             {
-                await EvaluateFetterState(fetter, true);
+                await EvaluateFetterState(fetter, true, false);
             }
             foreach (FetterBaseClass fetter in allFetters.Where(w => FetterStates[w.fetterId].FetterState == 2))
             {
-                await EvaluateFetterState(fetter, false);
+                await EvaluateFetterState(fetter, false, false);
             }
         }
 
-        private async Task<uint> EvaluateFetterState(FetterBaseClass fetter, bool openOrFinish) // Returns: fetterState
+        private async Task<uint> EvaluateFetterState(FetterBaseClass fetter, bool openOrFinish, bool notifyPlayer) // Returns: fetterState
         {
             if (openOrFinish ? fetter.openConds.Length == 0 : fetter.finishConds.Length == 0)
             {
@@ -93,12 +108,16 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 }
                 else
                 {
-                    for (uint i = 0; i < condResult.Length; i++)
+                    if (condResult.Contains(true))
                     {
-                        if (condResult[i])
+                        for (uint i = 0; i < condResult.Length; i++)
                         {
-                            fetterProto.CondIndexList.Add(i);
+                            if (condResult[i])
+                            {
+                                fetterProto.CondIndexList.Add(i);
+                            }
                         }
+                        if(notifyPlayer) await Owner.SendPacketAsync(new PacketAvatarFetterDataNotify(Avatar));
                     }
                 }
             }

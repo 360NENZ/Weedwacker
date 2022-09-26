@@ -1,6 +1,6 @@
 ﻿using Google.Protobuf;
-using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
+using Weedwacker.GameServer.Systems.Avatar;
 using Weedwacker.Shared.Network.Proto;
 
 namespace Weedwacker.GameServer.Packet.Send

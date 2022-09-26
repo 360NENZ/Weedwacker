@@ -4,7 +4,9 @@ using Weedwacker.GameServer.Data.Excel;
 
 namespace Weedwacker.GameServer.Systems.Inventory
 {
-    internal class GameItem
+	[BsonDiscriminator(RootClass = true)]
+	[BsonKnownTypes(typeof(MaterialItem), typeof(EquipItem))]
+	internal class GameItem
     {
         [BsonId]
 		private readonly ObjectId id;

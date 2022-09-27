@@ -3,6 +3,7 @@ using Weedwacker.GameServer.Database;
 
 namespace Weedwacker.GameServer.Systems.Player
 {
+    // MongoDb collection: "avatars"
     internal class AvatarManager
     {
         public int OwnerId { get; private set; }

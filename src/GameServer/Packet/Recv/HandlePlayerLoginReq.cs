@@ -26,22 +26,13 @@ namespace Weedwacker.GameServer.Packet.Recv
                 return;
             }
 
-            // Show opening cutscene if player has no avatars
-            if (session.Player.Avatars.GetAvatarCount() == 0)
-            {
-                // Pick character
-                session.State = SessionState.PICKING_CHARACTER;
-                await session.SendPacketAsync(new BasePacket(OpCode.DoSetPlayerBornDataNotify));
-            }
-            else
-            {
-                // Login done
-                session.Player.OnLogin();
-            }
+            // Login Setup
+            await session.Player.OnLoginAsync();
+
 
             // Final packet to tell client logging in is done
             await session.SendPacketAsync(new PacketPlayerLoginRsp(session));
         }
-    
+
     }
 }

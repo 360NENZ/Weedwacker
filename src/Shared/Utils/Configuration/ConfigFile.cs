@@ -4,7 +4,7 @@ namespace Weedwacker.Shared.Utils.Configuration
 {
     public class ConfigFile
     {
-        public Structure structure = new();
+        public StructureJson structure = new();
         public Language language = new();
         public int version = 1;
 
@@ -13,7 +13,7 @@ namespace Weedwacker.Shared.Utils.Configuration
                 public string connectionUri;
                 public string database;
         }
-        public class Structure
+        public class StructureJson
         {
             public string data = "../../../data/";
             public string plugins = "../../../plugins/";

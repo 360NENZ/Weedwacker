@@ -13,7 +13,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         public readonly AvatarData GeneralData;
         public readonly SortedList<int, AvatarSkillDepotData> SkillDepotData; // <depotId,depot> Skill, SubSkill, Talent, and ProudSkill ids. So far only the twins have multiple. Assume first is default
         public readonly SortedList<int,SortedList<int,AvatarSkillData>> SkillData; // <depotId,<skillId,data>>
-        public readonly SortedList<int, SortedList<int, AvatarPromoteData>> PromoteData; // <avatarPromoteId,<level,data>> AKA Ascension
+        public readonly SortedList<int, AvatarPromoteData> PromoteData; // <promoteLevel,data> AKA Ascension
         public readonly SortedList<int, SortedList<int, AvatarTalentData>> TalentData; // <depotId,<talentId,data>> AKA Constellations
         public readonly SortedList<int, SortedList<int, ProudSkillData>> ProudSkillData; // <depotId,<proudSkillId,data>> Passives
         public readonly SortedList<int, int[]>? AbilityNameHashes; //<depotId,List<Hashes>>
@@ -65,7 +65,8 @@ namespace Weedwacker.GameServer.Systems.Avatar
             {
                 var dictionary = GameData.AvatarSkillDataMap.Where(w => depot.skills.Contains(w.Key) || depot.subSkills.Contains(w.Key)).ToDictionary(x => x.Key, x => x.Value);
                 SkillData.Add(depot.id, new SortedList<int, AvatarSkillData>(dictionary));
-                PromoteData.Add(depot.id, GameData.AvatarPromoteDataMap.Where(w => w.Key == GeneralData.avatarPromoteId).FirstOrDefault().Value);
+                var dictionary9 = GameData.AvatarPromoteDataMap.Where(w => w.Key.Item1 == GeneralData.avatarPromoteId).ToDictionary(x => x.Key.Item2, x => x.Value);
+                PromoteData = new SortedList<int, AvatarPromoteData>(dictionary9);
                 var dictionary7 = GameData.AvatarTalentDataMap.Where(w => depot.talents.Contains(w.Value.talentId)).ToDictionary(x => x.Key, x => x.Value);
                 TalentData.Add(depot.id, new SortedList<int, AvatarTalentData>(dictionary7));
                 var dictionary8 = GameData.ProudSkillDataMap.Where(w => depot.inherentProudSkillOpens.Exists(y => y.proudSkillGroupId == w.Value.proudSkillGroupId)).ToDictionary(x => x.Key, x => x.Value);

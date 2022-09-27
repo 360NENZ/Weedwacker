@@ -16,8 +16,6 @@ namespace Weedwacker.GameServer.Systems.Avatar
 {
     internal class Avatar
     {
-        [BsonId]
-        private ObjectId id;
         public int BornTime { get; private set; }
         public int AvatarId { get; private set; }           // Id of avatar
         [BsonIgnore]
@@ -175,10 +173,12 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
         public bool UnequipRelic(EquipType slot)
         {
+            //TODO
             return false;
         }
         public bool UnequipWeapon(EquipType slot)
         {
+            //TODO
             return false;
         }
 

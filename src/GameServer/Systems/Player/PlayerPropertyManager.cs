@@ -29,17 +29,55 @@ namespace Weedwacker.GameServer.Systems.Player
 
         public PlayerPropertyManager(Player owner) { Owner = owner; }
 
-
-        public async Task AddLegendaryKey(int count)
+        public async Task<bool> AddPrimogemsAsync(int count, PropChangeReason reason = PropChangeReason.None)
         {
-            await SetPropertyAsync(PlayerProperty.PROP_PLAYER_LEGENDARY_KEY, Owner.PlayerProperties[PlayerProperty.PROP_PLAYER_LEGENDARY_KEY] + count);
-        }
-        public async Task UseLegendaryKey(int count)
-        {
-            await SetPropertyAsync(PlayerProperty.PROP_PLAYER_LEGENDARY_KEY, Owner.PlayerProperties[PlayerProperty.PROP_PLAYER_LEGENDARY_KEY] - count);
+            return await SetPropertyAsync(PlayerProperty.PROP_PLAYER_HCOIN, Owner.PlayerProperties[PlayerProperty.PROP_PLAYER_HCOIN] + count, true, reason);
         }
 
-        public async Task<bool> SetPropertyAsync(PlayerProperty prop, int value, bool sendPacket = true)
+        public async Task<bool> UsePrimogemsAsync(int count, PropChangeReason reason = PropChangeReason.None)
+        {
+            return await SetPropertyAsync(PlayerProperty.PROP_PLAYER_HCOIN, Owner.PlayerProperties[PlayerProperty.PROP_PLAYER_HCOIN] - count, true, reason);
+        }
+
+        public async Task<bool> AddMoraAsync(int count, PropChangeReason reason = PropChangeReason.None)
+        {
+            return await SetPropertyAsync(PlayerProperty.PROP_PLAYER_SCOIN, Owner.PlayerProperties[PlayerProperty.PROP_PLAYER_SCOIN] + count, true, reason);
+        }
+
+        public async Task<bool> PayMoraAsync(int count, PropChangeReason reason = PropChangeReason.None)
+        {
+            return await SetPropertyAsync(PlayerProperty.PROP_PLAYER_SCOIN, Owner.PlayerProperties[PlayerProperty.PROP_PLAYER_SCOIN] - count, true, reason);
+        }
+
+        public async Task<bool> AddGenesisCrystalsAsync(int count, PropChangeReason reason = PropChangeReason.None)
+        {
+            return await SetPropertyAsync(PlayerProperty.PROP_PLAYER_MCOIN, Owner.PlayerProperties[PlayerProperty.PROP_PLAYER_MCOIN] + count, true, reason);
+        }
+
+        public async Task<bool> UseGenesisCrystalsAsync(int count, PropChangeReason reason = PropChangeReason.None)
+        {
+            return await SetPropertyAsync(PlayerProperty.PROP_PLAYER_MCOIN, Owner.PlayerProperties[PlayerProperty.PROP_PLAYER_MCOIN] - count, true, reason);
+        }
+
+        public async Task<bool> AddLegendaryKeyAsync(int count, PropChangeReason reason = PropChangeReason.None)
+        {
+            return await SetPropertyAsync(PlayerProperty.PROP_PLAYER_LEGENDARY_KEY, Owner.PlayerProperties[PlayerProperty.PROP_PLAYER_LEGENDARY_KEY] + count, true, reason);
+        }
+        public async Task<bool> UseLegendaryKeyAsync(int count, PropChangeReason reason = PropChangeReason.None)
+        {
+            return await SetPropertyAsync(PlayerProperty.PROP_PLAYER_LEGENDARY_KEY, Owner.PlayerProperties[PlayerProperty.PROP_PLAYER_LEGENDARY_KEY] - count, true, reason);
+        }
+
+        public async Task<bool> AddHomeCoinAsync(int count, PropChangeReason reason = PropChangeReason.None)
+        {
+            return await SetPropertyAsync(PlayerProperty.PROP_PLAYER_HOME_COIN, Owner.PlayerProperties[PlayerProperty.PROP_PLAYER_HOME_COIN] + count, true, reason);
+        }
+        public async Task<bool> PayHomeCoinAsync(int count, PropChangeReason reason = PropChangeReason.None)
+        {
+            return await SetPropertyAsync(PlayerProperty.PROP_PLAYER_HOME_COIN, Owner.PlayerProperties[PlayerProperty.PROP_PLAYER_HOME_COIN] - count, true, reason);
+        }
+
+        public async Task<bool> SetPropertyAsync(PlayerProperty prop, int value, bool sendPacket = true, PropChangeReason reason = PropChangeReason.None)
         {
             switch (prop)
             {
@@ -104,7 +142,7 @@ namespace Weedwacker.GameServer.Systems.Player
                     {
                         // Update player with packet
                         await Owner.SendPacketAsync(new PacketPlayerPropNotify(Owner, prop));
-                        await Owner.SendPacketAsync(new PacketPlayerPropChangeNotify(prop, value - currentValue));
+                        
 
                         if (value - currentValue != 0)
                         {
@@ -115,12 +153,11 @@ namespace Weedwacker.GameServer.Systems.Player
                             var queryStrings = updateQuery.Build();
                             await DatabaseManager.UpdatePlayerAsync(queryStrings);
 
-                            // Make the Adventure EXP pop-up show on screen.
-                            switch (prop)
+                            await Owner.SendPacketAsync(new PacketPlayerPropChangeNotify(prop, value - currentValue));
+
+                            if (reason != PropChangeReason.None)
                             {
-                                case PlayerProperty.PROP_PLAYER_EXP:
-                                    await Owner.SendPacketAsync(new PacketPlayerPropChangeReasonNotify(prop, currentValue, value, PropChangeReason.PlayerAddExp));
-                                    break;
+                                await Owner.SendPacketAsync(new PacketPlayerPropChangeReasonNotify(prop, currentValue, value, reason));
                             }
                         }
                     }

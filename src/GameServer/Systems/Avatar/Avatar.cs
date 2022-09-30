@@ -96,11 +96,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             return SkillDepots[CurrentDepotId];
         }
         public async Task<bool> SetFlyCloakAsync(int cloakId)
-        {
-            if (!Owner.FlyCloakList.Contains(cloakId))
-            {
-                return false;
-            }
+        { 
             FlyCloak = cloakId;
             // Update
             var updateQuery = new UpdateQueryBuilder<AvatarManager>();
@@ -171,27 +167,24 @@ namespace Weedwacker.GameServer.Systems.Avatar
             return false;
         }
 
-        public bool UnequipRelic(EquipType slot)
+        public async Task<bool> UnequipRelic(EquipType slot)
         {
             //TODO
+            await RecalcStatsAsync();
             return false;
         }
-        public bool UnequipWeapon(EquipType slot)
+        public async Task<bool> UnequipWeapon()
         {
             //TODO
+            await RecalcStatsAsync();
             return false;
         }
 
-        public async Task RecalcStatsAsync()
-        {
-            await RecalcStatsAsync(false);
-        }
-
-        public async Task RecalcStatsAsync(bool forceSendAbilityChange)
+        public async Task RecalcStatsAsync(bool forceSendAbilityChange = false)
         {
             // Setup
             AvatarCompiledData data = GameServer.AvatarInfo[AvatarId];
-            AvatarPromoteData promoteData = GameServer.AvatarInfo[AvatarId].PromoteData[data.GeneralData.avatarPromoteId][PromoteLevel];
+            AvatarPromoteData promoteData = GameServer.AvatarInfo[AvatarId].PromoteData[PromoteLevel];
 
             // Get hp percent, set to 100% if none
             float hpPercent = FightProp[FightProperty.FIGHT_PROP_MAX_HP] == 0 ? 1f : FightProp[FightProperty.FIGHT_PROP_CUR_HP] / FightProp[FightProperty.FIGHT_PROP_MAX_HP];

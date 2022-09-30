@@ -1,4 +1,5 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
+using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.Shared.Network.Proto;
 
@@ -8,16 +9,20 @@ namespace Weedwacker.GameServer.Systems.Inventory
     {
 		public readonly int MainPropId;
 		public readonly List<int>? AppendPropIdList = new();
-		public int EquipCharacter;
-        [BsonIgnore]
-		public int WeaponEntityId;
+		public int EquippedAvatar; // By avatarId
 		[BsonIgnore]
-		public new readonly ReliquaryData ItemData;
+		public new ReliquaryData ItemData { get; protected set; }
 
-		public ReliquaryItem(int ownerId) : base(ownerId)
-        {
+		public ReliquaryItem(int guid) : base(guid)
+		{
+			ItemData = (ReliquaryData)GameData.ItemDataMap[ItemId];
+		}
 
-        }
+		public async Task OnLoadAsync(long guid)
+		{
+			ItemData = (ReliquaryData)GameData.ItemDataMap[ItemId];
+			Guid = guid;
+		}
 		public int GetEquipSlot()
 		{
 			return (int)ItemData.equipType;
@@ -38,5 +43,22 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
 			return relic;
 		}
-	}
+
+		public SceneReliquaryInfo CreateSceneReliquaryInfo()
+		{
+			SceneReliquaryInfo relicInfo = new SceneReliquaryInfo()
+			{
+				ItemId = (uint)ItemId,
+				Guid = (ulong)Guid,
+				Level = (uint)Level
+			};
+
+			return relicInfo;
+		}
+
+		public override Item ToProto()
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

@@ -3,15 +3,18 @@
 namespace Weedwacker.GameServer.Systems.Inventory
 {
 	[BsonKnownTypes(typeof(WeaponItem), typeof(ReliquaryItem))]
-	internal class EquipItem : GameItem
+	internal abstract class EquipItem : GameItem
     {
-		// Equips
-		public int Level { get; protected set; }
+        // Equips
+        public int Level { get; protected set; }
 		public int Exp { get; protected set; }
 		public int TotalExp { get; protected set; }
 		public int PromoteLevel { get; protected set; }
 		public bool Locked { get; protected set; }
 
+		protected EquipItem(int guid) : base(guid)
+		{
+		}
 		public static int GetMinPromoteLevel(int level)
 		{
 			if (level > 80)
@@ -40,10 +43,5 @@ namespace Weedwacker.GameServer.Systems.Inventory
 			}
 			return 0;
 		}
-
-		public EquipItem(int ownerId) : base(ownerId)
-        {
-
-        }
 	}
 }

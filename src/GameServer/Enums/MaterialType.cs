@@ -38,12 +38,12 @@ namespace Weedwacker.GameServer.Enums
         MATERIAL_HOME_SEED = 31,
         MATERIAL_FISH_BAIT = 32,
         MATERIAL_FISH_ROD = 33,
-        MATERIAL_SUMO_BUFF = 34,
-        MATERIAL_FIREWORKS = 35,
+        MATERIAL_SUMO_BUFF = 34, // Unused?
+        MATERIAL_FIREWORKS = 35, // Event tab
         MATERIAL_BGM = 36,
         MATERIAL_SPICE_FOOD = 37,
         MATERIAL_ACTIVITY_ROBOT = 38,
         MATERIAL_ACTIVITY_GEAR = 39,
-        MATERIAL_ACTIVITY_JIGSAW = 40
+        MATERIAL_ACTIVITY_JIGSAW = 40 // Event tab?
     }
 }

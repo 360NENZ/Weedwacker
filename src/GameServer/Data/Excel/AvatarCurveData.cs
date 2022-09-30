@@ -12,14 +12,14 @@ namespace Weedwacker.GameServer.Data
 		[JsonProperty]
 		public readonly CurveInfo[] curveInfos;
 
-		public float GetMultiplier(string type)
+		public Tuple<string,float> GetArith(string type)
 		{
 			foreach (CurveInfo curveInfo in curveInfos)
 			{
-				if (curveInfo.type == type) return curveInfo.value;
+				if (curveInfo.type == type) return Tuple.Create(curveInfo.type,curveInfo.value);
 			}
 			Logger.WriteErrorLine("Could not find value for " + type + " for avatar level:" + level);
-			return 1;
+			return Tuple.Create("ARITH_MULTI",(float)1.0);
 		}
 	}
 }

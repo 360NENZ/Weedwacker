@@ -33,6 +33,8 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonIgnore] private long NextGuid = 0;
         [BsonIgnore] public AvatarManager Avatars { get; set; } // Loaded by DatabaseManager
         [BsonIgnore] public InventoryManager Inventory; // Loaded by DatabaseManager
+        [BsonIgnore] public ExpManager ExpManager; //Loaded by DatabaseManager
+        [BsonIgnore] public BattlePassManager BattlePassManager; //Loaded by DatabaseManager
 
         [BsonConstructor]
         public Player(string heroName, string accountUid, int gameUid)
@@ -42,7 +44,8 @@ namespace Weedwacker.GameServer.Systems.Player
             GameUid = gameUid;
             PropManager = new(this);
             ResinManager = new(this);
-            
+            ExpManager = new(this);
+            BattlePassManager = new(this);
         }
 
         public long GetNextGameGuid()

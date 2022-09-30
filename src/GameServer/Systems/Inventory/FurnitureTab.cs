@@ -1,0 +1,18 @@
+﻿
+namespace Weedwacker.GameServer.Systems.Inventory
+{
+    internal class FurnitureTab : InventoryTab
+    {
+        public new readonly int InventoryLimit = 2000;
+
+        internal override Task<GameItem?> AddItemAsync(int itemId, int count = 1)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal override Task<bool> RemoveItemAsync(GameItem item, int count = 1)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}

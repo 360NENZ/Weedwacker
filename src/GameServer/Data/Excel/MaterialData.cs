@@ -24,6 +24,8 @@ namespace Weedwacker.GameServer.Data.Excel
         [JsonProperty]
         public readonly List<ItemUseData>? itemUse;
         [JsonProperty]
+        public readonly FoodQuality foodQuality;
+        [JsonProperty]
         public readonly long effectDescTextMapHash;
         [JsonProperty]
         public readonly long specialDescTextMapHash;

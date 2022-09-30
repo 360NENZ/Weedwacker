@@ -37,13 +37,12 @@ namespace Weedwacker.GameServer.Data
 
         public readonly static SortedList<int, EquipAffixData> EquipAffixDataMap = new(); // affixId
         public readonly static SortedList<int, HomeWorldFurnitureData> HomeWorldFurnitureDataMap = new(); // id
-        public readonly static SortedList<int, MaterialData> MaterialDataMap = new(); // id
+        public readonly static SortedList<int, ItemData> ItemDataMap = new(); // id ItemData is subclassed, and loaded as MaterialData, ReliquaryData, and WeaponData
         public readonly static SortedList<string, RelicAffixConfigData> RelicAffixConfigDataMap = new(); // openConfig
-        public readonly static SortedList<int, ReliquaryData> ReliquaryDataMap = new(); // id
         public readonly static SortedList<int, RewardData> RewardDataMap = new(); // RewardId
         public readonly static SortedList<string, TeamResonanceConfigData> TeamResonanceConfigDataMap = new(); // openConfig
         public readonly static SortedList<string, WeaponAffixConfigData> WeaponAffixConfigDataMap = new(); // openConfig
-        public readonly static SortedList<int, WeaponData> WeaponDataMap = new(); // id
+
 
 
         static readonly JsonSerializer Serializer = new();
@@ -54,6 +53,18 @@ namespace Weedwacker.GameServer.Data
             var tasks = new List<Task>();
             foreach (string filePath in filePaths) { tasks.Add(LoadData(filePath, keySelector, map)); }
             await Task.WhenAll(tasks);
+        }
+
+        // To handle derived types
+        static async Task LoadData<Obj, Key, DerivedType>(string path, Func<Obj, Key> keySelector, SortedList<Key, Obj> map) where Key : notnull where DerivedType : Obj
+        {
+            var ra = typeof(DerivedType).GetResourceData();
+            if (ra == null || !ra.GetResourceFile(path, out var fi)) return;
+            map.Clear();
+            var objs = await LoadObjects<DerivedType[]>(fi);
+            if (objs == null) return;
+            foreach (var obj in objs)
+                map.Add(keySelector(obj), obj);
         }
         static async Task LoadData<Obj, Key>(string path, Func<Obj, Key> keySelector, SortedList<Key, Obj> map) where Key : notnull
         {
@@ -102,13 +113,13 @@ namespace Weedwacker.GameServer.Data
                 LoadData(excelPath, o => o.fetterId, FettersDataMap),
                 LoadData(excelPath, o => o.fetterId, FetterStoryDataMap),
                 LoadData(excelPath, o => o.id, HomeWorldFurnitureDataMap),
-                LoadData(excelPath, o => o.id, MaterialDataMap),
+                LoadData<ItemData, int, MaterialData>(excelPath, o => o.id, ItemDataMap),
                 LoadData(excelPath, o => o.fetterId, PhotographExpressionDataMap),
                 LoadData(excelPath, o => o.fetterId, PhotographPosenameDataMap),
                 LoadData(excelPath, o => o.proudSkillId, ProudSkillDataMap),
-                LoadData(excelPath, o => o.id, ReliquaryDataMap),
+                LoadData<ItemData, int, ReliquaryData>(excelPath, o => o.id, ItemDataMap),
                 LoadData(excelPath, o => o.rewardId, RewardDataMap),
-                LoadData(excelPath, o => o.id, WeaponDataMap),
+                LoadData<ItemData, int, WeaponData>(excelPath, o => o.id, ItemDataMap)
                 //LoadData(Path.Combine(binPath, "/AbilityGroup"), o => ????, PlayerElementAbilityDataMap), // TODO
                 //LoadFolder(Path.Combine(binPath, "/AbilityGroup/Talent/AvatarTalents"), o => ????, AvatarTalentConfigDataMap),
                 //LoadFolder(Path.Combine(binPath, "/AbilityGroup/Talent/EquipTalents"), o => ????, WeaponAffixConfigDataMap),

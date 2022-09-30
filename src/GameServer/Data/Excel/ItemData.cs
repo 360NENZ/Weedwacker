@@ -4,7 +4,7 @@ using Weedwacker.GameServer.Enums;
 namespace Weedwacker.GameServer.Data.Excel
 {
     
-    internal class ItemData
+    internal abstract class ItemData
     {
         [JsonProperty]
         public readonly int id;

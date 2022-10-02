@@ -1,5 +1,4 @@
-﻿
-using Weedwacker.GameServer.Data.Excel;
+﻿using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.Shared.Network.Proto;
 
 namespace Weedwacker.GameServer.Systems.Inventory
@@ -9,7 +8,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
         public int Count;
         public new readonly MaterialData ItemData; 
 
-        public MaterialItem(int ownerId) : base(ownerId)
+        public MaterialItem(long guid, int itemId, int count) : base(guid, itemId, count)
         {
 
         }

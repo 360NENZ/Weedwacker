@@ -42,6 +42,7 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<int, RewardData> RewardDataMap = new(); // RewardId
         public readonly static SortedList<string, TeamResonanceConfigData> TeamResonanceConfigDataMap = new(); // openConfig
         public readonly static SortedList<string, WeaponAffixConfigData> WeaponAffixConfigDataMap = new(); // openConfig
+        public readonly static SortedList<int, ReliquaryMainPropData> ReliquaryMainPropDataMap = new(); // id
 
 
 
@@ -118,6 +119,7 @@ namespace Weedwacker.GameServer.Data
                 LoadData(excelPath, o => o.fetterId, PhotographPosenameDataMap),
                 LoadData(excelPath, o => o.proudSkillId, ProudSkillDataMap),
                 LoadData<ItemData, int, ReliquaryData>(excelPath, o => o.id, ItemDataMap),
+                LoadData(excelPath, o => o.id, ReliquaryMainPropDataMap),
                 LoadData(excelPath, o => o.rewardId, RewardDataMap),
                 LoadData<ItemData, int, WeaponData>(excelPath, o => o.id, ItemDataMap)
                 //LoadData(Path.Combine(binPath, "/AbilityGroup"), o => ????, PlayerElementAbilityDataMap), // TODO

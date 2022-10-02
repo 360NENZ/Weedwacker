@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using System.Linq.Expressions;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Data.Common;
@@ -11,6 +12,7 @@ using Weedwacker.GameServer.Systems.Avatar;
 using Weedwacker.GameServer.Systems.Inventory;
 using Weedwacker.GameServer.Systems.Player;
 using Weedwacker.Shared.Network.Proto;
+using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.Avatar
 {
@@ -34,7 +36,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         public int CurrentDepotId { get; private set; }
         public Dictionary<int, SkillDepot> SkillDepots { get; private set; } = new();
         public FetterSystem Fetters { get; private set; }
-        public Dictionary<EquipType, GameItem> Equips { get; private set; } = new();
+        [BsonIgnore] public Dictionary<EquipType, EquipItem> Equips { get; private set; } = new(); // Loaded through the inventory system
         public Dictionary<FightProperty, float> FightProp { get; private set; } = new();
 
         public int FlyCloak { get; private set; } = 140001;
@@ -143,6 +145,16 @@ namespace Weedwacker.GameServer.Systems.Avatar
             return Equips[EquipType.EQUIP_WEAPON];
         }
 
+        public GameItem? GetRelic(EquipType slot)
+        {
+            if(slot == EquipType.EQUIP_WEAPON)
+            {
+                Logger.WriteErrorLine("Tried to access weapon as relic");
+                return null;
+            }
+            return Equips[slot];
+        }
+
         public void SetCurrentEnergy(float currentEnergy)
         {
             GetCurSkillDepot().Element.CurEnergy = currentEnergy;
@@ -158,25 +170,123 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
         public async Task<bool> EquipRelic(ReliquaryItem item, bool shouldRecalc)
         {
-            //TODO
-            return false;
+            // Sanity check equip type
+            EquipType itemEquipType = item.ItemData.equipType;
+            if (itemEquipType == EquipType.EQUIP_NONE)
+            {
+                return false;
+            }
+ 
+            else if (GetRelic(itemEquipType) != null)
+            {
+                // Unequip item in current slot if it exists
+                await UnequipRelic(itemEquipType);
+            }
+
+            // Set equip
+            Equips[itemEquipType] = item;
+            item.EquippedAvatar = AvatarId;
+
+            // Update Database
+            var updateQuery = new UpdateQueryBuilder<InventoryManager>();
+            updateQuery.SetFilter(w => w.OwnerId == Owner.GameUid);
+            updateQuery.AddValueToSet(w =>
+                (w.SubInventories[ItemType.ITEM_RELIQUARY] as RelicTab).Items[item.UniqueId].EquippedAvatar, item.EquippedAvatar);
+            var queryStrings = updateQuery.Build();
+            await DatabaseManager.UpdateInventoryAsync(queryStrings);
+
+            if (Owner.HasSentLoginPackets)
+            {
+                await Owner.SendPacketAsync(new PacketAvatarEquipChangeNotify(this, item, itemEquipType));
+            }
+
+            if (shouldRecalc)
+            {
+                await RecalcStatsAsync();
+            }
+
+            return true;
         }
-        public async Task<bool> EquipWeapon(WeaponItem item, bool shouldRecalc)
+        public async Task<bool> EquipWeapon(WeaponItem item, bool shouldRecalc, bool notifyClient = true)
         {
-            //TODO
-            return false;
+            if (GetWeapon() != null)
+            {
+                // Unequip item in current slot if it exists
+                await UnequipWeapon(notifyClient);
+            }
+
+            // Set equip
+            Equips[EquipType.EQUIP_WEAPON] = item;
+            item.EquippedAvatar = AvatarId;
+            item.WeaponEntityId = Owner.World.GetNextEntityId(EntityIdType.WEAPON);
+
+            // Update Database
+            var updateQuery = new UpdateQueryBuilder<InventoryManager>();
+            updateQuery.SetFilter(w => w.OwnerId == Owner.GameUid);
+            updateQuery.AddValueToSet(w => 
+                (w.SubInventories[ItemType.ITEM_WEAPON] as WeaponTab).Items[item.UniqueId].EquippedAvatar, item.EquippedAvatar);
+            var queryStrings = updateQuery.Build();
+            await DatabaseManager.UpdateInventoryAsync(queryStrings);
+
+            if (Owner.HasSentLoginPackets && notifyClient)
+            {
+                await Owner.SendPacketAsync(new PacketAvatarEquipChangeNotify(this, item, EquipType.EQUIP_WEAPON));
+            }
+
+            if (shouldRecalc)
+            {
+                await RecalcStatsAsync(notifyClient);
+            }
+
+            return true;                         
         }
 
         public async Task<bool> UnequipRelic(EquipType slot)
         {
-            //TODO
-            await RecalcStatsAsync();
+            ReliquaryItem item = (ReliquaryItem)Equips[slot];
+            Equips.Remove(slot);
+
+            if (item != null)
+            {
+                item.EquippedAvatar = 0;
+
+                // Update Database
+                var updateQuery = new UpdateQueryBuilder<InventoryManager>();
+                updateQuery.SetFilter(w => w.OwnerId == Owner.GameUid);
+                updateQuery.AddValueToSet(w =>
+                    (w.SubInventories[ItemType.ITEM_RELIQUARY] as RelicTab).Items[item.UniqueId].EquippedAvatar, item.EquippedAvatar);
+                var queryStrings = updateQuery.Build();
+                await DatabaseManager.UpdateInventoryAsync(queryStrings);
+
+                await Owner.SendPacketAsync(new PacketAvatarEquipChangeNotify(this, slot));
+                await RecalcStatsAsync();
+                return true;
+            }
+
             return false;
         }
-        public async Task<bool> UnequipWeapon()
+        public async Task<bool> UnequipWeapon(bool notifyClient = true)
         {
-            //TODO
-            await RecalcStatsAsync();
+            WeaponItem item = (WeaponItem)Equips[EquipType.EQUIP_WEAPON];
+            Equips.Remove(EquipType.EQUIP_WEAPON);
+
+            if (item != null)
+            {
+                item.EquippedAvatar = 0;
+
+                // Update Database
+                var updateQuery = new UpdateQueryBuilder<InventoryManager>();
+                updateQuery.SetFilter(w => w.OwnerId == Owner.GameUid);
+                updateQuery.AddValueToSet(w =>
+                    (w.SubInventories[ItemType.ITEM_WEAPON] as WeaponTab).Items[item.UniqueId].EquippedAvatar, item.EquippedAvatar);
+                var queryStrings = updateQuery.Build();
+                await DatabaseManager.UpdateInventoryAsync(queryStrings);
+
+                if (notifyClient) await Owner.SendPacketAsync(new PacketAvatarEquipChangeNotify(this, EquipType.EQUIP_WEAPON));
+                await RecalcStatsAsync(notifyClient);              
+                return true;
+            }
+
             return false;
         }
 

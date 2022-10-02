@@ -14,7 +14,7 @@ namespace Weedwacker.GameServer.Database
         static IMongoDatabase Database;
         static IMongoCollection<Player> Players;
         static IMongoCollection<AvatarManager> Avatars;
-        static IMongoCollection<GameItem> Items;
+        static IMongoCollection<InventoryManager> Inventories;
         static DatabaseProperties Properties;
 
         public static async Task Initialize()
@@ -24,6 +24,7 @@ namespace Weedwacker.GameServer.Database
             Database = DbClient.GetDatabase(GameServer.Configuration.Database.Database);
             Players = Database.GetCollection<Player>("players");
             Avatars = Database.GetCollection<AvatarManager>("avatars");
+            Inventories = Database.GetCollection<InventoryManager>("inventories");
 
             if (Database.GetCollection<DatabaseProperties>("dbProperties").Find(w => true).FirstOrDefault() == null)
             {
@@ -85,19 +86,13 @@ namespace Weedwacker.GameServer.Database
             var player = await matches.FirstOrDefaultAsync() ?? await CreatePlayerFromAccountUidAsync(uid);
             //Attach player systems to the player
             player.Avatars = await GetAvatarsByPlayerAsync(player) ?? new AvatarManager(player);
+            player.Inventory = await GetInventoryByPlayerAsync(player) ?? new InventoryManager(player);
 
             return player;
         }
 
-        public static async Task<AvatarManager?> CreateAvatarStorageAsync(Player player)
+        public static async Task<AvatarManager?> CreateAvatarStorageAsync(AvatarManager avatars)
         {
-            //Make sure there are no id collisions
-            var queryResult = await Avatars.FindAsync(w => w.OwnerId == player.GameUid);
-            if (queryResult.ToList().Count > 0)
-            {
-                return null;
-            }
-            AvatarManager avatars = new(player);
             await Avatars.InsertOneAsync(avatars);
             return avatars;
         }
@@ -119,13 +114,34 @@ namespace Weedwacker.GameServer.Database
             return await Avatars.UpdateOneAsync(filter, update);
         }
 
-
-
         private static async Task<AvatarManager?> GetAvatarsByPlayerAsync(Player owner)
         {
             AvatarManager avatars = await Database.GetCollection<AvatarManager>("avatars").Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
             if (avatars != null) await avatars.OnLoadAsync(owner);
             return avatars;
+        }
+        private static async Task<InventoryManager?> GetInventoryByPlayerAsync(Player owner)
+        {
+            InventoryManager inventory = await Database.GetCollection<InventoryManager>("inventories").Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
+            if (inventory != null) await inventory.OnLoadAsync(owner);
+            return inventory;
+        }
+        public static async Task<InventoryManager?> CreateInventoryAsync(InventoryManager inventory)
+        {
+            await Inventories.InsertOneAsync(inventory);
+            return inventory;
+        }
+
+        public static async Task<UpdateResult> UpdateInventoryAsync(Tuple<string?, string> queryFilterAndUpdate)
+        {
+            string? filterString = queryFilterAndUpdate.Item1;
+            var filter = filterString == null ? Builders<InventoryManager>.Filter.And(filterString) : Builders<InventoryManager>.Filter.Empty;
+
+            string updateString = queryFilterAndUpdate.Item2;
+            var pipeline = new EmptyPipelineDefinition<InventoryManager>().AppendStage<InventoryManager, InventoryManager, InventoryManager>(updateString);
+            var update = Builders<InventoryManager>.Update.Pipeline(pipeline);
+
+            return await Inventories.UpdateOneAsync(filter, update);
         }
     }
 }

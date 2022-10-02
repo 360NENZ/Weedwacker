@@ -24,7 +24,7 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonElement] public int HeadImage { get; private set; }
         public int NextResinRefresh;
         public int LastDailyReset;
-        public Dictionary<PlayerProperty, int> PlayerProperties;
+        public Dictionary<PlayerProperty, int> PlayerProperties; // SET ONLY THROUGH THE PROPMANAGER
         [BsonIgnore] public PlayerPropertyManager PropManager;
         [BsonIgnore] public ResinManager ResinManager;
         [BsonIgnore] public Connection Session; // Set by HandleGetPlayerTokenReq
@@ -46,8 +46,20 @@ namespace Weedwacker.GameServer.Systems.Player
             ResinManager = new(this);
             ExpManager = new(this);
             BattlePassManager = new(this);
+            Inventory = new(this);
         }
 
+        private async Task OnCreate()
+        {
+            await PropManager.SetPropertyAsync(PlayerProperty.PROP_PLAYER_LEVEL, 1, false);
+            await PropManager.SetPropertyAsync(PlayerProperty.PROP_IS_SPRING_AUTO_USE, 1, false);
+            await PropManager.SetPropertyAsync(PlayerProperty.PROP_SPRING_AUTO_USE_PERCENT, 50, false);
+            await PropManager.SetPropertyAsync(PlayerProperty.PROP_PLAYER_RESIN, 160, false);
+
+            // Pick character
+            Session.State = SessionState.PICKING_CHARACTER;
+            await Session.SendPacketAsync(new BasePacket(OpCode.DoSetPlayerBornDataNotify));
+        }
         public long GetNextGameGuid()
         {
             long nextId = ++NextGuid;
@@ -59,11 +71,7 @@ namespace Weedwacker.GameServer.Systems.Player
             // Show opening cutscene if player has no avatars
             if (Avatars.GetAvatarCount() == 0)
             {
-                await PropManager.SetPropertyAsync(PlayerProperty.PROP_PLAYER_RESIN, 160, false);
-
-                // Pick character
-                Session.State = SessionState.PICKING_CHARACTER;
-                await Session.SendPacketAsync(new BasePacket(OpCode.DoSetPlayerBornDataNotify));
+                await OnCreate();
             }
 
             // Multiplayer setting

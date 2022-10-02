@@ -6,7 +6,7 @@ namespace Weedwacker.GameServer.Systems.Player
     // MongoDb collection: "avatars"
     internal class AvatarManager
     {
-        public int OwnerId { get; private set; }
+        public int OwnerId { get; private set; } // GameUid
         public Dictionary<int, Avatar.Avatar> Avatars { get; private set; }
         [BsonIgnore]
         private Player Owner; // Loaded by DatabaseManager
@@ -18,7 +18,7 @@ namespace Weedwacker.GameServer.Systems.Player
             OwnerId = owner.GameUid;
             Owner = owner;
             Avatars = new();
-            DatabaseManager.CreateAvatarStorageAsync(owner);
+            DatabaseManager.CreateAvatarStorageAsync(this);
         }
 
         public async Task OnLoadAsync(Player owner)

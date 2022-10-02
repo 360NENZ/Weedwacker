@@ -1,16 +1,16 @@
-﻿
-using MongoDB.Bson;
-using Weedwacker.GameServer.Enums;
+﻿using MongoDB.Bson.Serialization.Attributes;
+using Weedwacker.GameServer.Systems.Player;
 
 namespace Weedwacker.GameServer.Systems.Inventory
 {
+    [BsonKnownTypes(typeof(BattlePassTab), typeof(FoodTab),
+    typeof(FurnitureTab), typeof(GadgetTab), typeof(MaterialsTab), typeof(PreciousTab),
+    typeof(PromoteTab), typeof(QuestTab), typeof(RelicTab), typeof(WeaponTab))]
     internal abstract class InventoryTab : SubInventory
     {
-        public readonly int InventoryLimit = 9999;
-        public Dictionary<ObjectId, GameItem> Items;
+        [BsonIgnore] public const int InventoryLimit = 9999;
+        public Dictionary<int, GameItem> Items;
 
-        //TODO update codex
-
-        
+        protected InventoryTab(Player.Player owner, InventoryManager inventory) : base(owner, inventory) { }
     }
 }

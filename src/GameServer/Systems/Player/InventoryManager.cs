@@ -2,6 +2,7 @@
 using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Data.Common;
 using Weedwacker.GameServer.Data.Excel;
+using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet.Send;
 using Weedwacker.GameServer.Systems.Inventory;
@@ -11,21 +12,23 @@ namespace Weedwacker.GameServer.Systems.Player
 {
     internal class InventoryManager
     {
-        [BsonIgnore]
-        private Player Owner;
-        [BsonElement]
-        public Dictionary<ItemType, SubInventory> SubInventories { get; private set; } = new()
-        {
-            { ItemType.ITEM_WEAPON, new WeaponTab()}, //Weapon tab includes MATERIAL_WEAPON_EXP_STONE
-            { ItemType.ITEM_RELIQUARY, new RelicTab() }, //Relic tab includes MATERIAL_RELIQUARY_MATERIAL
-            { ItemType.ITEM_MATERIAL, new MaterialSubInv() },
-            { ItemType.ITEM_FURNITURE, new FurnitureTab() } // Furniture tab includes MATERIAL_FURNITURE_FORMULA, MATERIAL_FURNITURE_SUITE_FORMULA, MATERIAL_ACTIVITY_ROBOT
-        };
+        [BsonId] public int OwnerId; // GameUid
+        [BsonIgnore] internal Player Owner;
+        [BsonElement] public Dictionary<ItemType, SubInventory> SubInventories { get; private set; }
+       
 
         [BsonIgnore] public Dictionary<long, GameItem> GuidMap = new();
         public InventoryManager(Player owner)
         {
             Owner = owner;
+            SubInventories = new()
+            {
+                { ItemType.ITEM_WEAPON, new WeaponTab(Owner, this)}, //Weapon tab includes MATERIAL_WEAPON_EXP_STONE
+                { ItemType.ITEM_RELIQUARY, new RelicTab(Owner, this) }, //Relic tab includes MATERIAL_RELIQUARY_MATERIAL
+                { ItemType.ITEM_MATERIAL, new MaterialSubInv(Owner, this) },
+                { ItemType.ITEM_FURNITURE, new FurnitureTab(Owner, this) } // Furniture tab includes MATERIAL_FURNITURE_FORMULA, MATERIAL_FURNITURE_SUITE_FORMULA, MATERIAL_ACTIVITY_ROBOT
+            };
+            DatabaseManager.CreateInventoryAsync(this);
         }
 
         private int GetVirtualItemValue(int itemId)
@@ -61,9 +64,14 @@ namespace Weedwacker.GameServer.Systems.Player
         {
             return await AddItemByIdAsync(itemParam.id, itemParam.count, reason);
         }
-        public async Task<List<GameItem>?> AddItemByParamDataMany(IEnumerable<ItemParamData> items, ActionReason reason)
+        public async Task<List<GameItem>?> AddItemByParamDataManyAsync(IEnumerable<ItemParamData> items, ActionReason reason)
         {
             return await AddItemByIdManyAsync(items.Select(x => Tuple.Create(x.id, x.count)).ToList());
+        }
+
+        public async Task<GameItem?> AddItemByGuidAsync(long guid, int count = 1, ActionReason reason = ActionReason.None)
+        {
+            return await AddItemByIdAsync(GuidMap[guid].ItemId, count, reason);
         }
 
         public async Task<List<GameItem>?> AddItemByIdManyAsync(IEnumerable<Tuple<int,int>> idAndCount, ActionReason reason = ActionReason.None)
@@ -109,10 +117,11 @@ namespace Weedwacker.GameServer.Systems.Player
                     Logger.WriteErrorLine("Unknown item: " + itemId);
                     return null;
                 case ItemType.ITEM_VIRTUAL:
-                    // All known virtual items are Player Properties, and the client is notified by different packets
+                    //Update  avatar/player properties, and update database
                     await AddVirtualItemByIdAsync(itemId, count);
                     return null;
                 case ItemType.ITEM_MATERIAL:
+                    // Add to inventory and update database
                     updatedItem = await SubInventories[ItemType.ITEM_MATERIAL].AddItemAsync(itemId, count);
                     break;
                 case ItemType.ITEM_RELIQUARY:
@@ -127,25 +136,28 @@ namespace Weedwacker.GameServer.Systems.Player
                     Logger.WriteErrorLine("Unhandled item: " + itemId);
                     return null;
                 case ItemType.ITEM_FURNITURE:
+                    // Add to inventory and update database
                     updatedItem = await SubInventories[ItemType.ITEM_FURNITURE].AddItemAsync(itemId, count);
                     break;
                 default: // Should be unreachable
                     return null;
-            }         
-            if(updatedItem != null && notifyClient)
+            }
+            if (updatedItem != null)
             {
                 // Add a reference by Guid
                 GuidMap.Add(updatedItem.Guid, updatedItem);
 
-                if (reason != ActionReason.None)
+                if (notifyClient)
                 {
-                    await Owner.SendPacketAsync(new PacketItemAddHintNotify(updatedItem, reason));
+                    if (reason != ActionReason.None)
+                    {
+                        await Owner.SendPacketAsync(new PacketItemAddHintNotify(updatedItem, reason));
+                    }
+
+                    await Owner.SendPacketAsync(new PacketStoreItemChangeNotify(updatedItem));
                 }
-
-                await Owner.SendPacketAsync(new PacketStoreItemChangeNotify(updatedItem));
             }
-
-            return updatedItem;
+                return updatedItem;
         }
 
         private async Task<bool> AddVirtualItemByIdAsync(int itemId, int count)
@@ -270,11 +282,18 @@ namespace Weedwacker.GameServer.Systems.Player
 
         public async Task<bool> EquipRelic(long avatarGuid, long equipGuid)
         {
-            Avatar.Avatar avatar = Owner.Avatars.GetAvatarByGuid(avatarGuid);
+            Avatar.Avatar? avatar = Owner.Avatars.GetAvatarByGuid(avatarGuid);
 
             if (avatar != null && GuidMap.TryGetValue(equipGuid, out GameItem relic) && relic.ItemData.itemType == ItemType.ITEM_RELIQUARY)
             {
                 ReliquaryItem asRelic = (ReliquaryItem)relic;
+                // Is it equipped ot another avatar?
+                Avatar.Avatar? otherAvatar = Owner.Avatars.Avatars.Values.Where(a => a.GetRelic(asRelic.ItemData.equipType) == asRelic && a != avatar).FirstOrDefault();
+                if (otherAvatar != null)
+                {
+                    await UnequipRelicAsync(otherAvatar.Guid, asRelic.ItemData.equipType);
+                }
+                
                 if (await avatar.EquipRelic(asRelic, true))
                 {
                     asRelic.EquippedAvatar = avatar.AvatarId;
@@ -287,10 +306,16 @@ namespace Weedwacker.GameServer.Systems.Player
 
         public async Task<bool> EquipWeapon(long avatarGuid, long equipGuid)
         {
-            Avatar.Avatar avatar = Owner.Avatars.GetAvatarByGuid(avatarGuid);
+            Avatar.Avatar? avatar = Owner.Avatars.GetAvatarByGuid(avatarGuid);
 
             if (avatar != null && GuidMap.TryGetValue(equipGuid, out GameItem weapon) && weapon.ItemData.itemType == ItemType.ITEM_WEAPON)
             {
+                // Is it equipped ot another avatar?
+                Avatar.Avatar? otherAvatar = Owner.Avatars.Avatars.Values.Where(a => a.GetWeapon() == weapon && a != avatar).FirstOrDefault();
+                if (otherAvatar != null)
+                {
+                    await UnequipWeaponAsync(otherAvatar.Guid);
+                }
                 WeaponItem asWeapon = (WeaponItem)weapon;
                 if (avatar.Data.GeneralData.weaponType == asWeapon.ItemData.weaponType)
                 {
@@ -303,33 +328,28 @@ namespace Weedwacker.GameServer.Systems.Player
             return false;
         }
 
-        public async Task<bool> UnequipRelic(long avatarGuid, int slot)
+        public async Task<bool> UnequipRelicAsync(long avatarGuid, EquipType slot)
         {
-            Avatar.Avatar avatar = Owner.Avatars.GetAvatarByGuid(avatarGuid);
-            EquipType equipType = (EquipType)slot;
+            Avatar.Avatar? avatar = Owner.Avatars.GetAvatarByGuid(avatarGuid);
 
-            if (avatar != null && equipType != EquipType.EQUIP_WEAPON)
+            if (avatar != null && slot != EquipType.EQUIP_WEAPON)
             {
-                if (await avatar.UnequipRelic(equipType))
-                {
-                    await Owner.SendPacketAsync(new PacketAvatarEquipChangeNotify(avatar, equipType));
-                    return true;
-                }
+ 
+                    return await avatar.UnequipRelic(slot);
+                
             }
 
             return false;
         }
-        public async Task<bool> UnequipWeapon(long avatarGuid)
+        public async Task<bool> UnequipWeaponAsync(long avatarGuid)
         {
-            Avatar.Avatar avatar = Owner.Avatars.GetAvatarByGuid(avatarGuid);
+            Avatar.Avatar? avatar = Owner.Avatars.GetAvatarByGuid(avatarGuid);
 
             if (avatar != null)
             {
-                if (await avatar.UnequipWeapon())
-                {
-                    await Owner.SendPacketAsync(new PacketAvatarEquipChangeNotify(avatar, EquipType.EQUIP_WEAPON));
-                    return true;
-                }
+
+                    return await avatar.UnequipWeapon();
+                
             }
 
             return false;
@@ -337,6 +357,11 @@ namespace Weedwacker.GameServer.Systems.Player
 
         public async Task OnLoadAsync(Player owner)
         {
+            Owner = owner;
+            foreach(SubInventory sub in SubInventories.Values)
+            {
+                await sub.OnLoadAsync(owner, this);
+            }
             //TODO        
         }
     }

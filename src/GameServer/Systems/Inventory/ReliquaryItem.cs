@@ -1,21 +1,32 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Data.Excel;
+using Weedwacker.GameServer.Enums;
 using Weedwacker.Shared.Network.Proto;
 
 namespace Weedwacker.GameServer.Systems.Inventory
 {
     internal class ReliquaryItem : EquipItem
     {
-		public readonly int MainPropId;
+		[BsonId] public int UniqueId { get; protected set; }
+		[BsonElement] public int MainPropId { get; protected set; }
+		[BsonIgnore] public new int Count { get; protected set; } = 1;
 		public readonly List<int>? AppendPropIdList = new();
 		public int EquippedAvatar; // By avatarId
-		[BsonIgnore]
-		public new ReliquaryData ItemData { get; protected set; }
+		[BsonIgnore] public new ReliquaryData ItemData { get; protected set; }
 
-		public ReliquaryItem(int guid) : base(guid)
+		public ReliquaryItem(long guid, int itemId, int uniqueId) : base(guid, itemId)
 		{
-			ItemData = (ReliquaryData)GameData.ItemDataMap[ItemId];
+			UniqueId = uniqueId;
+			Level = 1;
+
+			// Create main property
+			Random rand = new();
+			ReliquaryMainPropData mainPropData = GameData.ReliquaryMainPropDataMap.ElementAt(rand.Next(0, GameData.ReliquaryMainPropDataMap.Count)).Value;
+			MainPropId = mainPropData.id;
+
+			// Create extra stats
+			AppendPropIdList.Add(ItemData.appendPropNum);
 		}
 
 		public async Task OnLoadAsync(long guid)
@@ -23,9 +34,9 @@ namespace Weedwacker.GameServer.Systems.Inventory
 			ItemData = (ReliquaryData)GameData.ItemDataMap[ItemId];
 			Guid = guid;
 		}
-		public int GetEquipSlot()
+		public EquipType GetEquipSlot()
 		{
-			return (int)ItemData.equipType;
+			return ItemData.equipType;
 		}
 		public Reliquary ToReliquaryProto()
 		{

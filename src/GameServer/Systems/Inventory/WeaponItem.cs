@@ -7,16 +7,29 @@ namespace Weedwacker.GameServer.Systems.Inventory
 {
     internal class WeaponItem : EquipItem
     {
-        public List<int>? Affixes { get; protected set; }
+        [BsonId] public int UniqueId { get; protected set; }
+		public List<int>? Affixes { get; protected set; } = new();
 		[BsonIgnore] public new int Count { get; protected set; } = 1;
         public int Refinement { get; protected set; } = 0;
 		[BsonIgnore] public int WeaponEntityId;
 		public int EquippedAvatar; // By avatarId
 		[BsonIgnore] public new WeaponData ItemData;
 
-		public WeaponItem(int guid) : base(guid)
+		public WeaponItem(long guid, int itemId, int uniqueId) : base(guid, itemId)
 		{
 			ItemData = (WeaponData)GameData.ItemDataMap[ItemId];
+			Level = 1;
+
+			if (ItemData.skillAffix != null)
+			{
+				foreach (int skillAffix in ItemData.skillAffix)
+				{
+					if (skillAffix > 0)
+					{
+						Affixes.Add(skillAffix);
+					}
+				}
+			}
 		}
 
 		public async Task OnLoadAsync(long guid)

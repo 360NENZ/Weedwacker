@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.Shared.Network.Proto;
 
@@ -13,14 +14,17 @@ namespace Weedwacker.GameServer.Systems.Inventory
 		private ObjectId id;
 		[BsonElement] public int ItemId { get; protected set; }
 		public int Count;
-        [BsonIgnore] public long Guid { get; protected set; } // Player unique id. Generated each session
+		[BsonIgnore] public long Guid; // Player unique id. Generated each session
 		[BsonIgnore] public bool IsNew { get; protected set; } = false;
 		[BsonIgnore] public ItemData ItemData { get; protected set; }
        
 
-		public GameItem(int guid)
+		public GameItem(long guid, int itemId, int count)
 		{
 			Guid = guid;
+			ItemId = itemId;
+			ItemData = GameData.ItemDataMap[itemId];
+			IsNew = true;
 		}
 
 		public abstract Item ToProto();

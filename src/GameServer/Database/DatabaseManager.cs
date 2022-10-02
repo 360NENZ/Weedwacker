@@ -85,7 +85,7 @@ namespace Weedwacker.GameServer.Database
             var matches = await Players.FindAsync(w => w.AccountUid == uid);
             var player = await matches.FirstOrDefaultAsync() ?? await CreatePlayerFromAccountUidAsync(uid);
             //Attach player systems to the player
-            player.Avatars = await GetAvatarsByPlayerAsync(player) ?? new AvatarManager(player);
+            player.Avatars = await GetAvatarsByPlayerAsync(player) ?? new AvatarManager(player); // Load avatars before inventory, so that we can attach weapons while loading them
             player.Inventory = await GetInventoryByPlayerAsync(player) ?? new InventoryManager(player);
 
             return player;

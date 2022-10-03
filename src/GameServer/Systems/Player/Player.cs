@@ -18,6 +18,7 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonElement] public string Nickname { get; private set; }
         [BsonElement] public string Signature { get; private set; }
         [BsonElement] public int NameCardId { get; private set; } = 210001;
+        [BsonIgnore] public World.World World;
         [BsonElement] public Vector3 Position { get; private set; }
         [BsonElement] public Vector3 Rotation { get; private set; }
         [BsonElement] public Tuple<int,int> Birthday { get; private set; } // <Date,Month>

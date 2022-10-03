@@ -43,7 +43,7 @@ namespace Weedwacker.GameServer.Data.Excel
             [JsonProperty]
             public readonly float initValue;
             [JsonProperty]
-            public readonly WeaponGrowCurveType type;
+            public readonly GrowCurveType type;
         }
     }
 }

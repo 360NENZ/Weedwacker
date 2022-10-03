@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Weedwacker.GameServer.Data.Common;
+using Weedwacker.GameServer.Enums;
 using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Data
@@ -12,11 +13,11 @@ namespace Weedwacker.GameServer.Data
 		[JsonProperty]
 		public readonly CurveInfo[] curveInfos;
 
-		public Tuple<string,float> GetArith(string type)
+		internal Tuple<string,float> GetArith(GrowCurveType type)
 		{
 			foreach (CurveInfo curveInfo in curveInfos)
 			{
-				if (curveInfo.type == type) return Tuple.Create(curveInfo.type,curveInfo.value);
+				if (curveInfo.type == type) return Tuple.Create(curveInfo.arith,curveInfo.value);
 			}
 			Logger.WriteErrorLine("Could not find value for " + type + " for avatar level:" + level);
 			return Tuple.Create("ARITH_MULTI",(float)1.0);

@@ -42,7 +42,13 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<int, RewardData> RewardDataMap = new(); // RewardId
         public readonly static SortedList<string, TeamResonanceConfigData> TeamResonanceConfigDataMap = new(); // openConfig
         public readonly static SortedList<string, WeaponAffixConfigData> WeaponAffixConfigDataMap = new(); // openConfig
+        public readonly static SortedList<int, WeaponCurveData> WeaponCurveDataMap = new(); // level
+        public readonly static SortedList<Tuple<int,int>, WeaponPromoteData> WeaponPromoteDataMap = new(); // <weaponPromoteId, promoteLevel>
+        public readonly static SortedList<int, ReliquaryAffixData> ReliquaryAffixDataMap = new(); // id
         public readonly static SortedList<int, ReliquaryMainPropData> ReliquaryMainPropDataMap = new(); // id
+        public readonly static SortedList<Tuple<int, int>, ReliquaryLevelData> ReliquaryLevelDataMap = new(); // <rank, level>
+        public readonly static SortedList<int, ReliquarySetData> ReliquarySetDataMap = new(); // setid
+
 
 
 
@@ -119,9 +125,14 @@ namespace Weedwacker.GameServer.Data
                 LoadData(excelPath, o => o.fetterId, PhotographPosenameDataMap),
                 LoadData(excelPath, o => o.proudSkillId, ProudSkillDataMap),
                 LoadData<ItemData, int, ReliquaryData>(excelPath, o => o.id, ItemDataMap),
+                LoadData(excelPath, o => o.id, ReliquaryAffixDataMap),
                 LoadData(excelPath, o => o.id, ReliquaryMainPropDataMap),
+                LoadData(excelPath, o => Tuple.Create(o.rank, o.level), ReliquaryLevelDataMap),
+                LoadData(excelPath, o => o.setId, ReliquarySetDataMap),
                 LoadData(excelPath, o => o.rewardId, RewardDataMap),
-                LoadData<ItemData, int, WeaponData>(excelPath, o => o.id, ItemDataMap)
+                LoadData<ItemData, int, WeaponData>(excelPath, o => o.id, ItemDataMap),
+                LoadData(excelPath, o => o.level, WeaponCurveDataMap),
+                LoadData(excelPath, o => Tuple.Create(o.weaponPromoteId, o.promoteLevel), WeaponPromoteDataMap),
                 //LoadData(Path.Combine(binPath, "/AbilityGroup"), o => ????, PlayerElementAbilityDataMap), // TODO
                 //LoadFolder(Path.Combine(binPath, "/AbilityGroup/Talent/AvatarTalents"), o => ????, AvatarTalentConfigDataMap),
                 //LoadFolder(Path.Combine(binPath, "/AbilityGroup/Talent/EquipTalents"), o => ????, WeaponAffixConfigDataMap),

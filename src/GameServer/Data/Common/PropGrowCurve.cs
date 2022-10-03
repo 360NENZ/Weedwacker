@@ -8,6 +8,6 @@ namespace Weedwacker.GameServer.Data.Common
         [JsonProperty]
         public readonly FightProperty type;
         [JsonProperty]
-        public readonly string growCurve;
+        public readonly GrowCurveType growCurve;
     }
 }

@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Data.Common;
@@ -8,39 +7,37 @@ using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet;
 using Weedwacker.GameServer.Packet.Send;
-using Weedwacker.GameServer.Systems.Avatar;
 using Weedwacker.GameServer.Systems.Inventory;
 using Weedwacker.GameServer.Systems.Player;
 using Weedwacker.Shared.Network.Proto;
 using Weedwacker.Shared.Utils;
+using static Weedwacker.GameServer.Data.Excel.WeaponData;
 
 namespace Weedwacker.GameServer.Systems.Avatar
 {
     internal class Avatar
     {
-        public int BornTime { get; private set; }
-        public int AvatarId { get; private set; }           // Id of avatar
-        [BsonIgnore]
-        public Player.Player Owner { get; private set; } // Loaded by DatabaseManager
-        [BsonIgnore]
-        public AvatarCompiledData Data { get; private set; } // Loaded by DatabaseManager
-        [BsonIgnore]
-        public long Guid { get; private set; }           // Player unique Avatar id. Generated each session
+        [BsonElement] public int BornTime { get; private set; }
+        [BsonElement] public int AvatarId { get; private set; }           // Id of avatar
+        [BsonIgnore] public Player.Player Owner { get; private set; } // Loaded by DatabaseManager
+        [BsonIgnore] public AvatarCompiledData Data { get; private set; } // Loaded by DatabaseManager
+        [BsonIgnore] public long Guid { get; private set; }           // Player unique Avatar id. Generated each session
 
-        public int Level { get; private set; } = 1;
+        [BsonElement] public int Level { get; private set; } = 1;
         public int Exp;
-        public int PromoteLevel { get; private set; } = 0;
+        [BsonElement] public int PromoteLevel { get; private set; } = 0;
         public int Satiation; // ?
         public int SatiationPenalty; // ?
-        public LifeState Life { get; private set; } = LifeState.LIFE_ALIVE;
-        public int CurrentDepotId { get; private set; }
-        public Dictionary<int, SkillDepot> SkillDepots { get; private set; } = new();
-        public FetterSystem Fetters { get; private set; }
+        [BsonElement] public LifeState Life { get; private set; } = LifeState.LIFE_ALIVE;
+        [BsonElement] public int CurrentDepotId { get; private set; }
+        [BsonElement] public Dictionary<int, SkillDepot> SkillDepots { get; private set; } = new();
+        [BsonElement] public FetterSystem Fetters { get; private set; }
         [BsonIgnore] public Dictionary<EquipType, EquipItem> Equips { get; private set; } = new(); // Loaded through the inventory system
-        public Dictionary<FightProperty, float> FightProp { get; private set; } = new();
+        [BsonElement] public Dictionary<FightProperty, float> FightProp { get; private set; } = new();
+        [BsonElement] public HashSet<string> AppliedOpenConfigs { get; private set; } = new();
 
-        public int FlyCloak { get; private set; } = 140001;
-        public int Costume { get; private set; }
+        [BsonElement] public int FlyCloak { get; private set; } = 140001;
+        [BsonElement] public int Costume { get; private set; }
 
         public Avatar(int avatarId, Player.Player owner)
         {
@@ -71,7 +68,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
             // Set stats
             RecalcStatsAsync();
-            SetCurrentHp(FightProp[FightProperty.FIGHT_PROP_MAX_HP]);
+            SetCurrentHp(FightProp[FightProperty.FIGHT_PROP_MAX_HP], false);
         }
 
         public async Task OnLoadAsync(Player.Player owner)
@@ -89,9 +86,18 @@ namespace Weedwacker.GameServer.Systems.Avatar
             }
             await Task.WhenAll(tasks);
         }
-        public void SetCurrentHp(float value)
+        public async Task<bool> SetCurrentHp(float value, bool notifyClient = true)
         {
+            if (FightProp[FightProperty.FIGHT_PROP_MAX_HP] <= value) return false;
             FightProp[FightProperty.FIGHT_PROP_CUR_HP] = value;
+            // Update
+            var updateQuery = new UpdateQueryBuilder<AvatarManager>();
+            updateQuery.SetFilter(w => w.OwnerId == Owner.GameUid);
+            updateQuery.AddValueToSet(w => w.Avatars[AvatarId].FightProp[FightProperty.FIGHT_PROP_CUR_HP], value);
+            Tuple<string, string> updateString = updateQuery.Build();
+            var result = await DatabaseManager.UpdateAvatarsAsync(updateString);
+            if(notifyClient) await Owner.SendPacketAsync(new PacketAvatarFightPropUpdateNotify(this, FightProperty.FIGHT_PROP_CUR_HP));
+            return result.IsAcknowledged;
         }
         public SkillDepot GetCurSkillDepot()
         {
@@ -140,9 +146,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
             return 0;
         }
 
-        public GameItem? GetWeapon()
+        public WeaponItem? GetWeapon()
         {
-            return Equips[EquipType.EQUIP_WEAPON];
+            return (WeaponItem?)Equips[EquipType.EQUIP_WEAPON];
         }
 
         public GameItem? GetRelic(EquipType slot)
@@ -155,20 +161,46 @@ namespace Weedwacker.GameServer.Systems.Avatar
             return Equips[slot];
         }
 
-        public void SetCurrentEnergy(float currentEnergy)
+        public async Task<bool> SetCurrentEnergy(float currentEnergy, bool update = true)
         {
             GetCurSkillDepot().Element.CurEnergy = currentEnergy;
             FightProp[GetCurSkillDepot().Element.CurEnergyProp] = currentEnergy;
-            //TODO update database
+
+            // false = used in RecalcStatsAsync
+            if (update)
+            {
+                // Update
+                var updateQuery = new UpdateQueryBuilder<AvatarManager>();
+                updateQuery.SetFilter(w => w.OwnerId == Owner.GameUid);
+                updateQuery.AddValueToSet(w => w.Avatars[AvatarId].FightProp[GetCurSkillDepot().Element.CurEnergyProp], currentEnergy);
+                Tuple<string, string> updateString = updateQuery.Build();
+                var result = await DatabaseManager.UpdateAvatarsAsync(updateString);
+                await Owner.SendPacketAsync(new PacketAvatarFightPropUpdateNotify(this, GetCurSkillDepot().Element.CurEnergyProp));
+                return result.IsAcknowledged;
+            }
+            return true;
         }
 
-        public void AddToFightProperty(FightProperty prop, float value)
+        public async Task<bool> AddToFightProperty(FightProperty prop, float value, bool update = true)
         {
             FightProp[prop] += value;
-            //TODO update database
+
+            // false = used in RecalcStatsAsync
+            if (update)
+            {
+                // Update
+                var updateQuery = new UpdateQueryBuilder<AvatarManager>();
+                updateQuery.SetFilter(w => w.OwnerId == Owner.GameUid);
+                updateQuery.AddValueToSet(w => w.Avatars[AvatarId].FightProp[prop], value);
+                Tuple<string, string> updateString = updateQuery.Build();
+                var result = await DatabaseManager.UpdateAvatarsAsync(updateString);
+                await Owner.SendPacketAsync(new PacketAvatarFightPropUpdateNotify(this, prop));
+                return result.IsAcknowledged;
+            }
+            return true;
         }
 
-        public async Task<bool> EquipRelic(ReliquaryItem item, bool shouldRecalc)
+        public async Task<bool> EquipRelic(ReliquaryItem item, bool notifyClient = true)
         {
             // Sanity check equip type
             EquipType itemEquipType = item.ItemData.equipType;
@@ -200,14 +232,11 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 await Owner.SendPacketAsync(new PacketAvatarEquipChangeNotify(this, item, itemEquipType));
             }
 
-            if (shouldRecalc)
-            {
-                await RecalcStatsAsync();
-            }
+           await RecalcStatsAsync(notifyClient);
 
             return true;
         }
-        public async Task<bool> EquipWeapon(WeaponItem item, bool shouldRecalc, bool notifyClient = true)
+        public async Task<bool> EquipWeapon(WeaponItem item, bool notifyClient = true)
         {
             if (GetWeapon() != null)
             {
@@ -233,15 +262,12 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 await Owner.SendPacketAsync(new PacketAvatarEquipChangeNotify(this, item, EquipType.EQUIP_WEAPON));
             }
 
-            if (shouldRecalc)
-            {
-                await RecalcStatsAsync(notifyClient);
-            }
+            await RecalcStatsAsync(notifyClient);
 
             return true;                         
         }
 
-        public async Task<bool> UnequipRelic(EquipType slot)
+        public async Task<bool> UnequipRelic(EquipType slot, bool notifyClient = true)
         {
             ReliquaryItem item = (ReliquaryItem)Equips[slot];
             Equips.Remove(slot);
@@ -259,7 +285,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 await DatabaseManager.UpdateInventoryAsync(queryStrings);
 
                 await Owner.SendPacketAsync(new PacketAvatarEquipChangeNotify(this, slot));
-                await RecalcStatsAsync();
+                await RecalcStatsAsync(notifyClient);
                 return true;
             }
 
@@ -293,8 +319,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         public async Task RecalcStatsAsync(bool forceSendAbilityChange = false)
         {
             // Setup
-            AvatarCompiledData data = GameServer.AvatarInfo[AvatarId];
-            AvatarPromoteData promoteData = GameServer.AvatarInfo[AvatarId].PromoteData[PromoteLevel];
+            AvatarPromoteData promoteData = Data.PromoteData[PromoteLevel];
 
             // Get hp percent, set to 100% if none
             float hpPercent = FightProp[FightProperty.FIGHT_PROP_MAX_HP] == 0 ? 1f : FightProp[FightProperty.FIGHT_PROP_CUR_HP] / FightProp[FightProperty.FIGHT_PROP_MAX_HP];
@@ -309,23 +334,157 @@ namespace Weedwacker.GameServer.Systems.Avatar
             }
 
             // Base stats
-            FightProp[FightProperty.FIGHT_PROP_BASE_HP] = data.GetBaseHp(Level);
-            FightProp[FightProperty.FIGHT_PROP_BASE_ATTACK] = data.GetBaseAttack(Level);
-            FightProp[FightProperty.FIGHT_PROP_BASE_DEFENSE] = data.GetBaseDefense(Level);
-            FightProp[FightProperty.FIGHT_PROP_CRITICAL] = data.GetBaseCritical();
-            FightProp[FightProperty.FIGHT_PROP_CRITICAL_HURT] = data.GetBaseCriticalHurt();
+            FightProp[FightProperty.FIGHT_PROP_BASE_HP] = Data.GetBaseHp(Level);
+            FightProp[FightProperty.FIGHT_PROP_BASE_ATTACK] = Data.GetBaseAttack(Level);
+            FightProp[FightProperty.FIGHT_PROP_BASE_DEFENSE] = Data.GetBaseDefense(Level);
+            FightProp[FightProperty.FIGHT_PROP_CRITICAL] = Data.GetBaseCritical();
+            FightProp[FightProperty.FIGHT_PROP_CRITICAL_HURT] = Data.GetBaseCriticalHurt();
             FightProp[FightProperty.FIGHT_PROP_CHARGE_EFFICIENCY] = 1f;
 
 
             foreach (FightPropData fightPropData in promoteData.addProps)
             {
-                AddToFightProperty(fightPropData.propType, fightPropData.value);
+                FightProp[fightPropData.propType] += fightPropData.value;
             }
 
             // Set energy usage
-            SetCurrentEnergy(currentEnergy);
+            await SetCurrentEnergy(currentEnergy, false);
 
-            //TODO Artifacts, Weapons 
+            // Artifacts
+
+            // artifact set ids and number of artifacts
+            Dictionary<int, int> sets = new();
+
+            for (int slotId = 1; slotId <= 5; slotId++)
+            {
+                // Get artifact
+                var equip = (ReliquaryItem)Equips[(EquipType)slotId];
+                if (equip == null)
+                {
+                    continue;
+                }
+                // Artifact main stat
+                ReliquaryMainPropData mainPropData = GameData.ReliquaryMainPropDataMap[equip.MainPropId];
+                if (mainPropData != null)
+                {
+                    ReliquaryLevelData levelData = GameData.ReliquaryLevelDataMap[Tuple.Create(equip.ItemData.rankLevel, equip.Level)];
+                    if (levelData != null)
+                    {
+                        FightProp[mainPropData.propType] += levelData.addProps.Where(w => w.propType == mainPropData.propType).First().value;
+                    }
+                }
+                // Artifact sub stats
+                foreach (int appendPropId in equip.AppendPropIdList)
+                {
+                    ReliquaryAffixData affixData = GameData.ReliquaryAffixDataMap[appendPropId];
+                    if (affixData != null)
+                    {
+                        FightProp[affixData.propType] += affixData.propValue;
+                    }
+                }
+                // Set bonus
+                if (equip.ItemData.setId > 0)
+                {
+                    sets[equip.ItemData.setId] += 1;
+                }
+            }
+
+            // Artifact Set stuff
+            foreach (KeyValuePair<int,int> e in sets.ToList())
+            {
+                ReliquarySetData setData = GameData.ReliquarySetDataMap[e.Key];
+                if (setData == null)
+                {
+                    continue;
+                }
+
+                // Calculate how many items are from the set
+                int amount = e.Value;
+
+                // Add affix data from set bonus
+                for (int setIndex = 0; setIndex < setData.setNeedNum.Length; setIndex++)
+                {
+                    if (amount >= setData.setNeedNum[setIndex])
+                    {
+                        int affixId = (setData.EquipAffixId * 10) + setIndex;
+
+                        EquipAffixData affix = GameData.EquipAffixDataMap[affixId];
+                        if (affix == null)
+                        {
+                            continue;
+                        }
+
+                        // Add properties from this affix to our avatar
+                        foreach (FightPropData prop in affix.addProps)
+                        {
+                            FightProp[prop.propType] += prop.value;
+                        }
+
+                        // Add any skill strings from this affix
+                        //this.addToExtraAbilityEmbryos(affix.openConfig, true);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            // Weapon
+            WeaponItem weapon = GetWeapon();
+            if (weapon != null)
+            {
+                // Add stats
+                WeaponCurveData curveData = GameData.WeaponCurveDataMap[weapon.Level];
+                if (curveData != null)
+                {
+                    foreach (WeaponProperty weaponProperty in weapon.ItemData.weaponProp)
+                    {
+                        FightProp[weaponProperty.propType] += WeaponCurveData.CalcValue(weaponProperty.initValue, curveData.GetArith(weaponProperty.type));
+                    }
+                }
+                // Weapon promotion stats
+                WeaponPromoteData wepPromoteData = GameData.WeaponPromoteDataMap[Tuple.Create(weapon.ItemData.weaponPromoteId, weapon.PromoteLevel)];
+                if (wepPromoteData != null)
+                {
+                    foreach (FightPropData prop in wepPromoteData.addProps)
+                    {
+                        if (prop.value == 0f || prop.propType == FightProperty.FIGHT_PROP_NONE)
+                        {
+                            continue;
+                        }
+                        FightProp[prop.propType] += prop.value;
+                    }
+                }
+                // Add weapon skill from affixes
+                if (weapon.Affixes != null && weapon.Affixes.Count > 0)
+                {
+                    // Weapons usually dont have more than one affix but just in case...
+                    foreach (int af in weapon.Affixes)
+                    {
+                        if (af == 0)
+                        {
+                            continue;
+                        }
+                        // Calculate affix id
+                        int affixId = (af * 10) + weapon.Refinement;
+                        EquipAffixData affix = GameData.EquipAffixDataMap[affixId];
+                        if (affix == null)
+                        {
+                            continue;
+                        }
+
+                        // Add properties from this affix to our avatar
+                        foreach (FightPropData prop in affix.addProps)
+                        {
+                            FightProp[prop.propType] += prop.value;
+                        }
+
+                        // Add any skill strings from this affix
+                        //this.addToExtraAbilityEmbryos(affix.openConfig, true);
+                    }
+                }
+            }
 
             // Proud skills
             foreach (ProudSkillData proudSkill in GetCurSkillDepot().InherentProudSkillOpens)
@@ -357,7 +516,6 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
             }
         }
-
 
         public AvatarInfo ToProto()
         {

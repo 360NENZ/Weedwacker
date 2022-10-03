@@ -1,11 +1,15 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 using Newtonsoft.Json.Converters;
 
 namespace Weedwacker.GameServer.Enums
 {
     [JsonConverter(typeof(StringEnumConverter))]
-    public enum WeaponGrowCurveType
+    public enum GrowCurveType
     {
+        GROW_CURVE_HP_S4,
+        GROW_CURVE_HP_S5,
+        GROW_CURVE_ATTACK_S4,
+        GROW_CURVE_ATTACK_S5,
         GROW_CURVE_ATTACK_101,
         GROW_CURVE_ATTACK_102,
         GROW_CURVE_ATTACK_104,

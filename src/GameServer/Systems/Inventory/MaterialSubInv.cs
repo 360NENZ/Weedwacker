@@ -116,12 +116,15 @@ namespace Weedwacker.GameServer.Systems.Inventory
             // Find the Handler for this opcode
             foreach (ItemUseData op in data.itemUse)
             {
-                var query =
-                    from type in Assembly.GetExecutingAssembly().GetTypes()
-                    where type.GetCustomAttribute<ItemUseAttribute>()?.Op == op.useOp
-                    select type;
-                var opType = query.FirstOrDefault();
-                if (opType != null) ops.Add((BaseItemUse)Activator.CreateInstance(opType, Owner, itemId));
+                if (op.useOp != ItemUseOp.ITEM_USE_NONE)
+                {
+                    var query =
+                        from type in Assembly.GetExecutingAssembly().GetTypes()
+                        where type.GetCustomAttribute<ItemUseAttribute>()?.Op == op.useOp
+                        select type;
+                    var opType = query.FirstOrDefault();
+                    if (opType != null) ops.Add((BaseItemUse)Activator.CreateInstance(opType, Owner, itemId));
+                }
             }
 
             switch (data.materialType)

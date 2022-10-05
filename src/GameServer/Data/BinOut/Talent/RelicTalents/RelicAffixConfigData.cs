@@ -1,6 +1,10 @@
-﻿namespace Weedwacker.GameServer.Data.BinOut.Talent.RelicTalents
+﻿using Newtonsoft.Json;
+using Weedwacker.GameServer.Data.Common;
+
+namespace Weedwacker.GameServer.Data.BinOut.Talent.RelicTalents
 {
-    internal class RelicAffixConfigData : TalentConfig
+    internal class RelicAffixConfigData
     {
+        [JsonProperty] public readonly Dictionary<string, ConfigTalent[]> Configs;
     }
 }

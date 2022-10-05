@@ -36,5 +36,15 @@ namespace Weedwacker.GameServer.Data.Excel
         public readonly long[] paramDescList;
         [JsonProperty]
         public readonly long nameTextMapHash;
+
+        public List<ItemParamData> GetTotalCostItems()
+        {
+            List<ItemParamData> total = new();
+            total = (List<ItemParamData>)total.Concat(costItems);
+            if (coinCost > 0)
+                total.Add(new ItemParamData(202, coinCost));
+            
+            return total;
+        }
     }
 }

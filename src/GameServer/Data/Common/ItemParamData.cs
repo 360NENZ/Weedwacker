@@ -14,5 +14,11 @@ namespace Weedwacker.GameServer.Data.Common
 
         [JsonProperty("itemCount")]
         private int itemCount { set { count = value; } }
+
+        public ItemParamData(int itemId, int count)
+        {
+            id = itemId;
+            this.count = count;
+        }
     }
 }

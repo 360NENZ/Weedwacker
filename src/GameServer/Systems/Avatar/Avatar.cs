@@ -5,7 +5,6 @@ using Weedwacker.GameServer.Data.Common;
 using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
-using Weedwacker.GameServer.Packet;
 using Weedwacker.GameServer.Packet.Send;
 using Weedwacker.GameServer.Systems.Inventory;
 using Weedwacker.GameServer.Systems.Player;
@@ -22,6 +21,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         [BsonIgnore] public Player.Player Owner { get; private set; } // Loaded by DatabaseManager
         [BsonIgnore] public AvatarCompiledData Data { get; private set; } // Loaded by DatabaseManager
         [BsonIgnore] public long Guid { get; private set; }           // Player unique Avatar id. Generated each session
+        [BsonIgnore] public int EntityId { get; private set; }
 
         [BsonElement] public int Level { get; private set; } = 1;
         public int Exp;
@@ -31,6 +31,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         [BsonElement] public LifeState Life { get; private set; } = LifeState.LIFE_ALIVE;
         [BsonElement] public int CurrentDepotId { get; private set; }
         [BsonElement] public Dictionary<int, SkillDepot> SkillDepots { get; private set; } = new();
+        
         [BsonElement] public FetterSystem Fetters { get; private set; }
         [BsonIgnore] public Dictionary<EquipType, EquipItem> Equips { get; private set; } = new(); // Loaded through the inventory system
         [BsonElement] public Dictionary<FightProperty, float> FightProp { get; private set; } = new();
@@ -419,9 +420,6 @@ namespace Weedwacker.GameServer.Systems.Avatar
                         {
                             FightProp[prop.propType] += prop.value;
                         }
-
-                        // Add any skill strings from this affix
-                        //this.addToExtraAbilityEmbryos(affix.openConfig, true);
                     }
                     else
                     {
@@ -479,9 +477,6 @@ namespace Weedwacker.GameServer.Systems.Avatar
                         {
                             FightProp[prop.propType] += prop.value;
                         }
-
-                        // Add any skill strings from this affix
-                        //this.addToExtraAbilityEmbryos(affix.openConfig, true);
                     }
                 }
             }
@@ -507,13 +502,18 @@ namespace Weedwacker.GameServer.Systems.Avatar
             // Set current hp
             FightProp[FightProperty.FIGHT_PROP_CUR_HP] = FightProp[FightProperty.FIGHT_PROP_MAX_HP] * hpPercent;
 
+            // Update Database
+            var updateQuery = new UpdateQueryBuilder<AvatarManager>();
+            updateQuery.SetFilter(w => w.OwnerId == Owner.GameUid);
+            updateQuery.AddValueToSet(w => w.Avatars[AvatarId].FightProp, FightProp);
+            Tuple<string, string> updateString = updateQuery.Build();
+            var result = await DatabaseManager.UpdateAvatarsAsync(updateString);
+
             // Packet
             if (Owner.HasSentLoginPackets)
             {
                 // Update stats for client
                 await Owner.SendPacketAsync(new PacketAvatarFightPropNotify(this));
-                //TODO Update client abilities
-
             }
         }
 
@@ -565,7 +565,14 @@ namespace Weedwacker.GameServer.Systems.Avatar
             {
                 avatarInfo.FightPropMap.Add((uint)prop, FightProp[prop]);
             }
-            //TODO ProudSkillExtraLevelMap, MaxChargeCount
+            foreach (int groupId in GetCurSkillDepot().ProudSkillExtraLevelMap.Keys)
+            {
+                avatarInfo.ProudSkillExtraLevelMap.Add((uint)groupId, (uint)GetCurSkillDepot().ProudSkillExtraLevelMap[groupId]);
+            }
+            foreach (int skillId in GetCurSkillDepot().SkillExtraChargeMap.Keys)
+            {
+                avatarInfo.SkillMap.Add((uint)skillId, new AvatarSkillInfo() { MaxChargeCount = (uint)GetCurSkillDepot().SkillExtraChargeMap[skillId] });
+            }
 
             foreach (GameItem item in Equips.Values)
             {
@@ -607,9 +614,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
             {
                 showAvatarInfo.SkillLevelMap.Add((uint)skill, (uint)GetCurSkillDepot().GetSkillLevelMap()[skill]);
             }
-            foreach (int groupId in GetCurSkillDepot().proudSkillExtraLevelMap.Keys)
+            foreach (int groupId in GetCurSkillDepot().ProudSkillExtraLevelMap.Keys)
             {
-                showAvatarInfo.ProudSkillExtraLevelMap.Add((uint)groupId, (uint)GetCurSkillDepot().proudSkillExtraLevelMap[groupId]);
+                showAvatarInfo.ProudSkillExtraLevelMap.Add((uint)groupId, (uint)GetCurSkillDepot().ProudSkillExtraLevelMap[groupId]);
             }
             foreach (FightProperty prop in FightProp.Keys)
             {

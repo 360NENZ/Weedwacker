@@ -9,6 +9,7 @@ namespace Weedwacker.GameServer.Enums
         AddAbility,
         ModifyAbility,
         ModifySkillPoint,
+        ModifySkillCD,
         UnlockTalentParam,
         AddTalentExtraLevel
     }

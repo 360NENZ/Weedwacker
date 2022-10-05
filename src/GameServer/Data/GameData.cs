@@ -1,11 +1,12 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Weedwacker.GameServer.Data.BinOut.AbilityGroup;
 using Weedwacker.GameServer.Data.BinOut.Talent.AvatarTalents;
 using Weedwacker.GameServer.Data.BinOut.Talent.EquipTalents;
 using Weedwacker.GameServer.Data.BinOut.Talent.RelicTalents;
 using Weedwacker.GameServer.Data.BinOut.Talent.TeamTalents;
+using Weedwacker.GameServer.Data.Common.ConfigTalentTypes;
 using Weedwacker.GameServer.Data.Excel;
+using static Weedwacker.GameServer.Data.SerializationSettings;
 
 namespace Weedwacker.GameServer.Data
 {
@@ -54,6 +55,17 @@ namespace Weedwacker.GameServer.Data
 
         static readonly JsonSerializer Serializer = new();
 
+        // To handle $type
+        static JsonSerializerSettings settings = new()
+        {
+            TypeNameHandling = TypeNameHandling.Objects,
+            SerializationBinder = new KnownTypesBinder
+            {
+                KnownTypes = new List<Type> { typeof(AddAbility), typeof(AddTalentExtraLevel), typeof(ModifyAbility),
+                    typeof(ModifySkillCD), typeof(ModifySkillPoint), typeof(UnlockTalentParam) }
+            }
+        };
+    
         static async Task LoadFolder<Obj, Key>(string path, Func<Obj, Key> keySelector, SortedList<Key, Obj> map) where Key : notnull
         {
             string[] filePaths = Directory.GetFiles(path, ".json", SearchOption.TopDirectoryOnly);

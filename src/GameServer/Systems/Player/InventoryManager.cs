@@ -160,6 +160,29 @@ namespace Weedwacker.GameServer.Systems.Player
                 return updatedItem;
         }
 
+        public async Task<bool> PayPromoteCostAsync(IEnumerable<ItemParamData> costItems , ActionReason reason = ActionReason.None)
+        {
+            Dictionary<MaterialItem,int> materials = new();
+            Dictionary<int, int> virtualItems = new();
+            foreach(ItemParamData itemData in costItems)
+            {
+                if (GameData.ItemDataMap[itemData.id].itemType == ItemType.ITEM_MATERIAL)
+                {
+                    var material = (SubInventories[ItemType.ITEM_MATERIAL] as MaterialSubInv).PromoteTab.Items[itemData.id];
+                    if (material.Count < itemData.count) return false; // insufficient materials
+                    else materials.Add(material, itemData.count);
+                }
+                else if (GameData.ItemDataMap[itemData.id].itemType == ItemType.ITEM_VIRTUAL)
+                {
+                    if (GetVirtualItemValue(itemData.id) < itemData.count) return false; // insufficient currency
+                    else virtualItems.Add(itemData.id, GetVirtualItemValue(itemData.id));
+                }
+            }
+            // We have the requisite amount for all items
+            foreach(MaterialItem material in materials.Keys) await RemoveItemByGuid(material.Guid, materials[material]);
+            foreach (int item in virtualItems.Keys) await PayVirtualItemByIdAsync(item, virtualItems[item]);
+            return true;
+        }
         private async Task<bool> AddVirtualItemByIdAsync(int itemId, int count)
         {
             switch (itemId)
@@ -191,8 +214,7 @@ namespace Weedwacker.GameServer.Systems.Player
                     return false;
             }
         }
-
-        private async Task<bool> PayVirtualItemByIdAsync(int itemId, int count)
+        private async Task<bool> PayVirtualItemByIdAsync(int itemId, int count, ActionReason reason = ActionReason.None)
         {
             switch (itemId)
             {
@@ -219,13 +241,10 @@ namespace Weedwacker.GameServer.Systems.Player
                     return false;
             }
         }
-
-
         public async Task<bool> PayVirtualItemByParamDataAsync(ItemParamData costItem)
         {
             return await PayVirtualItemByIdAsync(costItem.id, costItem.count);
         }
-
         public async Task<bool> PayVirtualItemByParamDataManyAsync(IEnumerable<ItemParamData> costItems, int quantity = 1, ActionReason reason = ActionReason.None)
         {
             // Make sure player has requisite items
@@ -361,8 +380,7 @@ namespace Weedwacker.GameServer.Systems.Player
             foreach(SubInventory sub in SubInventories.Values)
             {
                 await sub.OnLoadAsync(owner, this);
-            }
-            //TODO        
+            }      
         }
     }
 }

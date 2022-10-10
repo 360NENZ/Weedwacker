@@ -15,6 +15,7 @@ namespace Weedwacker.GameServer.Database
         static IMongoCollection<Player> Players;
         static IMongoCollection<AvatarManager> Avatars;
         static IMongoCollection<InventoryManager> Inventories;
+        static IMongoCollection<TeamManager> Teams;
         static DatabaseProperties Properties;
 
         public static async Task Initialize()
@@ -25,6 +26,7 @@ namespace Weedwacker.GameServer.Database
             Players = Database.GetCollection<Player>("players");
             Avatars = Database.GetCollection<AvatarManager>("avatars");
             Inventories = Database.GetCollection<InventoryManager>("inventories");
+            Teams = Database.GetCollection<TeamManager>("teams");
 
             if (Database.GetCollection<DatabaseProperties>("dbProperties").Find(w => true).FirstOrDefault() == null)
             {
@@ -41,7 +43,7 @@ namespace Weedwacker.GameServer.Database
         public static async Task<Player?> CreatePlayerFromAccountUidAsync( string accountUid, string heroName = "", int gameUid = 0)
         {
             //Make sure there are no name or id collisions
-            var queryResult = await Players.FindAsync(w => w.HeroName == heroName || w.AccountUid == accountUid || w.GameUid == gameUid);
+            var queryResult = await Players.FindAsync(w => w.Profile.HeroName == heroName || w.AccountUid == accountUid || w.GameUid == gameUid);
             if (queryResult.ToList().Count > 0)
             {
                 return null;
@@ -87,6 +89,9 @@ namespace Weedwacker.GameServer.Database
             //Attach player systems to the player
             player.Avatars = await GetAvatarsByPlayerAsync(player) ?? new AvatarManager(player); // Load avatars before inventory, so that we can attach weapons while loading them
             player.Inventory = await GetInventoryByPlayerAsync(player) ?? new InventoryManager(player);
+            player.TeamManager = await GetTeamsByPlayerAsync(player) ?? new TeamManager(player);
+            player.GadgetManager = new(player);
+            player.EnergyManager = new(player);
 
             return player;
         }
@@ -142,6 +147,36 @@ namespace Weedwacker.GameServer.Database
             var update = Builders<InventoryManager>.Update.Pipeline(pipeline);
 
             return await Inventories.UpdateOneAsync(filter, update);
+        }
+
+        public static async Task<TeamManager?> CreateTeamStorageAsync(TeamManager teams)
+        {
+            await Teams.InsertOneAsync(teams);
+            return teams;
+        }
+        public static async Task SaveTeamsAsync(TeamManager teams)
+        {
+            await Teams.ReplaceOneAsync<TeamManager>(w => w.OwnerId == teams.OwnerId, teams);
+        }
+
+        public static async Task<UpdateResult> UpdateTeamsAsync(Tuple<string?, string> queryFilterAndUpdate)
+        {
+
+            string? filterString = queryFilterAndUpdate.Item1;
+            var filter = filterString == null ? Builders<TeamManager>.Filter.And(filterString) : Builders<TeamManager>.Filter.Empty;
+
+            string updateString = queryFilterAndUpdate.Item2;
+            var pipeline = new EmptyPipelineDefinition<TeamManager>().AppendStage<TeamManager, TeamManager, TeamManager>(updateString);
+            var update = Builders<TeamManager>.Update.Pipeline(pipeline);
+
+            return await Teams.UpdateOneAsync(filter, update);
+        }
+
+        private static async Task<TeamManager?> GetTeamsByPlayerAsync(Player owner)
+        {
+            TeamManager teams = await Database.GetCollection<TeamManager>("teams").Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
+            if (teams != null) await teams.OnLoadAsync(owner);
+            return teams;
         }
     }
 }

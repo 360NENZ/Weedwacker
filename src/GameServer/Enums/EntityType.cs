@@ -1,6 +1,10 @@
-﻿namespace Weedwacker.GameServer.Enums
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
+namespace Weedwacker.GameServer.Enums
 {
-    public enum EntityType
+	[JsonConverter(typeof(StringEnumConverter))]
+	public enum EntityType
     {
 		None = 0,
 		Avatar = 1,

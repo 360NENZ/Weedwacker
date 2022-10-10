@@ -22,7 +22,7 @@ namespace Weedwacker.GameServer.Packet.Send
                 Uid = (uint)session.Player.GameUid,
                 Token = token,
                 AccountType = 1,
-                IsProficientPlayer = session.Player.HeroName != "", // Not sure what this checks
+                IsProficientPlayer = session.Player.Profile.HeroName != "", // Not sure what this checks
                 SecretKeySeed = Crypto.ENCRYPT_SEED,
                 SecurityCmdBuffer = ByteString.CopyFrom(Crypto.ENCRYPT_SEED_BUFFER),
                 PlatformType = 3,
@@ -42,7 +42,7 @@ namespace Weedwacker.GameServer.Packet.Send
             GetPlayerTokenRsp p = new GetPlayerTokenRsp()
             {
                 AccountType = 1,
-                IsProficientPlayer = session.Player.HeroName != "", // Not sure what this checks
+                IsProficientPlayer = session.Player.Profile.HeroName != "", // Not sure what this checks
                 Retcode = retcode,
                 Msg = msg,
                 BlackUidEndTime = (uint)blackEndTime,
@@ -62,7 +62,7 @@ namespace Weedwacker.GameServer.Packet.Send
                 Uid = (uint)session.Player.GameUid,
                 Token = token,
                 AccountType = 1,
-                IsProficientPlayer = session.Player.HeroName != "", // Not sure what this checks
+                IsProficientPlayer = session.Player.Profile.HeroName != "", // Not sure what this checks
                 SecretKeySeed = Crypto.ENCRYPT_SEED,
                 SecurityCmdBuffer = ByteString.CopyFrom(Crypto.ENCRYPT_SEED_BUFFER),
                 PlatformType = 3,

@@ -3,6 +3,7 @@ using Vim.Math3d;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet;
 using Weedwacker.GameServer.Packet.Send;
+using Weedwacker.GameServer.Systems.World;
 using Weedwacker.Shared.Network.Proto;
 
 namespace Weedwacker.GameServer.Systems.Player
@@ -14,33 +15,42 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonElement("_id")]
         public string AccountUid { get; private set; }
         [BsonElement] public int GameUid { get; private set; }
-        [BsonElement] public string HeroName { get; private set; }
-        [BsonElement] public string Nickname { get; private set; }
-        [BsonElement] public string Signature { get; private set; }
-        [BsonElement] public int NameCardId { get; private set; } = 210001;
-        [BsonIgnore] public World.World World;
-        [BsonElement] public Vector3 Position { get; private set; }
-        [BsonElement] public Vector3 Rotation { get; private set; }
-        [BsonElement] public Tuple<int,int> Birthday { get; private set; } // <Date,Month>
-        [BsonElement] public int HeadImage { get; private set; }
+        [BsonElement] public PlayerProfile Profile;
+        [BsonIgnore] public World.World? World;
+        [BsonIgnore] public Scene? Scene { get; private set; }
+        [BsonElement] public int SceneId { get; private set; }
+        [BsonElement] public int RegionId { get; private set; }
+        [BsonElement] public short WorldLevel = 1;
+        [BsonIgnore] public uint PeerId;
+        [BsonElement] public Vector3 Position;
+        [BsonElement] public Vector3 Rotation;
         public int NextResinRefresh;
         public int LastDailyReset;
-        public Dictionary<PlayerProperty, int> PlayerProperties; // SET ONLY THROUGH THE PROPMANAGER
+        public Dictionary<PlayerProperty, int> PlayerProperties = new(); // SET ONLY THROUGH THE PROPMANAGER
         [BsonIgnore] public PlayerPropertyManager PropManager;
         [BsonIgnore] public ResinManager ResinManager;
-        [BsonIgnore] public Connection Session; // Set by HandleGetPlayerTokenReq
+        [BsonIgnore] public Connection? Session; // Set by HandleGetPlayerTokenReq
         [BsonIgnore] public string Token { get; set; } // Obtained and used When Logging in
+        [BsonIgnore] public uint EnterSceneToken;
         [BsonIgnore] public bool HasSentLoginPackets { get; private set; }
-        [BsonIgnore] private long NextGuid = 0;
-        [BsonIgnore] public AvatarManager Avatars { get; set; } // Loaded by DatabaseManager
+        [BsonIgnore] private ulong NextGuid = 0;
+        [BsonIgnore] public SceneLoadState SceneLoadState = SceneLoadState.NONE;
+        [BsonIgnore] public AvatarManager? Avatars; // Loaded by DatabaseManager
         [BsonIgnore] public InventoryManager Inventory; // Loaded by DatabaseManager
-        [BsonIgnore] public ExpManager ExpManager; //Loaded by DatabaseManager
-        [BsonIgnore] public BattlePassManager BattlePassManager; //Loaded by DatabaseManager
+        [BsonIgnore] public ExpManager ExpManager; // Loaded by DatabaseManager
+        [BsonIgnore] public BattlePassManager BattlePassManager; // Loaded by DatabaseManager
+        [BsonIgnore] public TeamManager TeamManager; // Loaded by DatabaseManager
+        [BsonIgnore] public EnergyManager EnergyManager; // Loaded by DatabaseManager
+        [BsonIgnore] public ClientGadgetEntityManager GadgetManager; // Loaded by DatabaseManager
 
-        [BsonConstructor]
         public Player(string heroName, string accountUid, int gameUid)
         {
-            HeroName = heroName;
+            Profile = new()
+            {
+                HeroName = heroName,
+                NameCardId = 210001,
+            };
+
             AccountUid = accountUid;
             GameUid = gameUid;
             PropManager = new(this);
@@ -48,6 +58,9 @@ namespace Weedwacker.GameServer.Systems.Player
             ExpManager = new(this);
             BattlePassManager = new(this);
             Inventory = new(this);
+            TeamManager = new(this);
+            GadgetManager = new(this);
+            EnergyManager = new(this);
         }
 
         private async Task OnCreate()
@@ -56,15 +69,31 @@ namespace Weedwacker.GameServer.Systems.Player
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_IS_SPRING_AUTO_USE, 1, false);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_SPRING_AUTO_USE_PERCENT, 50, false);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_PLAYER_RESIN, 160, false);
+            await PropManager.SetPropertyAsync(PlayerProperty.PROP_IS_FLYABLE, 0, false);
+            await PropManager.SetPropertyAsync(PlayerProperty.PROP_MAX_STAMINA, 10000, false);
+            await PropManager.SetPropertyAsync(PlayerProperty.PROP_CUR_PERSIST_STAMINA, 10000, false);
+            SceneId = 3;
+            RegionId = 1;
 
             // Pick character
             Session.State = SessionState.PICKING_CHARACTER;
             await Session.SendPacketAsync(new BasePacket(OpCode.DoSetPlayerBornDataNotify));
         }
-        public long GetNextGameGuid()
+        public ulong GetNextGameGuid()
         {
-            long nextId = ++NextGuid;
-            return ((long)GameUid << 32) + nextId;
+            ulong nextId = ++NextGuid;
+            return ((ulong)GameUid << 32) + nextId;
+        }
+
+        public string GetNickName()
+        {
+            return Profile.Nickname;
+        }
+        public async Task SetSceneAsync(Scene? scene)
+        {
+            Scene = scene;
+            if (scene == null) SceneId = 0;
+            else SceneId = scene.SceneData.id;
         }
 
         public async Task OnLoginAsync()
@@ -81,7 +110,36 @@ namespace Weedwacker.GameServer.Systems.Player
 
             await ResinManager.OnLoginAsync();
         }
-      
+
+        public bool IsInMultiplayer() { return World != null && World.IsMultiplayer; }
+
+        public OnlinePlayerInfo GetOnlinePlayerInfo()
+        {
+            OnlinePlayerInfo onlineInfo = new()
+            {
+                Uid = (uint)GameUid,
+                Nickname = Profile.Nickname,
+                PlayerLevel = (uint)PlayerProperties[PlayerProperty.PROP_PLAYER_LEVEL],
+                MpSettingType = (MpSettingType)PlayerProperties[PlayerProperty.PROP_PLAYER_MP_SETTING_TYPE],
+                NameCardId = (uint)Profile.NameCardId,
+                Signature = Profile.Signature,
+                ProfilePicture = Profile.HeadImage,
+                AvatarId = (uint)TeamManager.Teams[TeamManager.CurrentTeamIndex].AvatarInfo[TeamManager.CurrentCharacterIndex].AvatarId, // current selected avatar
+                OnlineId = AccountUid, // not sure if correct
+                //PsnId = 42069,
+                WorldLevel = (uint)WorldLevel
+            };
+
+            if (World != null)
+            {
+                onlineInfo.CurPlayerNumInWorld = (uint)World.Players.Count;
+            }
+            if (Profile.BlacklistUidList != null)
+                onlineInfo.BlacklistUidList.AddRange(Profile.BlacklistUidList);
+
+            return onlineInfo;
+        }
+
         public async Task SendPacketAsync(BasePacket packet)
         {
             await Session.SendPacketAsync(packet);

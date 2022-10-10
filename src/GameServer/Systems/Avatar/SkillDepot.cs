@@ -108,6 +108,12 @@ namespace Weedwacker.GameServer.Systems.Avatar
             return await SetSkillLevel(skillId, newLevel);
         }
 
+        internal async Task SendAvatarSkillInfoNotify()
+        {
+            if (!SkillExtraChargeMap.Any()) return;
+            await Owner.SendPacketAsync(new PacketAvatarSkillInfoNotify(Character.Guid, SkillExtraChargeMap));
+        }
+
         public async Task<bool> SetSkillLevel(int skillId, int level)
         {
             if (level < 0 || level > 15) return false;

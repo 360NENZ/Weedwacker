@@ -22,7 +22,7 @@ namespace Weedwacker.GameServer
         public bool UseSecretKey { get; set; } = false;
         public Player? Player { get; set; }
         private int ClientTime;
-        private long LastPingTime;
+        public uint LastPingTime { get; private set; }
         private uint LastClientSeq = 10;
         public static readonly List<OpCode> BANNED_PACKETS  = new List<OpCode>(){ OpCode.WindSeedClientNotify, OpCode.PlayerLuaShellNotify };
         public Connection(KcpConversation conversation, IPEndPoint remote)

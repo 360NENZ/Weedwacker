@@ -45,5 +45,7 @@ namespace Weedwacker.GameServer.Data.Excel
         public readonly int[]? satiationParams;
         [JsonProperty]
         public readonly bool isForceGetHint;
+        [JsonProperty]
+        public readonly int gadgetId;
     }
 }

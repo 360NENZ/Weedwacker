@@ -6,16 +6,18 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Systems.Avatar;
+using Weedwacker.GameServer.Systems.World;
 using Weedwacker.Shared.Authentication;
 using Weedwacker.Shared.Utils.Configuration;
 
 namespace Weedwacker.GameServer
 {
-    internal class GameServer
+    internal static class GameServer
     {
         private static readonly HttpClient client = new HttpClient();
         public static GameConfig Configuration;
         public static SortedList<int,Connection> OnlinePlayers = new(); // <gameUid,connection>
+        private static HashSet<World> Worlds = new();
         public static SortedList<int, AvatarCompiledData> AvatarInfo; // <avatarId,data>
         public static async Task<bool> VerifyToken(string accountUid, string token)
         {
@@ -30,6 +32,11 @@ namespace Weedwacker.GameServer
             return false;
         }
 
+        internal static void RegisterWorld(World world)
+        {
+            Worlds.Add(world);
+        }
+
         public static AvatarCompiledData GetAvatarInfo(int avatarId)
         {
             if(!AvatarInfo.ContainsKey(avatarId))
@@ -42,7 +49,7 @@ namespace Weedwacker.GameServer
         public static async Task Start()
         {
             Configuration = await Config.Load<GameConfig>("GameConfig.json");
-            await GameData.LoadAllResourcesAsync(Configuration.Structure.Resources);
+            await GameData.LoadAllResourcesAsync(Configuration.structure.Resources);
             Shared.Utils.Crypto.LoadKeys(Configuration.structure.keys);
             await Database.DatabaseManager.Initialize();
             Listener.StartListener();

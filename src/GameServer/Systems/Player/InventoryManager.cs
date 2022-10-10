@@ -17,7 +17,7 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonElement] public Dictionary<ItemType, SubInventory> SubInventories { get; private set; }
        
 
-        [BsonIgnore] public Dictionary<long, GameItem> GuidMap = new();
+        [BsonIgnore] public Dictionary<ulong, GameItem> GuidMap = new();
         public InventoryManager(Player owner)
         {
             Owner = owner;
@@ -69,7 +69,7 @@ namespace Weedwacker.GameServer.Systems.Player
             return await AddItemByIdManyAsync(items.Select(x => Tuple.Create(x.id, x.count)).ToList());
         }
 
-        public async Task<GameItem?> AddItemByGuidAsync(long guid, int count = 1, ActionReason reason = ActionReason.None)
+        public async Task<GameItem?> AddItemByGuidAsync(ulong guid, int count = 1, ActionReason reason = ActionReason.None)
         {
             return await AddItemByIdAsync(GuidMap[guid].ItemId, count, reason);
         }
@@ -260,7 +260,7 @@ namespace Weedwacker.GameServer.Systems.Player
             return true;
         }
 
-        public async Task<bool> RemoveItemByGuid(long guid, int count = 1)
+        public async Task<bool> RemoveItemByGuid(ulong guid, int count = 1)
         {
             if (GuidMap.TryGetValue(guid, out GameItem? item))
             {
@@ -299,7 +299,7 @@ namespace Weedwacker.GameServer.Systems.Player
             return result;
         }
 
-        public async Task<bool> EquipRelic(long avatarGuid, long equipGuid)
+        public async Task<bool> EquipRelic(ulong avatarGuid, ulong equipGuid)
         {
             Avatar.Avatar? avatar = Owner.Avatars.GetAvatarByGuid(avatarGuid);
 
@@ -323,7 +323,7 @@ namespace Weedwacker.GameServer.Systems.Player
             return false;
         }
 
-        public async Task<bool> EquipWeapon(long avatarGuid, long equipGuid)
+        public async Task<bool> EquipWeapon(ulong avatarGuid, ulong equipGuid)
         {
             Avatar.Avatar? avatar = Owner.Avatars.GetAvatarByGuid(avatarGuid);
 
@@ -347,7 +347,7 @@ namespace Weedwacker.GameServer.Systems.Player
             return false;
         }
 
-        public async Task<bool> UnequipRelicAsync(long avatarGuid, EquipType slot)
+        public async Task<bool> UnequipRelicAsync(ulong avatarGuid, EquipType slot)
         {
             Avatar.Avatar? avatar = Owner.Avatars.GetAvatarByGuid(avatarGuid);
 
@@ -360,7 +360,7 @@ namespace Weedwacker.GameServer.Systems.Player
 
             return false;
         }
-        public async Task<bool> UnequipWeaponAsync(long avatarGuid)
+        public async Task<bool> UnequipWeaponAsync(ulong avatarGuid)
         {
             Avatar.Avatar? avatar = Owner.Avatars.GetAvatarByGuid(avatarGuid);
 

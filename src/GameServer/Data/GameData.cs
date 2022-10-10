@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Weedwacker.GameServer.Data.BinOut.AbilityGroup;
+using Weedwacker.GameServer.Data.BinOut.Scene.Point;
 using Weedwacker.GameServer.Data.BinOut.Talent.AvatarTalents;
 using Weedwacker.GameServer.Data.BinOut.Talent.EquipTalents;
 using Weedwacker.GameServer.Data.BinOut.Talent.RelicTalents;
@@ -36,9 +37,16 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<int, ProudSkillData> ProudSkillDataMap = new(); // proudSkillId
         //---------------------------------------------------------------------------------------------------------------------------------//
 
+        public readonly static SortedList<int, DungeonData> DungeonDataMap = new(); // id
+        public readonly static SortedList<int, EnvAnimalGatherData> EnvAnimalGatherDataMap = new(); // animalId
         public readonly static SortedList<int, EquipAffixData> EquipAffixDataMap = new(); // affixId
+        public readonly static SortedList<int, GatherData> GatherDataMap = new(); // id
+        public readonly static SortedList<int, GadgetData> GadgetDataMap = new(); // id
         public readonly static SortedList<int, HomeWorldFurnitureData> HomeWorldFurnitureDataMap = new(); // id
         public readonly static SortedList<int, ItemData> ItemDataMap = new(); // id ItemData is subclassed, and loaded as MaterialData, ReliquaryData, and WeaponData
+        public readonly static SortedList<int, MonsterCurveData> MonsterCurveDataMap = new(); // level
+        public readonly static SortedList<int, MonsterData> MonsterDataMap = new(); // id
+        public readonly static SortedList<int, MonsterDescribeData> MonsterDescribeDataMap = new(); // id
         public readonly static SortedList<string, RelicAffixConfigData> RelicAffixConfigDataMap = new(); // openConfig
         public readonly static SortedList<int, RewardData> RewardDataMap = new(); // RewardId
         public readonly static SortedList<string, TeamResonanceConfigData> TeamResonanceConfigDataMap = new(); // openConfig
@@ -49,7 +57,9 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<int, ReliquaryMainPropData> ReliquaryMainPropDataMap = new(); // id
         public readonly static SortedList<Tuple<int, int>, ReliquaryLevelData> ReliquaryLevelDataMap = new(); // <rank, level>
         public readonly static SortedList<int, ReliquarySetData> ReliquarySetDataMap = new(); // setid
-
+        public readonly static SortedList<int, SceneData> SceneDataMap = new(); //id
+        public readonly static SortedList<string, ScenePointData> ScenePointDataMap = new(); // filename
+        public readonly static SortedList<int, TeamResonanceData> TeamResonanceDataMap = new(); // teamResonanceId 
 
 
 
@@ -62,7 +72,7 @@ namespace Weedwacker.GameServer.Data
             SerializationBinder = new KnownTypesBinder
             {
                 KnownTypes = new List<Type> { typeof(AddAbility), typeof(AddTalentExtraLevel), typeof(ModifyAbility),
-                    typeof(ModifySkillCD), typeof(ModifySkillPoint), typeof(UnlockTalentParam) }
+                    typeof(ModifySkillCD), typeof(ModifySkillPoint), typeof(UnlockTalentParam), typeof(DungeonEntry), typeof(DungeonExit), typeof(SceneTransPoint) }
             }
         };
     
@@ -116,7 +126,7 @@ namespace Weedwacker.GameServer.Data
             {
 
                 LoadData(excelPath, o => o.sortId, AvatarCodexDataMap),
-                LoadData(excelPath, o => o.costumeId, AvatarCostumeDataMap),
+                LoadData(excelPath, o => o.skinId, AvatarCostumeDataMap),
                 LoadData(excelPath, o => o.level, AvatarCurveDataMap),
                 LoadData(excelPath, o => o.id, AvatarDataMap),
                 LoadData(excelPath, o => o.fetterLevel, AvatarFetterLevelDataMap),
@@ -126,13 +136,20 @@ namespace Weedwacker.GameServer.Data
                 LoadData(excelPath, o => o.id, AvatarSkillDataMap),
                 LoadData(excelPath, o => o.id, AvatarSkillDepotDataMap),
                 LoadData(excelPath, o => o.talentId, AvatarTalentDataMap),
+                LoadData(excelPath, o => o.id, DungeonDataMap),
+                LoadData(excelPath, o => o.animalId, EnvAnimalGatherDataMap),
                 LoadData(excelPath, o => o.affixId, EquipAffixDataMap),
                 LoadData(excelPath, o => o.avatarId, FetterCharacterCardDataMap),
                 LoadData(excelPath, o => o.fetterId, FetterInfoDataMap),
                 LoadData(excelPath, o => o.fetterId, FettersDataMap),
                 LoadData(excelPath, o => o.fetterId, FetterStoryDataMap),
+                LoadData(excelPath, o => o.id, GatherDataMap),
+                LoadData(excelPath, o => o.id, GadgetDataMap),
                 LoadData(excelPath, o => o.id, HomeWorldFurnitureDataMap),
                 LoadData<ItemData, int, MaterialData>(excelPath, o => o.id, ItemDataMap),
+                LoadData(excelPath, o => o.level, MonsterCurveDataMap),
+                LoadData(excelPath, o => o.id, MonsterDataMap),
+                LoadData(excelPath, o => o.id, MonsterDescribeDataMap),
                 LoadData(excelPath, o => o.fetterId, PhotographExpressionDataMap),
                 LoadData(excelPath, o => o.fetterId, PhotographPosenameDataMap),
                 LoadData(excelPath, o => o.proudSkillId, ProudSkillDataMap),
@@ -142,6 +159,8 @@ namespace Weedwacker.GameServer.Data
                 LoadData(excelPath, o => Tuple.Create(o.rank, o.level), ReliquaryLevelDataMap),
                 LoadData(excelPath, o => o.setId, ReliquarySetDataMap),
                 LoadData(excelPath, o => o.rewardId, RewardDataMap),
+                LoadData(excelPath, o => o.id, SceneDataMap),
+                LoadData(excelPath, o => o.teamResonanceId, TeamResonanceDataMap),
                 LoadData<ItemData, int, WeaponData>(excelPath, o => o.id, ItemDataMap),
                 LoadData(excelPath, o => o.level, WeaponCurveDataMap),
                 LoadData(excelPath, o => Tuple.Create(o.weaponPromoteId, o.promoteLevel), WeaponPromoteDataMap),
@@ -150,6 +169,7 @@ namespace Weedwacker.GameServer.Data
                 //LoadFolder(Path.Combine(binPath, "/AbilityGroup/Talent/EquipTalents"), o => ????, WeaponAffixConfigDataMap),
                 //LoadFolder(Path.Combine(binPath, "/AbilityGroup/Talent/RelicTalents"), o => ????, RelicAffixConfigDataMap),
                 //LoadFolder(Path.Combine(binPath, "/AbilityGroup/Talent/TeamTalents"), o => ????, TeamResonanceConfigDataMap),
+                //LoadFolder(Path.Combine(binPath, "/Scene/Point"), o => ????, ScenePointDataMap)
             });
         }
     }

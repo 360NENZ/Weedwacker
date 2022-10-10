@@ -11,7 +11,7 @@ namespace Weedwacker.GameServer.Systems.Player
             Owner = owner;
         }
 
-        internal void TriggerMission(WatcherTriggerType tRIGGER_COST_MATERIAL, int v, int amount)
+        internal void TriggerMission(WatcherTriggerType triggerType, int v, int amount)
         {
             throw new NotImplementedException();
         }

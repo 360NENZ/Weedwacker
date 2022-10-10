@@ -15,7 +15,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 		public int EquippedAvatar; // By avatarId
 		[BsonIgnore] public new ReliquaryData ItemData { get; protected set; }
 
-		public ReliquaryItem(long guid, int itemId, int uniqueId) : base(guid, itemId)
+		public ReliquaryItem(ulong guid, int itemId, int uniqueId) : base(guid, itemId)
 		{
 			UniqueId = uniqueId;
 			Level = 1;
@@ -29,7 +29,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 			AppendPropIdList.Add(ItemData.appendPropNum);
 		}
 
-		public async Task OnLoadAsync(long guid)
+		public async Task OnLoadAsync(ulong guid)
 		{
 			ItemData = (ReliquaryData)GameData.ItemDataMap[ItemId];
 			Guid = guid;
@@ -60,7 +60,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 			SceneReliquaryInfo relicInfo = new SceneReliquaryInfo()
 			{
 				ItemId = (uint)ItemId,
-				Guid = (ulong)Guid,
+				Guid = Guid,
 				Level = (uint)Level
 			};
 
@@ -69,7 +69,15 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
 		public override Item ToProto()
         {
-            throw new NotImplementedException();
-        }
+			Item proto = new()
+			{
+				Guid = Guid,
+				ItemId = (uint)ItemData.id
+			};
+
+			Reliquary relic = ToReliquaryProto();
+			proto.Equip = new Equip() { Reliquary = relic, IsLocked = Locked };
+			return proto;
+		}
     }
 }

@@ -13,7 +13,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 		public bool Locked { get; protected set; }
 		public int EquippedAvatar = 0;
 
-		protected EquipItem(long guid, int itemId) : base(guid, itemId, 1)
+		protected EquipItem(ulong guid, int itemId) : base(guid, itemId, 1)
 		{
 		}
 		public static int GetMinPromoteLevel(int level)

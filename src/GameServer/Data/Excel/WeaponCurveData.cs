@@ -11,25 +11,27 @@ namespace Weedwacker.GameServer.Data.Excel
         [JsonProperty] public readonly int level;
         [JsonProperty] public readonly CurveInfo[] curveInfos;
 
-		public Tuple<string, float> GetArith(GrowCurveType type)
+		public Tuple<ArithType, float> GetArith(GrowCurveType type)
 		{
 			foreach (CurveInfo curveInfo in curveInfos)
 			{
 				if (curveInfo.type == type) return Tuple.Create(curveInfo.arith, curveInfo.value);
 			}
 			Logger.WriteErrorLine("Could not find value for " + type + " for avatar level:" + level);
-			return Tuple.Create("ARITH_MULTI", (float)1.0);
+			return Tuple.Create(ArithType.ARITH_MULTI, (float)1.0);
 		}
 
-        public static float CalcValue(float value, Tuple<string, float> curve)
+        public static float CalcValue(float value, Tuple<ArithType, float> curve)
         {
             switch (curve.Item1)
             {
-                case "ARITH_MULTI":
+                case ArithType.ARITH_MULTI:
                     return value * curve.Item2;
+                case ArithType.ARITH_ADD:
+                    return value + curve.Item2;
                 default:
                     Logger.WriteErrorLine("Unknown Weapon curve operation");
-                    goto case "ARITH_MULTI";
+                    goto case ArithType.ARITH_MULTI;
             }
         }
     }

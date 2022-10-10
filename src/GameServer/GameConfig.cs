@@ -1,4 +1,5 @@
-﻿using Weedwacker.Shared.Utils.Configuration;
+﻿using Weedwacker.Shared.Utils;
+using Weedwacker.Shared.Utils.Configuration;
 
 namespace Weedwacker.GameServer
 {
@@ -6,7 +7,7 @@ namespace Weedwacker.GameServer
     {
         public ServerJson Server = new();
         public DatabaseJson Database = new();
-        public new StructureJson Structure = new();
+        public new StructureJson structure = new();
         public new class DatabaseJson
         {
             public string ConnectionUri = "mongodb://localhost:27017";
@@ -16,6 +17,7 @@ namespace Weedwacker.GameServer
         {
             public string Resources = "../../../resources/";
             public string Scripts = "../../../resources/Scripts/";
+            public string keys = "../../../keys/";
 
 
             // UNUSED (potentially added later?)
@@ -69,6 +71,43 @@ namespace Weedwacker.GameServer
             public bool FishhookTeleport = true;
             public ResinOptionsJson ResinOptions = new();
             public RatesJson Rates = new();
+            public ConstantsJson Constants = new();
+
+            public class ConstantsJson
+            {
+                public string VERSION = "3.0.0";
+
+                public int DEFAULT_TEAMS = 4;
+                public int MAX_TEAMS = 10;
+                public int MAIN_CHARACTER_MALE = 10000005;
+                public int MAIN_CHARACTER_FEMALE = 10000007;
+                public float[] START_POSITION = { 2747, 194, -1719 };
+
+                public int MAX_FRIENDS = 45;
+                public int MAX_FRIEND_REQUESTS = 50;
+
+                public int SERVER_CONSOLE_UID = 99; // The UID of the server console's "player".
+
+                public int BATTLE_PASS_MAX_LEVEL = 50;
+                public int BATTLE_PASS_POINT_PER_LEVEL = 1000;
+                public int BATTLE_PASS_POINT_PER_WEEK = 10000;
+                public int BATTLE_PASS_LEVEL_PRICE = 150;
+                public int BATTLE_PASS_CURRENT_INDEX = 2;
+
+                // Default entity ability hashes.
+                public string[] DEFAULT_ABILITY_STRINGS = {
+                    "Avatar_DefaultAbility_VisionReplaceDieInvincible", "Avatar_DefaultAbility_AvartarInShaderChange", "Avatar_SprintBS_Invincible",
+                    "Avatar_Freeze_Duration_Reducer", "Avatar_Attack_ReviveEnergy", "Avatar_Component_Initializer", "Avatar_FallAnthem_Achievement_Listener"
+                    };
+
+                public int[] DEFAULT_ABILITY_HASHES;
+                public int DEFAULT_ABILITY_NAME = Utils.AbilityHash("Default");
+
+                public ConstantsJson()
+                {
+                    DEFAULT_ABILITY_HASHES = DEFAULT_ABILITY_STRINGS.Select(x => Utils.AbilityHash(x)).ToArray();
+                }
+            }
 
             public class InventoryLimitsJson
             {

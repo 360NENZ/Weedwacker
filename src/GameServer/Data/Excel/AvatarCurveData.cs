@@ -13,14 +13,14 @@ namespace Weedwacker.GameServer.Data
 		[JsonProperty]
 		public readonly CurveInfo[] curveInfos;
 
-		internal Tuple<string,float> GetArith(GrowCurveType type)
+		internal Tuple<ArithType,float> GetArith(GrowCurveType type)
 		{
 			foreach (CurveInfo curveInfo in curveInfos)
 			{
 				if (curveInfo.type == type) return Tuple.Create(curveInfo.arith,curveInfo.value);
 			}
 			Logger.WriteErrorLine("Could not find value for " + type + " for avatar level:" + level);
-			return Tuple.Create("ARITH_MULTI",(float)1.0);
+			return Tuple.Create(ArithType.ARITH_MULTI,(float)1.0);
 		}
 	}
 }

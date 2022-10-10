@@ -11,11 +11,11 @@ namespace Weedwacker.GameServer.Systems.Inventory
 		public List<int>? Affixes { get; protected set; } = new();
 		[BsonIgnore] public new int Count { get; protected set; } = 1;
         public int Refinement { get; protected set; } = 0;
-		[BsonIgnore] public int WeaponEntityId;
+		[BsonIgnore] public uint WeaponEntityId;
 		public int EquippedAvatar; // By avatarId
 		[BsonIgnore] public new WeaponData ItemData;
 
-		public WeaponItem(long guid, int itemId, int uniqueId) : base(guid, itemId)
+		public WeaponItem(ulong guid, int itemId, int uniqueId) : base(guid, itemId)
 		{
 			ItemData = (WeaponData)GameData.ItemDataMap[ItemId];
 			Level = 1;
@@ -32,7 +32,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 			}
 		}
 
-		public async Task OnLoadAsync(long guid)
+		public async Task OnLoadAsync(ulong guid)
         {
 			ItemData = (WeaponData)GameData.ItemDataMap[ItemId];
 			Guid = guid;
@@ -64,9 +64,9 @@ namespace Weedwacker.GameServer.Systems.Inventory
 		{
 			SceneWeaponInfo weaponInfo = new SceneWeaponInfo()
 			{
-				EntityId = (uint)WeaponEntityId,
+				EntityId = WeaponEntityId,
 				ItemId = (uint)ItemId,
-				Guid = (ulong)Guid,
+				Guid = Guid,
 				Level = (uint)Level,
 				GadgetId = (uint)ItemData.gadgetId,
 				AbilityInfo = new AbilitySyncStateInfo() { IsInited = Affixes.Count > 0 }
@@ -85,7 +85,15 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
 		public override Item ToProto()
         {
-            throw new NotImplementedException();
-        }
+			Item proto = new()
+			{
+				Guid = Guid,
+				ItemId = (uint)ItemData.id
+			};
+
+			Shared.Network.Proto.Weapon weapon = ToWeaponProto();
+			proto.Equip = new Equip() { Weapon = weapon, IsLocked = Locked };
+			return proto;
+		}
     }
 }

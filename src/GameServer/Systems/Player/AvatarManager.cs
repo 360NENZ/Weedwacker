@@ -11,7 +11,7 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonIgnore]
         private Player Owner; // Loaded by DatabaseManager
         [BsonIgnore]
-        public Dictionary<long, Avatar.Avatar> AvatarsGuid { get; private set; } = new();
+        public Dictionary<ulong, Avatar.Avatar> AvatarsGuid { get; private set; } = new();
 
         public AvatarManager(Player owner)
         {
@@ -46,7 +46,7 @@ namespace Weedwacker.GameServer.Systems.Player
             return Avatars[id];
         }
 
-        public Avatar.Avatar? GetAvatarByGuid(long id)
+        public Avatar.Avatar? GetAvatarByGuid(ulong id)
         {
             return AvatarsGuid[id];
         }

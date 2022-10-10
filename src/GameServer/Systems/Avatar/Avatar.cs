@@ -8,6 +8,7 @@ using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet.Send;
 using Weedwacker.GameServer.Systems.Inventory;
 using Weedwacker.GameServer.Systems.Player;
+using Weedwacker.GameServer.Systems.World;
 using Weedwacker.Shared.Network.Proto;
 using Weedwacker.Shared.Utils;
 using static Weedwacker.GameServer.Data.Excel.WeaponData;
@@ -20,7 +21,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         [BsonElement] public int AvatarId { get; private set; }           // Id of avatar
         [BsonIgnore] public Player.Player Owner { get; private set; } // Loaded by DatabaseManager
         [BsonIgnore] public AvatarCompiledData Data { get; private set; } // Loaded by DatabaseManager
-        [BsonIgnore] public long Guid { get; private set; }           // Player unique Avatar id. Generated each session
+        [BsonIgnore] public ulong Guid { get; private set; }           // Player unique Avatar id. Generated each session
         [BsonIgnore] public int EntityId { get; private set; }
 
         [BsonElement] public int Level { get; private set; } = 1;
@@ -28,7 +29,8 @@ namespace Weedwacker.GameServer.Systems.Avatar
         [BsonElement] public int PromoteLevel { get; private set; } = 0;
         public int Satiation; // ?
         public int SatiationPenalty; // ?
-        [BsonElement] public LifeState Life { get; private set; } = LifeState.LIFE_ALIVE;
+        [BsonElement] public LifeState LifeState { get; private set; } = LifeState.LIFE_ALIVE;
+        public List<string> EquipOpenConfigs; // openConfigs from relics and weapon
         [BsonElement] public int CurrentDepotId { get; private set; }
         [BsonElement] public Dictionary<int, SkillDepot> SkillDepots { get; private set; } = new();
         
@@ -38,7 +40,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         [BsonElement] public HashSet<string> AppliedOpenConfigs { get; private set; } = new();
 
         [BsonElement] public int FlyCloak { get; private set; } = 140001;
-        [BsonElement] public int Costume { get; private set; }
+        [BsonElement] public int Costume { get; private set; } = default; // no costume
 
         public Avatar(int avatarId, Player.Player owner)
         {
@@ -70,6 +72,11 @@ namespace Weedwacker.GameServer.Systems.Avatar
             // Set stats
             RecalcStatsAsync();
             SetCurrentHp(FightProp[FightProperty.FIGHT_PROP_MAX_HP], false);
+        }
+
+        internal Avatar Clone()
+        {
+            throw new NotImplementedException();
         }
 
         public async Task OnLoadAsync(Player.Player owner)
@@ -147,7 +154,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             return 0;
         }
 
-        public WeaponItem? GetWeapon()
+        public WeaponItem GetWeapon()
         {
             return (WeaponItem?)Equips[EquipType.EQUIP_WEAPON];
         }
@@ -162,6 +169,10 @@ namespace Weedwacker.GameServer.Systems.Avatar
             return Equips[slot];
         }
 
+        public float GetCurrentEnergy()
+        {
+            return GetCurSkillDepot().Element.CurEnergy;
+        }
         public async Task<bool> SetCurrentEnergy(float currentEnergy, bool update = true)
         {
             GetCurSkillDepot().Element.CurEnergy = currentEnergy;
@@ -220,6 +231,8 @@ namespace Weedwacker.GameServer.Systems.Avatar
             Equips[itemEquipType] = item;
             item.EquippedAvatar = AvatarId;
 
+            //TODO add relic openConfigs
+
             // Update Database
             var updateQuery = new UpdateQueryBuilder<InventoryManager>();
             updateQuery.SetFilter(w => w.OwnerId == Owner.GameUid);
@@ -250,6 +263,8 @@ namespace Weedwacker.GameServer.Systems.Avatar
             item.EquippedAvatar = AvatarId;
             item.WeaponEntityId = Owner.World.GetNextEntityId(EntityIdType.WEAPON);
 
+            //TODO apply weapon openConfigs
+
             // Update Database
             var updateQuery = new UpdateQueryBuilder<InventoryManager>();
             updateQuery.SetFilter(w => w.OwnerId == Owner.GameUid);
@@ -272,6 +287,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
         {
             ReliquaryItem item = (ReliquaryItem)Equips[slot];
             Equips.Remove(slot);
+
+            //TODO remove relic openConfigs
+
 
             if (item != null)
             {
@@ -296,6 +314,8 @@ namespace Weedwacker.GameServer.Systems.Avatar
         {
             WeaponItem item = (WeaponItem)Equips[EquipType.EQUIP_WEAPON];
             Equips.Remove(EquipType.EQUIP_WEAPON);
+
+            //TODO remove weapon openConfigs
 
             if (item != null)
             {
@@ -544,7 +564,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 FetterInfo = avatarFetter,
                 BornTime = (uint)BornTime,
                 SkillDepotId = (uint)CurrentDepotId,
-                LifeState = (uint)Life,
+                LifeState = (uint)LifeState,
                 AvatarType = 1,
                 CoreProudSkillLevel = GetCurSkillDepot().GetCoreProudSkillLevel()
             };

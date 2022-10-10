@@ -6,7 +6,7 @@ namespace Weedwacker.GameServer.Data.Excel
     public class AvatarCostumeData
     {
         [JsonProperty]
-        public readonly int costumeId;
+        public readonly int skinId;
         [JsonProperty]
         public readonly int itemId;
         [JsonProperty]

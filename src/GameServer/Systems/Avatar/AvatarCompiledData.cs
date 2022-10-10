@@ -32,9 +32,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
         public readonly SortedList<int, PhotographExpressionData> PhotographExpressionData; // fetterId
         public static readonly SortedList<int, AvatarFetterLevelData> FetterLevelData = GameData.AvatarFetterLevelDataMap; // level Friendship exp breakpoints
 
-        public readonly Tuple<string, float>[] HpGrowthCurve;
-        public readonly Tuple<string, float>[] AttackGrowthCurve;
-        public readonly Tuple<string, float>[] DefenseGrowthCurve;
+        public readonly Tuple<ArithType, float>[] HpGrowthCurve;
+        public readonly Tuple<ArithType, float>[] AttackGrowthCurve;
+        public readonly Tuple<ArithType, float>[] DefenseGrowthCurve;
 
 
 
@@ -105,9 +105,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
             var dictionary6 = GameData.PhotographExpressionDataMap.Where(w => w.Value.avatarId == avatarId).ToDictionary(w => w.Key, w => w.Value);
             PhotographExpressionData = new SortedList<int, PhotographExpressionData>(dictionary6);
 
-            HpGrowthCurve = new Tuple<string,float>[CurveData.Count];
-            AttackGrowthCurve = new Tuple<string, float>[CurveData.Count];
-            DefenseGrowthCurve = new Tuple<string, float>[CurveData.Count];
+            HpGrowthCurve = new Tuple<ArithType,float>[CurveData.Count];
+            AttackGrowthCurve = new Tuple<ArithType, float>[CurveData.Count];
+            DefenseGrowthCurve = new Tuple<ArithType, float>[CurveData.Count];
             foreach (AvatarCurveData curveData in CurveData.Values)
             {
                 int level = curveData.level - 1;
@@ -132,15 +132,17 @@ namespace Weedwacker.GameServer.Systems.Avatar
             }
         }
 
-        private static float CalcValue(float value, Tuple<string,float> curve)
+        private static float CalcValue(float value, Tuple<ArithType,float> curve)
         {
             switch(curve.Item1)
             {
-                case "ARITH_MULTI":
+                case ArithType.ARITH_MULTI:
                     return value * curve.Item2;
+                case ArithType.ARITH_ADD:
+                    return value + curve.Item2;
                 default:
                     Logger.WriteErrorLine("Unknown Avatar curve operation");
-                    goto case "ARITH_MULTI";            
+                    goto case ArithType.ARITH_MULTI;            
             }
         }
         public float GetBaseHp(int level)

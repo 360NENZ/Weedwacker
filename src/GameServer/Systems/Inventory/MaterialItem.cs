@@ -8,14 +8,21 @@ namespace Weedwacker.GameServer.Systems.Inventory
         public int Count;
         public new readonly MaterialData ItemData; 
 
-        public MaterialItem(long guid, int itemId, int count) : base(guid, itemId, count)
+        public MaterialItem(ulong guid, int itemId, int count) : base(guid, itemId, count)
         {
 
         }
 
         public override Item ToProto()
         {
-            throw new NotImplementedException();
+            Item proto = new()
+            {
+                Guid = Guid,
+                ItemId = (uint)ItemData.id,
+                Material = new() { Count = (uint)Count}
+            };
+
+            return proto;
         }
     }
 }

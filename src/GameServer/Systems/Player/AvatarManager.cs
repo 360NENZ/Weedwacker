@@ -6,6 +6,8 @@ namespace Weedwacker.GameServer.Systems.Player
     // MongoDb collection: "avatars"
     internal class AvatarManager
     {
+        [BsonId]
+        [BsonElement("_id")]
         public int OwnerId { get; private set; } // GameUid
         public Dictionary<int, Avatar.Avatar> Avatars { get; private set; }
         [BsonIgnore]

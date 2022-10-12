@@ -22,8 +22,11 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonElement] public int RegionId { get; private set; }
         [BsonElement] public short WorldLevel = 1;
         [BsonIgnore] public uint PeerId;
-        [BsonElement] public Vector3 Position;
-        [BsonElement] public Vector3 Rotation;
+        [BsonIgnore] public Vector3 Position;
+        [BsonIgnore] public Vector3 Rotation;
+        // Quick Hack for mongodb
+        [BsonElement("Position")] public float[] PositionArray { get => new[] { Position.X, Position.Y, Position.Z }; set => Position = new(value[0], value[1], value[2]); }
+        [BsonElement("Rotation")] public float[] RotationArray { get => new[] { Rotation.X, Rotation.Y, Rotation.Z }; set => Rotation = new(value[0], value[1], value[2]); }
         public int NextResinRefresh;
         public int LastDailyReset;
         public Dictionary<PlayerProperty, int> PlayerProperties = new(); // SET ONLY THROUGH THE PROPMANAGER

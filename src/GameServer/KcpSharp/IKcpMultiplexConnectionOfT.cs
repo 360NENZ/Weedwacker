@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 
 namespace KcpSharp
 {
@@ -11,23 +12,25 @@ namespace KcpSharp
         /// Create a raw channel with the specified conversation ID.
         /// </summary>
         /// <param name="id">The conversation ID.</param>
+        /// <param name="remoteEndpoint">The remote Endpoint</param>
         /// <param name="state">The user state of this channel.</param>
         /// <param name="options">The options of the <see cref="KcpRawChannel"/>.</param>
         /// <returns>The raw channel created.</returns>
         /// <exception cref="ObjectDisposedException">The current instance is disposed.</exception>
         /// <exception cref="InvalidOperationException">Another channel or conversation with the same ID was already registered.</exception>
-        KcpRawChannel CreateRawChannel(long id, T state, KcpRawChannelOptions? options = null);
+        KcpRawChannel CreateRawChannel(long id, IPEndPoint remoteEndpoint, T state, KcpRawChannelOptions? options = null);
 
         /// <summary>
         /// Create a conversation with the specified conversation ID.
         /// </summary>
         /// <param name="id">The conversation ID.</param>
+        /// <param name="remoteEndpoint">The remote Endpoint</param>
         /// <param name="state">The user state of this conversation.</param>
         /// <param name="options">The options of the <see cref="KcpConversation"/>.</param>
         /// <returns>The KCP conversation created.</returns>
         /// <exception cref="ObjectDisposedException">The current instance is disposed.</exception>
         /// <exception cref="InvalidOperationException">Another channel or conversation with the same ID was already registered.</exception>
-        KcpConversation CreateConversation(long id, T state, KcpConversationOptions? options = null);
+        KcpConversation CreateConversation(long id, IPEndPoint remoteEndpoint, T state, KcpConversationOptions? options = null);
 
         /// <summary>
         /// Register a conversation or channel with the specified conversation ID and user state.

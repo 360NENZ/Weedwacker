@@ -48,8 +48,7 @@ namespace Weedwacker.GameServer
 #if DEBUG
         static void LogPacket(string sendOrRecv, ushort opcode, byte[] payload)
         {
-            Logger.DebugWriteLine(sendOrRecv + ": " + Enum.GetName(typeof(OpCode), opcode) + " (" + opcode + ")");
-            Logger.DebugWriteLine(Convert.ToHexString(payload));
+            Logger.DebugWriteLine(sendOrRecv + ": " + Enum.GetName(typeof(OpCode), opcode) + " (" + opcode + ")\r\n" + Convert.ToHexString(payload));
         }
 #endif
         async Task ReceiveLoop()
@@ -124,7 +123,7 @@ namespace Weedwacker.GameServer
 #if DEBUG
                         if (allDebug)
                         {
-                            Logger.WriteErrorLine(string.Format("Bad Data Package Received: got {0} ,expect 0x4567", Magic1));
+                            Logger.WriteErrorLine($"Bad Data Package Received: got 0x{Magic1:X} ,expect 0x4567");
                         }
 #endif
                         return; // Bad packet

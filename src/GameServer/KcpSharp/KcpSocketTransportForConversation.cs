@@ -10,20 +10,22 @@ namespace KcpSharp
     internal sealed class KcpSocketTransportForConversation : KcpSocketTransport<KcpConversation>, IKcpTransport<KcpConversation>
     {
         private readonly long? _conversationId;
+        private readonly IPEndPoint _remoteEndPoint;
         private readonly KcpConversationOptions? _options;
 
         private Func<Exception, IKcpTransport<KcpConversation>, object?, bool>? _exceptionHandler;
         private object? _exceptionHandlerState;
 
 
-        internal KcpSocketTransportForConversation(Socket socket, EndPoint endPoint, long? conversationId, KcpConversationOptions? options)
-            : base(socket, endPoint, options?.Mtu ?? KcpConversationOptions.MtuDefaultValue)
+        internal KcpSocketTransportForConversation(UdpClient listener, IPEndPoint endPoint, long? conversationId, KcpConversationOptions? options)
+            : base(listener, options?.Mtu ?? KcpConversationOptions.MtuDefaultValue)
         {
             _conversationId = conversationId;
+            _remoteEndPoint = endPoint;
             _options = options;
         }
 
-        protected override KcpConversation Activate() => _conversationId.HasValue ? new KcpConversation(this, _conversationId.GetValueOrDefault(), _options) : new KcpConversation(this, _options);
+        protected override KcpConversation Activate() => _conversationId.HasValue ? new KcpConversation(_remoteEndPoint, this, _conversationId.GetValueOrDefault(), _options) : new KcpConversation(_remoteEndPoint, this, _options);
 
         protected override bool HandleException(Exception ex)
         {

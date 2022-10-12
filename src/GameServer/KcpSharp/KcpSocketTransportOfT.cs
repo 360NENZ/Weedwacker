@@ -16,8 +16,7 @@ namespace KcpSharp
     /// <typeparam name="T"></typeparam>
     public abstract class KcpSocketTransport<T> : IKcpTransport, IDisposable where T : class, IKcpConversation
     {
-        private readonly Socket _socket;
-        private readonly EndPoint _endPoint;
+        private readonly UdpClient _udpListener;
         private readonly int _mtu;
         private T? _connection;
         private CancellationTokenSource? _cts;
@@ -27,12 +26,10 @@ namespace KcpSharp
         /// Construct a socket transport with the specified socket and remote endpoint.
         /// </summary>
         /// <param name="socket">The socket instance.</param>
-        /// <param name="endPoint">The remote endpoint.</param>
         /// <param name="mtu">The maximum packet size that can be transmitted.</param>
-        protected KcpSocketTransport(Socket socket, EndPoint endPoint, int mtu)
+        protected KcpSocketTransport(UdpClient listener, int mtu)
         {
-            _socket = socket ?? throw new ArgumentNullException(nameof(socket));
-            _endPoint = endPoint ?? throw new ArgumentNullException(nameof(endPoint));
+            _udpListener = listener ?? throw new ArgumentNullException(nameof(listener));
             _mtu = mtu;
             if (mtu < 50)
             {
@@ -96,103 +93,8 @@ namespace KcpSharp
             RunReceiveLoop();
         }
 
-
-#if NEED_SOCKET_SHIM
         /// <inheritdoc />
-        public async ValueTask SendPacketAsync(Memory<byte> packet, CancellationToken cancellationToken = default)
-        {
-            if (_disposed)
-            {
-                return;
-            }
-
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (packet.Length > _mtu)
-            {
-                return;
-            }
-
-            byte[]? rentedArray = null;
-            if (!MemoryMarshal.TryGetArray(packet, out ArraySegment<byte> segment))
-            {
-                rentedArray = ArrayPool<byte>.Shared.Rent(packet.Length);
-                segment = new ArraySegment<byte>(rentedArray, 0, packet.Length);
-                packet.CopyTo(segment.AsMemory());
-            }
-
-            try
-            {
-                using var saea = new AwaitableSocketAsyncEventArgs();
-                saea.SetBuffer(segment.Array, segment.Offset, segment.Count);
-                saea.SocketFlags = SocketFlags.None;
-                saea.RemoteEndPoint = _endPoint;
-                if (_socket.SendToAsync(saea))
-                {
-                    await saea.WaitAsync().ConfigureAwait(false);
-                    saea.Reset();
-                }
-
-                if (saea.SocketError != SocketError.Success)
-                {
-                    throw new SocketException((int)saea.SocketError);
-                }
-            }
-            finally
-            {
-                if (rentedArray is not null)
-                {
-                    ArrayPool<byte>.Shared.Return(rentedArray);
-                }
-            }
-        }
-
-        private static async ValueTask<int> ReceiveFromAsync(Socket socket, Memory<byte> buffer, EndPoint endPoint, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            byte[]? rentedArray = null;
-            if (!MemoryMarshal.TryGetArray(buffer, out ArraySegment<byte> segment))
-            {
-                rentedArray = ArrayPool<byte>.Shared.Rent(buffer.Length);
-                segment = new ArraySegment<byte>(rentedArray, 0, buffer.Length);
-            }
-
-            try
-            {
-                using var saea = new AwaitableSocketAsyncEventArgs();
-                saea.SetBuffer(segment.Array, segment.Offset, segment.Count);
-                saea.SocketFlags = SocketFlags.None;
-                saea.RemoteEndPoint = endPoint;
-                if (socket.SendToAsync(saea))
-                {
-                    await saea.WaitAsync().ConfigureAwait(false);
-                    saea.Reset();
-                }
-
-                if (saea.SocketError != SocketError.Success)
-                {
-                    throw new SocketException((int)saea.SocketError);
-                }
-
-                if (rentedArray is not null)
-                {
-                    segment.AsMemory().CopyTo(buffer);
-                }
-
-                return saea.BytesTransferred;
-            }
-            finally
-            {
-                if (rentedArray is not null)
-                {
-                    ArrayPool<byte>.Shared.Return(rentedArray);
-                }
-            }
-        }
-#else
-        /// <inheritdoc />
-        public ValueTask SendPacketAsync(Memory<byte> packet, CancellationToken cancellationToken = default)
+        public ValueTask SendPacketAsync(Memory<byte> packet, IPEndPoint endpoint, CancellationToken cancellationToken = default)
         {
             if (_disposed)
             {
@@ -203,10 +105,8 @@ namespace KcpSharp
                 return default;
             }
 
-            return new ValueTask(_socket.SendToAsync(packet, SocketFlags.None, _endPoint, cancellationToken).AsTask());
+            return new ValueTask(_udpListener.SendAsync(packet.ToArray(),  endpoint, cancellationToken).AsTask());
         }
-#endif
-
 
         private async void RunReceiveLoop()
         {
@@ -219,21 +119,16 @@ namespace KcpSharp
 
             using IMemoryOwner<byte> memoryOwner = AllocateBuffer(_mtu);
             try
-            {
-                Memory<byte> memory = memoryOwner.Memory;
+            { 
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     int bytesReceived = 0;
                     bool error = false;
-                    SocketReceiveFromResult result = default;
+                    UdpReceiveResult result = default;
                     try
                     {
-#if NEED_SOCKET_SHIM
-                        bytesReceived = await ReceiveFromAsync(_socket, memory, _endPoint, cancellationToken).ConfigureAwait(false);
-#else
-                        result = await _socket.ReceiveFromAsync(memory, SocketFlags.None, _endPoint, cancellationToken).ConfigureAwait(false);
-                        bytesReceived = result.ReceivedBytes;
-#endif
+                        result = await _udpListener.ReceiveAsync(cancellationToken);
+                        bytesReceived = result.Buffer.Length;
                     }
                     catch (Exception ex)
                     {
@@ -246,11 +141,10 @@ namespace KcpSharp
 
                     if (bytesReceived != 0 && bytesReceived <= _mtu)
                     {
-                        var data = memory[..bytesReceived];
                         if (bytesReceived == Listener.HANDSHAKE_SIZE)
-                            await Listener.HandleHandshake(data.ToArray(), result);
+                            await Listener.HandleHandshake(result);
                         else if (!error)
-                            await connection.InputPakcetAsync(data, cancellationToken).ConfigureAwait(false);
+                            await connection.InputPakcetAsync(result, cancellationToken).ConfigureAwait(false);
                     }
                 }
             }

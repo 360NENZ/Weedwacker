@@ -5,6 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Weedwacker.GameServer;
 using Weedwacker.Shared.Utils;
+using System.Net;
+using Weedwacker.GameServer.KcpSharp;
+using System.Net.Sockets;
 
 #if NEED_LINKEDLIST_SHIM
 using LinkedListOfBufferItem = KcpSharp.NetstandardShim.LinkedList<KcpSharp.KcpSendReceiveBufferItem>;
@@ -23,6 +26,7 @@ namespace KcpSharp
     {
         private readonly IKcpBufferPool _bufferPool;
         private readonly IKcpTransport _transport;
+        private readonly IPEndPoint _remoteEndPoint;
         private readonly ulong? _id;
 
         private readonly int _mtu;
@@ -98,26 +102,29 @@ namespace KcpSharp
         /// <summary>
         /// Construct a reliable channel using KCP protocol.
         /// </summary>
+        /// <param name="remoteEndpoint">The remote endpoint</param>
         /// <param name="transport">The underlying transport.</param>
         /// <param name="options">The options of the <see cref="KcpConversation"/>.</param>
-        public KcpConversation(IKcpTransport transport, KcpConversationOptions? options)
-            : this(transport, null, options)
+        public KcpConversation(IPEndPoint remoteEndpoint, IKcpTransport transport, KcpConversationOptions? options)
+            : this(remoteEndpoint, transport, null, options)
         { }
 
         /// <summary>
         /// Construct a reliable channel using KCP protocol.
         /// </summary>
+        /// <param name="remoteEndpoint">The remote endpoint</param>
         /// <param name="transport">The underlying transport.</param>
         /// <param name="conversationId">The conversation ID.</param>
         /// <param name="options">The options of the <see cref="KcpConversation"/>.</param>
-        public KcpConversation(IKcpTransport transport, long conversationId, KcpConversationOptions? options)
-            : this(transport, (ulong)conversationId, options)
+        public KcpConversation(IPEndPoint remoteEndpoint, IKcpTransport transport, long conversationId, KcpConversationOptions? options)
+            : this(remoteEndpoint, transport, (ulong)conversationId, options)
         { }
 
-        private KcpConversation(IKcpTransport transport, ulong? conversationId, KcpConversationOptions? options)
+        private KcpConversation(IPEndPoint remoteEndpoint, IKcpTransport transport, ulong? conversationId, KcpConversationOptions? options)
         {
             _bufferPool = options?.BufferPool ?? DefaultArrayPoolBufferAllocator.Default;
             _transport = transport;
+            _remoteEndPoint = remoteEndpoint;
             _id = conversationId;
 
             if (options is null)
@@ -143,16 +150,16 @@ namespace KcpSharp
             {
                 throw new ArgumentException("PostBufferSize must be a non-negative integer.", nameof(options));
             }
-            if ((uint)(_preBufferSize + _postBufferSize) >= (uint)(_mtu - 20))
+            if ((uint)(_preBufferSize + _postBufferSize) >= (uint)(_mtu - KcpGlobalVars.HEADER_LENGTH_WITHOUT_CONVID))
             {
                 throw new ArgumentException("The sum of PreBufferSize and PostBufferSize is too large. There is not enough space in the packet for the KCP header.", nameof(options));
             }
-            if (conversationId.HasValue && (uint)(_preBufferSize + _postBufferSize) >= (uint)(_mtu - 28))
+            if (conversationId.HasValue && (uint)(_preBufferSize + _postBufferSize) >= (uint)(_mtu - KcpGlobalVars.HEADER_LENGTH_WITH_CONVID))
             {
                 throw new ArgumentException("The sum of PreBufferSize and PostBufferSize is too large. There is not enough space in the packet for the KCP header.", nameof(options));
             }
 
-            _mss = conversationId.HasValue ? _mtu - 28 : _mtu - 20;
+            _mss = conversationId.HasValue ? _mtu - KcpGlobalVars.HEADER_LENGTH_WITH_CONVID : _mtu - KcpGlobalVars.HEADER_LENGTH_WITHOUT_CONVID;
             _mss = _mss - _preBufferSize - _postBufferSize;
 
             _ssthresh = 2;
@@ -352,7 +359,7 @@ namespace KcpSharp
         {
             int preBufferSize = _preBufferSize;
             int postBufferSize = _postBufferSize;
-            int packetHeaderSize = _id.HasValue ? 28 : 20;
+            int packetHeaderSize = _id.HasValue ? KcpGlobalVars.HEADER_LENGTH_WITH_CONVID : KcpGlobalVars.HEADER_LENGTH_WITHOUT_CONVID;
             int sizeLimitBeforePostBuffer = _mtu - _postBufferSize;
             bool anyPacketSent = false;
 
@@ -372,7 +379,7 @@ namespace KcpSharp
                     if ((size + packetHeaderSize) > sizeLimitBeforePostBuffer)
                     {
                         buffer.Span.Slice(size, postBufferSize).Clear();
-                        await _transport.SendPacketAsync(buffer.Slice(0, size + postBufferSize), cancellationToken).ConfigureAwait(false);
+                        await _transport.SendPacketAsync(buffer.Slice(0, size + postBufferSize), _remoteEndPoint, cancellationToken).ConfigureAwait(false);
                         _lastSendTick = GetTimestamp();
                         size = preBufferSize;
                         buffer.Span.Slice(0, size).Clear();
@@ -467,7 +474,7 @@ namespace KcpSharp
                     if ((size + need) > sizeLimitBeforePostBuffer)
                     {
                         buffer.Span.Slice(size, postBufferSize).Clear();
-                        await _transport.SendPacketAsync(buffer.Slice(0, size + postBufferSize), cancellationToken).ConfigureAwait(false);
+                        await _transport.SendPacketAsync(buffer.Slice(0, size + postBufferSize), _remoteEndPoint, cancellationToken).ConfigureAwait(false);
                         _lastSendTick = GetTimestamp();
                         size = preBufferSize;
                         buffer.Span.Slice(0, size).Clear();
@@ -535,7 +542,7 @@ namespace KcpSharp
                 if ((size + packetHeaderSize) > sizeLimitBeforePostBuffer)
                 {
                     buffer.Span.Slice(size, postBufferSize).Clear();
-                    await _transport.SendPacketAsync(buffer.Slice(0, size + postBufferSize), cancellationToken).ConfigureAwait(false);
+                    await _transport.SendPacketAsync(buffer.Slice(0, size + postBufferSize), _remoteEndPoint, cancellationToken).ConfigureAwait(false);
                     _lastSendTick = GetTimestamp();
                     size = preBufferSize;
                     buffer.Span.Slice(0, size).Clear();
@@ -552,7 +559,7 @@ namespace KcpSharp
                 if ((size + packetHeaderSize) > sizeLimitBeforePostBuffer)
                 {
                     buffer.Span.Slice(size, postBufferSize).Clear();
-                    await _transport.SendPacketAsync(buffer.Slice(0, size + postBufferSize), cancellationToken).ConfigureAwait(false);
+                    await _transport.SendPacketAsync(buffer.Slice(0, size + postBufferSize), _remoteEndPoint, cancellationToken).ConfigureAwait(false);
                     _lastSendTick = GetTimestamp();
                     size = preBufferSize;
                     buffer.Span.Slice(0, size).Clear();
@@ -570,7 +577,7 @@ namespace KcpSharp
                 buffer.Span.Slice(size, postBufferSize).Clear();
                 try
                 {
-                    await _transport.SendPacketAsync(buffer.Slice(0, size + postBufferSize), cancellationToken).ConfigureAwait(false);
+                    await _transport.SendPacketAsync(buffer.Slice(0, size + postBufferSize), _remoteEndPoint, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -628,7 +635,7 @@ namespace KcpSharp
                 {
                     var header = new KcpPacketHeader(KcpCommand.WindowSize, 0, windowSize, 0, 0, unacknowledged);
                     header.EncodeHeader(_id, 0, buffer.Span, out int bytesWritten);
-                    await _transport.SendPacketAsync(buffer.Slice(0, bytesWritten), cancellationToken).ConfigureAwait(false);
+                    await _transport.SendPacketAsync(buffer.Slice(0, bytesWritten), _remoteEndPoint, cancellationToken).ConfigureAwait(false);
                     _lastSendTick = GetTimestamp();
                 }
             }
@@ -810,22 +817,22 @@ namespace KcpSharp
         }
 
         /// <inheritdoc />
-        public ValueTask InputPakcetAsync(ReadOnlyMemory<byte> packet, CancellationToken cancellationToken = default)
+        public ValueTask InputPakcetAsync(UdpReceiveResult packet, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
             {
                 return new ValueTask(Task.FromCanceled(cancellationToken));
             }
-            int packetHeaderSize = _id.HasValue ? 28 : 20;
-            if (packet.Length < packetHeaderSize)
+            int packetHeaderSize = _id.HasValue ? KcpGlobalVars.HEADER_LENGTH_WITH_CONVID : KcpGlobalVars.HEADER_LENGTH_WITHOUT_CONVID;
+            if (packet.Buffer.Length < packetHeaderSize)
             {
                 return default;
             }
 
-            ReadOnlySpan<byte> packetSpan = packet.Span;
+            ReadOnlySpan<byte> packetSpan = packet.Buffer.AsSpan();
             if (_id.HasValue)
             {
-                var conversationId = BinaryPrimitives.ReadUInt64BigEndian(packet.Span);
+                var conversationId = BinaryPrimitives.ReadUInt64BigEndian(packet.Buffer.AsSpan());
                 if (conversationId != _id.GetValueOrDefault())
                 {
                     return default;
@@ -845,7 +852,7 @@ namespace KcpSharp
                 return default;
             }
 
-            return activation.InputPacketAsync(packet, cancellationToken);
+            return activation.InputPacketAsync(packet.Buffer.AsMemory(), cancellationToken);
         }
 
         private bool SetInput(ReadOnlySpan<byte> packet)

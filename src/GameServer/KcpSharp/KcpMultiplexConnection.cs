@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Buffers.Binary;
 using System.Collections.Concurrent;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Weedwacker.GameServer;
+using Weedwacker.GameServer.KcpSharp;
 
 namespace KcpSharp
 {
@@ -61,10 +64,10 @@ namespace KcpSharp
         /// <param name="packet">The content of the packet with conversation ID.</param>
         /// <param name="cancellationToken">A token to cancel this operation.</param>
         /// <returns>A <see cref="ValueTask"/> that completes when the packet is handled by the corresponding channel or conversation.</returns>
-        public ValueTask InputPakcetAsync(ReadOnlyMemory<byte> packet, CancellationToken cancellationToken = default)
+        public ValueTask InputPakcetAsync(UdpReceiveResult packet, CancellationToken cancellationToken = default)
         {
-            ReadOnlySpan<byte> span = packet.Span;
-            if (span.Length < 8)
+            ReadOnlySpan<byte> span = packet.Buffer.AsSpan();
+            if (span.Length < KcpGlobalVars.CONVID_LENGTH)
             {
                 return default;
             }
@@ -95,13 +98,14 @@ namespace KcpSharp
         /// Create a raw channel with the specified conversation ID.
         /// </summary>
         /// <param name="id">The conversation ID.</param>
+        /// <param name="remoteEndpoint">The remote Endpoint</param>
         /// <param name="options">The options of the <see cref="KcpRawChannel"/>.</param>
         /// <returns>The raw channel created.</returns>
         /// <exception cref="ObjectDisposedException">The current instance is disposed.</exception>
         /// <exception cref="InvalidOperationException">Another channel or conversation with the same ID was already registered.</exception>
-        public KcpRawChannel CreateRawChannel(long id, KcpRawChannelOptions? options = null)
+        public KcpRawChannel CreateRawChannel(long id, IPEndPoint remoteEndpoint, KcpRawChannelOptions? options = null)
         {
-            KcpRawChannel? channel = new KcpRawChannel(this, id, options);
+            KcpRawChannel? channel = new KcpRawChannel(remoteEndpoint, this, id, options);
             try
             {
                 RegisterConversation(channel, id, default);
@@ -124,14 +128,15 @@ namespace KcpSharp
         /// Create a raw channel with the specified conversation ID.
         /// </summary>
         /// <param name="id">The conversation ID.</param>
+        /// <param name="remoteEndpoint">The remote Endpoint</param>
         /// <param name="state">The user state of this channel.</param>
         /// <param name="options">The options of the <see cref="KcpRawChannel"/>.</param>
         /// <returns>The raw channel created.</returns>
         /// <exception cref="ObjectDisposedException">The current instance is disposed.</exception>
         /// <exception cref="InvalidOperationException">Another channel or conversation with the same ID was already registered.</exception>
-        public KcpRawChannel CreateRawChannel(long id, T state, KcpRawChannelOptions? options = null)
+        public KcpRawChannel CreateRawChannel(long id, IPEndPoint remoteEndpoint, T state, KcpRawChannelOptions? options = null)
         {
-            var channel = new KcpRawChannel(this, id, options);
+            var channel = new KcpRawChannel(remoteEndpoint, this, id, options);
             try
             {
                 RegisterConversation(channel, id, state);
@@ -154,13 +159,14 @@ namespace KcpSharp
         /// Create a conversation with the specified conversation ID.
         /// </summary>
         /// <param name="id">The conversation ID.</param>
+        /// <param name="remoteEndpoint">The remote Endpoint</param>
         /// <param name="options">The options of the <see cref="KcpConversation"/>.</param>
         /// <returns>The KCP conversation created.</returns>
         /// <exception cref="ObjectDisposedException">The current instance is disposed.</exception>
         /// <exception cref="InvalidOperationException">Another channel or conversation with the same ID was already registered.</exception>
-        public KcpConversation CreateConversation(long id, KcpConversationOptions? options = null)
+        public KcpConversation CreateConversation(long id, IPEndPoint remoteEndpoint, KcpConversationOptions? options = null)
         {
-            var conversation = new KcpConversation(this, id, options);
+            var conversation = new KcpConversation(remoteEndpoint, this, id, options);
             try
             {
                 RegisterConversation(conversation, id, default);
@@ -183,14 +189,15 @@ namespace KcpSharp
         /// Create a conversation with the specified conversation ID.
         /// </summary>
         /// <param name="id">The conversation ID.</param>
+        /// <param name="remoteEndpoint">The remote Endpoint</param>
         /// <param name="state">The user state of this conversation.</param>
         /// <param name="options">The options of the <see cref="KcpConversation"/>.</param>
         /// <returns>The KCP conversation created.</returns>
         /// <exception cref="ObjectDisposedException">The current instance is disposed.</exception>
         /// <exception cref="InvalidOperationException">Another channel or conversation with the same ID was already registered.</exception>
-        public KcpConversation CreateConversation(long id, T state, KcpConversationOptions? options = null)
+        public KcpConversation CreateConversation(long id, IPEndPoint remoteEndpoint, T state, KcpConversationOptions? options = null)
         {
-            var conversation = new KcpConversation(this, id, options);
+            var conversation = new KcpConversation(remoteEndpoint, this, id, options);
             try
             {
                 RegisterConversation(conversation, id, state);
@@ -285,13 +292,13 @@ namespace KcpSharp
         }
 
         /// <inheritdoc />
-        public ValueTask SendPacketAsync(Memory<byte> packet, CancellationToken cancellationToken = default)
+        public ValueTask SendPacketAsync(Memory<byte> packet, IPEndPoint remoteEndpoint, CancellationToken cancellationToken = default)
         {
             if (_transportClosed || _disposed)
             {
                 return default;
             }
-            return _transport.SendPacketAsync(packet, cancellationToken);
+            return _transport.SendPacketAsync(packet, remoteEndpoint, cancellationToken);
         }
 
         /// <inheritdoc />

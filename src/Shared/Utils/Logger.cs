@@ -12,7 +12,7 @@ namespace Weedwacker.Shared.Utils
         private static string ParseMessage(string message, string memberName = "", string fileName = "",
             int lineNumber = 0)
         {           
-            return $"[{DateTime.UtcNow:yy-MM-dd HH:mm:ss}]<{fileName.Split("\\").Last()}{memberName}> {message}";
+            return $"[{DateTime.UtcNow:yy-MM-dd HH:mm:ss}]<{fileName.Split("\\").Last()}:{memberName}> {message}";
         }
         public static void DebugWriteLine(string message)
         {

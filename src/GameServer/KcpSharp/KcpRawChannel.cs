@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Buffers.Binary;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Weedwacker.GameServer;
+using Weedwacker.GameServer.KcpSharp;
 
 namespace KcpSharp
 {
@@ -13,6 +16,7 @@ namespace KcpSharp
     {
         private readonly IKcpBufferPool _bufferPool;
         private readonly IKcpTransport _transport;
+        private readonly IPEndPoint _remoteEndPoint;
         private readonly ulong? _id;
         private readonly int _mtu;
         private readonly int _preBufferSize;
@@ -29,25 +33,28 @@ namespace KcpSharp
         /// <summary>
         /// Construct a unreliable channel with a conversation ID.
         /// </summary>
+        /// <param name="remoteEndPoint">The remote Endpoint</param>
         /// <param name="transport">The underlying transport.</param>
         /// <param name="options">The options of the <see cref="KcpRawChannel"/>.</param>
-        public KcpRawChannel(IKcpTransport transport, KcpRawChannelOptions? options)
-            : this(transport, null, options)
+        public KcpRawChannel(IPEndPoint remoteEndPoint, IKcpTransport transport, KcpRawChannelOptions? options)
+            : this(remoteEndPoint, transport, null, options)
         { }
 
         /// <summary>
         /// Construct a unreliable channel with a conversation ID.
         /// </summary>
+        /// <param name="remoteEndPoint">The remote Endpoint</param>
         /// <param name="transport">The underlying transport.</param>
         /// <param name="conversationId">The conversation ID.</param>
         /// <param name="options">The options of the <see cref="KcpRawChannel"/>.</param>
-        public KcpRawChannel(IKcpTransport transport, long conversationId, KcpRawChannelOptions? options)
-            : this(transport, (ulong)conversationId, options)
+        public KcpRawChannel(IPEndPoint remoteEndPoint, IKcpTransport transport, long conversationId, KcpRawChannelOptions? options)
+            : this(remoteEndPoint, transport, (ulong)conversationId, options)
         { }
 
-        private KcpRawChannel(IKcpTransport transport, ulong? conversationId, KcpRawChannelOptions? options)
+        private KcpRawChannel(IPEndPoint remoteEndPoint, IKcpTransport transport, ulong? conversationId, KcpRawChannelOptions? options)
         {
             _bufferPool = options?.BufferPool ?? DefaultArrayPoolBufferAllocator.Default;
+            _remoteEndPoint = remoteEndPoint;
             _transport = transport;
             _id = conversationId;
 
@@ -215,7 +222,7 @@ namespace KcpSharp
                         // Send the buffer
                         try
                         {
-                            await _transport.SendPacketAsync(owner.Memory.Slice(0, payloadSize + overhead), cancellationToken).ConfigureAwait(false);
+                            await _transport.SendPacketAsync(owner.Memory.Slice(0, payloadSize + overhead), _remoteEndPoint, cancellationToken).ConfigureAwait(false);
                         }
                         catch (Exception ex)
                         {
@@ -263,10 +270,10 @@ namespace KcpSharp
         }
 
         /// <inheritdoc />
-        public ValueTask InputPakcetAsync(ReadOnlyMemory<byte> packet, CancellationToken cancellationToken = default)
+        public ValueTask InputPakcetAsync(UdpReceiveResult packet, CancellationToken cancellationToken = default)
         {
-            ReadOnlySpan<byte> span = packet.Span;
-            int overhead = _id.HasValue ? 8 : 0;
+            ReadOnlySpan<byte> span = packet.Buffer.AsSpan();
+            int overhead = _id.HasValue ? KcpGlobalVars.CONVID_LENGTH : 0;
             if (span.Length < overhead || span.Length > _mtu)
             {
                 return default;

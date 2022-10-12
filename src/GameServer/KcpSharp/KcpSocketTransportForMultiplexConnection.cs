@@ -10,12 +10,12 @@ namespace KcpSharp
         private Func<Exception, IKcpTransport<IKcpMultiplexConnection<T>>, object?, bool>? _exceptionHandler;
         private object? _exceptionHandlerState;
 
-        internal KcpSocketTransportForMultiplexConnection(Socket socket, EndPoint endPoint, int mtu)
-            : base(socket, endPoint, mtu)
+        internal KcpSocketTransportForMultiplexConnection(UdpClient listener, int mtu)
+            : base(listener, mtu)
         { }
 
-        internal KcpSocketTransportForMultiplexConnection(Socket socket, EndPoint endPoint, int mtu, Action<T?>? disposeAction)
-            : base(socket, endPoint, mtu)
+        internal KcpSocketTransportForMultiplexConnection(UdpClient listener, int mtu, Action<T?>? disposeAction)
+            : base(listener, mtu)
         {
             _disposeAction = disposeAction;
         }

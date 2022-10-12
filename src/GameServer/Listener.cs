@@ -35,7 +35,7 @@ namespace Weedwacker.GameServer
             ListenAddress = new(IPAddress.Parse(GameServer.Configuration.Server.AccessAddress), PORT);
             UDPClient = new(ListenAddress);        
             if (UDPListener == null) return;
-            KCPTransport = KcpSocketTransport.CreateMultiplexConnection(UDPListener, ListenAddress, 1400);
+            KCPTransport = KcpSocketTransport.CreateMultiplexConnection(UDPClient, 1400);
             KCPTransport.Start();
         }
         static void RegisterConnection(Connection con)
@@ -53,12 +53,12 @@ namespace Weedwacker.GameServer
                 Logger.WriteLine($"Connection with {con.RemoteEndPoint} has been closed");
             }
         }
-        public static async Task HandleHandshake(byte[] data, SocketReceiveFromResult rcv)
+        public static async Task HandleHandshake(UdpReceiveResult rcv)
         {
             try
             {
-                var con = GetConnectionByEndPoint((IPEndPoint)rcv.RemoteEndPoint);
-                await using var ms = new MemoryStream(data);
+                var con = GetConnectionByEndPoint(rcv.RemoteEndPoint);
+                await using var ms = new MemoryStream(rcv.Buffer);
                 using var br = new BinaryReader(ms);
                 int code = br.ReadInt32BE();
                 br.ReadUInt32();
@@ -93,12 +93,12 @@ namespace Weedwacker.GameServer
                 Logger.WriteErrorLine($"Failed to handle handshake: {ex}");
             }
         }
-        static async Task AcceptConnection(SocketReceiveFromResult rcv, int enet)
+        static async Task AcceptConnection(UdpReceiveResult rcv, int enet)
         {
             var convId = Connections.GetNextAvailableIndex();
-            var convo = Multiplex?.CreateConversation(convId, ConvOpt);
+            var convo = Multiplex?.CreateConversation(convId, rcv.RemoteEndPoint, ConvOpt);
             if (convo == null) return;
-            var con = new Connection(convo, (IPEndPoint)rcv.RemoteEndPoint);
+            var con = new Connection(convo, rcv.RemoteEndPoint);
             RegisterConnection(con);
             await SendHandshakeResponse(con, enet);
         }

@@ -55,7 +55,7 @@ namespace KcpSharp
             Debug.Assert(destination.Length >= 20);
             if (conversationId.HasValue)
             {
-                BinaryPrimitives.WriteUInt64LittleEndian(destination, conversationId.GetValueOrDefault());
+                BinaryPrimitives.WriteUInt64BigEndian(destination, conversationId.GetValueOrDefault());
                 destination = destination.Slice(8);
                 bytesWritten = 28;
             }

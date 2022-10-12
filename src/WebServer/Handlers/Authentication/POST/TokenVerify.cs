@@ -10,7 +10,8 @@ namespace Weedwacker.WebServer.Handlers
     {
         public async Task<bool> HandleAsync(HttpContext context)
         {
-            //if(context.Request.Quer)
+            bool useGameToken = false;
+            if (!context.Request.QueryString.HasValue) useGameToken = true;
             // Parse body data.
             var bodyData = await context.Request.ReadFromJsonAsync<VerifyTokenRequestJson>();
             // Validate body data.
@@ -18,9 +19,9 @@ namespace Weedwacker.WebServer.Handlers
                 return false;
 
             // Pass data to authentication handler.
-            var responseData = await WebServer.AuthenticationSystem
+            var responseData = await (useGameToken ? WebServer.AuthenticationSystem.GetGameTokenAuthenticator().Authenticate(IAuthenticationSystem.FromTokenRequest(context, bodyData)) : WebServer.AuthenticationSystem
                 .GetTokenAuthenticator()
-                .Authenticate(IAuthenticationSystem.FromTokenRequest(context, bodyData));
+                .Authenticate(IAuthenticationSystem.FromTokenRequest(context, bodyData)));
             // Send response.
             await context.Response.WriteAsJsonAsync(responseData);
 

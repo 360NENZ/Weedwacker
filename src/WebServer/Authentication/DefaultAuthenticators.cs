@@ -82,8 +82,59 @@ namespace Weedwacker.WebServer.Authentication
     }
 
     /// <summary>
+    /// Handles the authentication request from the game when using a game token.
+    /// </summary>
+    public class GameTokenAuthenticator : IAuthenticator<LoginResultJson>
+    {
+        public async Task<LoginResultJson> Authenticate(AuthenticationRequest request)
+        {
+            var response = new LoginResultJson();
+
+            var requestData = request.TokenRequest;
+
+            bool successfulLogin;
+            string address = request.Context.Connection.RemoteIpAddress.ToString();
+            string loggerMessage;
+
+            // Log the attempt.
+            Logger.WriteLine(string.Format("Verifying session key from {0}", address));
+
+            // Get account from database.
+            Account? account = await DatabaseManager.GetAccountByIdAsync(requestData.uid);
+
+            // Check if account exists/token is valid.
+            successfulLogin = account != null && account.Token.Equals(requestData.token);
+
+            // Set response data.
+            if (successfulLogin)
+            {
+                response.message = "OK";
+                response.data.account.uid = account.Id.ToString();
+                response.data.account.token = account.Token;
+                response.data.account.email = account.Email;
+
+                // Log the login.
+                loggerMessage = string.Format("Successfully Verified session key for uid: {0}", requestData.uid);
+            }
+            else
+            {
+                response.retcode = -111;
+                response.message = "Game account cache information error.";
+                response.data = null;
+
+                // Log the failure.
+                loggerMessage = string.Format("failed verify token from: {0}.", address);
+            }
+
+
+
+            Logger.WriteLine(loggerMessage);
+            return response;
+        }
+    }
+
+    /// <summary>
     /// Handles the authentication request from the game when using a registry token.
-    /// Token authenticatino may be requested either from a client, or a Game Server 
     /// </summary>
     public class TokenAuthenticator : IAuthenticator<LoginResultJson>
     {
@@ -98,44 +149,44 @@ namespace Weedwacker.WebServer.Authentication
             string loggerMessage;
 
             // Log the attempt.
-            Logger.WriteLine(string.Format("Verifying token from {0}", address));
+            Logger.WriteLine(string.Format("Verifying session key from {0}", address));
 
 
 
-                // Get account from database.
-                Account? account = await DatabaseManager.GetAccountByIdAsync(requestData.uid);
+            // Get account from database.
+            Account? account = await DatabaseManager.GetAccountByIdAsync(requestData.uid);
 
-                // Check if account exists/token is valid.
-                successfulLogin = account != null && account.Token.Equals(requestData.token);
+            // Check if account exists/token is valid.
+            successfulLogin = account != null && account.SessionKey.Equals(requestData.token);
 
-                // Set response data.
-                if (successfulLogin)
-                {
-                    response.message = "OK";
-                    response.data.account.uid = account.Id.ToString();
-                    response.data.account.token = account.SessionKey;
-                    response.data.account.email = account.Email;
+            // Set response data.
+            if (successfulLogin)
+            {
+                response.message = "OK";
+                response.data.account.uid = account.Id.ToString();
+                response.data.account.token = account.SessionKey;
+                response.data.account.email = account.Email;
 
-                    // Log the login.
-                    loggerMessage = string.Format("Successfully Verified token for uid: {0}", requestData.uid);
-                }
-                else
-                {
-                    response.retcode = -111;
-                    response.message = "Game account cache information error.";
-                    response.data = null;
+                // Log the login.
+                loggerMessage = string.Format("Successfully Verified session key for uid: {0}", requestData.uid);
+            }
+            else
+            {
+                response.retcode = -111;
+                response.message = "Game account cache information error.";
+                response.data = null;
 
-                    // Log the failure.
-                    loggerMessage = string.Format("failed verify token from: {0}.", address);
-                }
+                // Log the failure.
+                loggerMessage = string.Format("failed verify token from: {0}.", address);
+            }
 
-            
+
 
             Logger.WriteLine(loggerMessage);
             return response;
         }
     }
-    
+
     /// <summary>
     /// Handles the authentication request from the game when using a combo token/session key.
     /// </summary>

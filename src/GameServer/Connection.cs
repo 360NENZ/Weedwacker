@@ -59,7 +59,7 @@ namespace Weedwacker.GameServer
                 KcpConversationReceiveResult result = await Conversation.WaitToReceiveAsync(CancelToken.Token);
                 if (result.TransportClosed)
                 {
-                    Logger.WriteErrorLine("Transport was closed");
+                    Logger.WriteErrorLine("Connection was closed");
                     break;
                 }
                 if (result.BytesReceived > Listener.MAX_MSG_SIZE)

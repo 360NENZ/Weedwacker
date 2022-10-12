@@ -56,17 +56,15 @@ namespace Weedwacker.GameServer.Packet.Recv
 
                     byte[] client_seed_encrypted = Convert.FromBase64String(req.ClientSeed);
                     byte[] client_seed = signer.Decrypt(client_seed_encrypted, RSAEncryptionPadding.Pkcs1);
-                    ulong firstEightBytes = BitConverter.ToUInt64(client_seed, 0);
-                    ulong xored = firstEightBytes ^ Crypto.ENCRYPT_SEED;
-                    byte[] seed_bytes = BitConverter.GetBytes(xored);
-
+                    byte[] encryptSeed = BitConverter.GetBytes(Crypto.ENCRYPT_SEED);
+                    Crypto.Xor(client_seed, encryptSeed);
+                    byte[] seed_bytes = client_seed;
 
                     //Kind of a hack, but whatever
                     RSA encryptor = req.KeyId == 3 ? Crypto.CurOSEncryptor : Crypto.CurCNEncryptor;
                     byte[] seed_encrypted = encryptor.Encrypt(seed_bytes, RSAEncryptionPadding.Pkcs1);
 
                     byte[] seed_bytes_sign = signer.SignData(seed_bytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-                   
 
                     await session.SendPacketAsync(new PacketGetPlayerTokenRsp(session, Convert.ToBase64String(seed_encrypted), Convert.ToBase64String(seed_bytes_sign), req.AccountToken));
                 }

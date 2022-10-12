@@ -12,6 +12,7 @@ namespace Weedwacker.WebServer.Authentication
     public class DefaultAuthentication : IAuthenticationSystem
     {
         private IAuthenticator<LoginResultJson> PasswordAuthenticator = new PasswordAuthenticator();
+        private IAuthenticator<LoginResultJson> GameTokenAuthenticator = new GameTokenAuthenticator();
         private IAuthenticator<LoginResultJson> TokenAuthenticator = new TokenAuthenticator();
         private IAuthenticator<ComboTokenResJson> SessionKeyAuthenticator = new SessionKeyAuthenticator();
         private IExternalAuthenticator ExternalAuthenticator = new ExternalAuthentication();
@@ -35,27 +36,32 @@ namespace Weedwacker.WebServer.Authentication
 
         public IAuthenticator<LoginResultJson> GetPasswordAuthenticator()
         {
-            return this.PasswordAuthenticator;
+            return PasswordAuthenticator;
         }
-
+        public IAuthenticator<LoginResultJson> GetGameTokenAuthenticator()
+        {
+            return GameTokenAuthenticator;
+        }
         public IAuthenticator<LoginResultJson> GetTokenAuthenticator()
         {
-            return this.TokenAuthenticator;
+            return TokenAuthenticator;
         }
 
         public IAuthenticator<ComboTokenResJson> GetSessionKeyAuthenticator()
         {
-            return this.SessionKeyAuthenticator;
+            return SessionKeyAuthenticator;
         }
 
         public IExternalAuthenticator GetExternalAuthenticator()
         {
-            return this.ExternalAuthenticator;
+            return ExternalAuthenticator;
         }
 
         public IOAuthAuthenticator GetOAuthAuthenticator()
         {
-            return this.OAuthAuthenticator;
+            return OAuthAuthenticator;
         }
+
+
     }
 }

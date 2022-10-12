@@ -1,24 +1,18 @@
-﻿using System;
-using System.Diagnostics;
-using System.Reflection;
+﻿using System.Runtime.CompilerServices;
 
 namespace Weedwacker.Shared.Utils
 {
     public static class Logger
     {
-        public static void WriteLine(string message)
+        public static void WriteLine(string message, [CallerMemberName] string memberName = "",[CallerFilePath] string fileName = "",
+            [CallerLineNumber] int lineNumber = 0)
         {
-            Console.WriteLine(ParseMessage(message));
+            Console.WriteLine(ParseMessage(message, memberName, fileName, lineNumber));
         }
-        private static string ParseMessage(string message)
-        {
-            StackTrace stackTrace = new StackTrace();           // get call stack
-            StackFrame[] stackFrames = stackTrace.GetFrames();  // get method calls (frames)
-
-            StackFrame callingFrame = stackFrames[2];
-            string method = callingFrame.GetMethod().DeclaringType.Name;
-
-            return $"[{DateTime.UtcNow:yy-MM-dd HH:mm:ss}]<{method}> {message}";
+        private static string ParseMessage(string message, string memberName = "", string fileName = "",
+            int lineNumber = 0)
+        {           
+            return $"[{DateTime.UtcNow:yy-MM-dd HH:mm:ss}]<{fileName.Split("\\").Last()}{memberName}> {message}";
         }
         public static void DebugWriteLine(string message)
         {
@@ -26,17 +20,21 @@ namespace Weedwacker.Shared.Utils
             Console.WriteLine(ParseMessage(message));
 #endif
         }
-        public static void WriteErrorLine(string message)
+        public static void WriteErrorLine(string message, [CallerMemberName] string memberName = "", [CallerFilePath] string fileName = "",
+            [CallerLineNumber] int lineNumber = 0)
         {
             Console.BackgroundColor = ConsoleColor.Red;
             Console.ForegroundColor = ConsoleColor.White;
-            Console.Error.WriteLine(ParseMessage(message));
+            Console.Error.WriteLine(ParseMessage(message, memberName, fileName,
+            lineNumber));
             Console.ResetColor();
         }
 
-        public static void WriteErrorLine(string message, Exception e)
+        public static void WriteErrorLine(string message, Exception e, [CallerMemberName] string memberName = "", [CallerFilePath] string fileName = "",
+            [CallerLineNumber] int lineNumber = 0)
         {
-            WriteErrorLine(message);
+            WriteErrorLine(message, memberName, fileName,
+            lineNumber);
             WriteErrorLine(e.StackTrace);
         }
     }

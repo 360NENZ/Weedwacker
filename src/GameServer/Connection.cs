@@ -295,7 +295,11 @@ namespace Weedwacker.GameServer
                     }
             }
 #endif
-            await Conversation.SendAsync(await packet.BuildPacketAsync(), CancelToken.Token);  
+            byte[] packetBytes = await packet.BuildPacketAsync();
+
+                Crypto.Xor(packetBytes, UseSecretKey ? SecretKey : Crypto.DISPATCH_KEY);
+            
+            await Conversation.SendAsync(packetBytes, CancelToken.Token);  
         }
 
         public async Task SetSecretKey(ulong seed)

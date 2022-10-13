@@ -7,7 +7,7 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketResinChangeNotify : BasePacket
     {
-        public PacketResinChangeNotify(Player player) : base(Enums.OpCode.ResinChangeNotify)
+        public PacketResinChangeNotify(Player player) : base(OpCode.ResinChangeNotify)
         {
             ResinChangeNotify proto = new()
             {

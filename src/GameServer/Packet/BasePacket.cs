@@ -76,11 +76,6 @@ namespace Weedwacker.GameServer.Packet
 
             byte[] packet = ms.ToArray();
 
-            if (ShouldEncrypt)
-            {
-                Crypto.Xor(packet, UseDispatchKey ? Crypto.DISPATCH_KEY : Crypto.ENCRYPT_KEY);
-            }
-            var asString = Convert.ToHexString(packet);
             return packet;
         }
     }

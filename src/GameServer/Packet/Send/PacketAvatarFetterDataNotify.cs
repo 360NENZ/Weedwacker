@@ -25,7 +25,7 @@ namespace Weedwacker.GameServer.Packet.Send
 			{
 				avatarFetter.FetterList.Add(fetter);
 			}
-			proto.FetterInfoMap.Add((ulong)avatar.Guid, avatarFetter);
+			proto.FetterInfoMap.Add(avatar.Guid, avatarFetter);
 
 			Data = proto.ToByteArray();
 		}

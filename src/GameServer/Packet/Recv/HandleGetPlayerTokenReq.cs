@@ -43,8 +43,7 @@ namespace Weedwacker.GameServer.Packet.Recv
             // Update the player's session pointer
             session.Player.Session = session;
 
-            // Set session state
-            session.UseSecretKey = true;
+
             ulong randSeed = (ulong)Random.Shared.NextInt64();
             //await session.SetSecretKey(randSeed);
             await session.SetSecretKey(Crypto.ENCRYPT_SEED);
@@ -71,6 +70,8 @@ namespace Weedwacker.GameServer.Packet.Recv
                     byte[] seed_bytes_sign = signer.SignData(seed_bytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
                     await session.SendPacketAsync(new PacketGetPlayerTokenRsp(session, Convert.ToBase64String(seed_encrypted), Convert.ToBase64String(seed_bytes_sign), req.AccountToken));
+                    // Set session state
+                    session.UseSecretKey = true;
                 }
                 catch (Exception ignore)
                 {
@@ -82,12 +83,16 @@ namespace Weedwacker.GameServer.Packet.Recv
                     string base64str = Convert.ToBase64String(clientBytes);
 
                     await session.SendPacketAsync(new PacketGetPlayerTokenRsp(session, base64str, "bm90aGluZyBoZXJl", req.AccountToken));
+                    // Set session state
+                    session.UseSecretKey = true;
                 }
             }
             else
             {
                 // Send packet
                 await session.SendPacketAsync(new PacketGetPlayerTokenRsp(session, req.AccountToken));
+                // Set session state
+                session.UseSecretKey = true;
             }
         }
     }

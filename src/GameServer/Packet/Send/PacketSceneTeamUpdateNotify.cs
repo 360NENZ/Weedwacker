@@ -46,7 +46,7 @@ namespace Weedwacker.GameServer.Packet.Send
 					if (player.IsInMultiplayer())
 					{
 						avatarProto.AvatarInfo = avatar.Avatar.ToProto();
-						avatarProto.SceneAvatarInfo = avatar.GetSceneAvatarInfo(); // why mihoyo...
+						avatarProto.SceneAvatarInfo = avatar.GetSceneAvatarInfo();
 					}
 
 					proto.SceneTeamAvatarList.Add(avatarProto);

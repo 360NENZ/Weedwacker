@@ -11,7 +11,7 @@ namespace Weedwacker.GameServer.Packet.Send
 		{
 			AvatarSkillChangeNotify proto = new AvatarSkillChangeNotify()
 			{
-				AvatarGuid = (ulong)avatar.Guid,
+				AvatarGuid = avatar.Guid,
 				EntityId = (uint)avatar.EntityId,
 				SkillDepotId = (uint)depotId,
 				AvatarSkillId = (uint)skillId,

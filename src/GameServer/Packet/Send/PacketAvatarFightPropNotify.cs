@@ -11,7 +11,7 @@ namespace Weedwacker.GameServer.Packet.Send
 		{
 			AvatarFightPropNotify proto = new AvatarFightPropNotify()
 			{
-				AvatarGuid = (ulong)avatar.Guid
+				AvatarGuid = avatar.Guid
 			};
 			foreach(FightProperty prop in avatar.FightProp.Keys)
             {

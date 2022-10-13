@@ -12,7 +12,7 @@ namespace Weedwacker.GameServer.Packet.Send
 
 			AvatarUnlockTalentNotify proto = new AvatarUnlockTalentNotify()
 			{
-				AvatarGuid = (ulong)avatar.Guid,
+				AvatarGuid = avatar.Guid,
 				EntityId = (uint)avatar.EntityId,
 				TalentId = (uint)talentId,
 				SkillDepotId = (uint)depotId

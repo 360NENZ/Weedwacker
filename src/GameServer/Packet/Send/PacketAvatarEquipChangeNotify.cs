@@ -13,9 +13,9 @@ namespace Weedwacker.GameServer.Packet.Send
 
 			AvatarEquipChangeNotify proto = new()
 			{
-				AvatarGuid = (ulong)avatar.Guid,
+				AvatarGuid = avatar.Guid,
 				EquipType = (uint)slot,
-				EquipGuid = (ulong)item.Guid,
+				EquipGuid = item.Guid,
 				ItemId = (uint)item.ItemId
 			};
 
@@ -37,7 +37,7 @@ namespace Weedwacker.GameServer.Packet.Send
 		{
 			AvatarEquipChangeNotify proto = new()
 			{
-				AvatarGuid = (ulong)avatar.Guid,
+				AvatarGuid = avatar.Guid,
 				EquipType = (uint)slot
 			};
 

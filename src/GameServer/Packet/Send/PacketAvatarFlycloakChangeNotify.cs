@@ -11,7 +11,7 @@ namespace Weedwacker.GameServer.Packet.Send
 		{
 			AvatarFlycloakChangeNotify proto = new()
 			{
-				AvatarGuid = (uint)avatar.Guid,
+				AvatarGuid = avatar.Guid,
 				FlycloakId = (uint)avatar.FlyCloak
 			};
 			Data = proto.ToByteArray();

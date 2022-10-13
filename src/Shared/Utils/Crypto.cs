@@ -10,7 +10,7 @@ namespace Weedwacker.Shared.Utils
         public static byte[] DISPATCH_SEED;
 
         public static byte[] ENCRYPT_KEY;
-        public static ulong ENCRYPT_SEED = 11468049314633205968;
+        public static ulong ENCRYPT_SEED = 0x0;
         public static byte[] ENCRYPT_SEED_BUFFER = new byte[0];
         
         public static RSA CurOSEncryptor = RSA.Create(); //Public key

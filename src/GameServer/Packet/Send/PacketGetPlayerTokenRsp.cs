@@ -54,7 +54,7 @@ namespace Weedwacker.GameServer.Packet.Send
                 Token = token,
                 AccountType = 1,
                 IsProficientPlayer = session.Player.Profile.HeroName != "", // Not sure what this checks
-                //SecretKeySeed = Crypto.ENCRYPT_SEED,
+                SecretKeySeed = Crypto.ENCRYPT_SEED,
                 //SecurityCmdBuffer = ByteString.CopyFrom(Crypto.ENCRYPT_SEED_BUFFER),
                 PlatformType = 3,
                 ChannelId = 1,

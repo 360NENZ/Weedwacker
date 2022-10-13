@@ -90,8 +90,7 @@ namespace Weedwacker.GameServer.Database
             player.Avatars = await GetAvatarsByPlayerAsync(player) ?? new AvatarManager(player); // Load avatars before inventory, so that we can attach weapons while loading them
             player.Inventory = await GetInventoryByPlayerAsync(player) ?? new InventoryManager(player);
             player.TeamManager = await GetTeamsByPlayerAsync(player) ?? new TeamManager(player);
-            player.GadgetManager = new(player);
-            player.EnergyManager = new(player);
+            await player.OnLoadAsync();
 
             return player;
         }

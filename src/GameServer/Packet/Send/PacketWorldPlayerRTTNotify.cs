@@ -10,7 +10,7 @@ namespace Weedwacker.GameServer.Packet.Send
 		{ 
 			WorldPlayerRTTNotify proto = new();
 
-			proto.PlayerRttList.AddRange(world.Players.Select(p => new PlayerRTTInfo() { Uid = (uint)p.GameUid, Rtt = p.Session.LastPingTime }));
+			proto.PlayerRttList.AddRange(world.Players.Select(p => new PlayerRTTInfo() { Uid = (uint)p.GameUid, Rtt = (uint)(p.Session.LastPingTime /1000) }));
 
 			Data = proto.ToByteArray();
 		}

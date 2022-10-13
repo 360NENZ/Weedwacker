@@ -136,7 +136,7 @@ namespace Weedwacker.GameServer.Systems.Player
                     if (value < MIN_HOME_COIN) return false;
                     goto default;
                 default:
-                    int currentValue = Owner.PlayerProperties[prop];
+                    int currentValue = Owner.PlayerProperties.GetValueOrDefault(prop);
                     Owner.PlayerProperties[prop] = value;
                     if (sendPacket)
                     {

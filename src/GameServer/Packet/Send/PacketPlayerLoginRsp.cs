@@ -24,7 +24,8 @@ namespace Weedwacker.GameServer.Packet.Send
                         {
                             GateserverIp = GameServer.Configuration.Server.AccessAddress,
                             GateserverPort = (uint)GameServer.Configuration.Server.AccessPort,
-                            SecretKey = ByteString.CopyFrom(Crypto.DISPATCH_SEED)
+                            SecretKey = ByteString.CopyFrom(Crypto.DISPATCH_SEED),
+                            ResVersionConfig = new(),
                         };
                         RegionCache = new QueryCurrRegionHttpRsp()
                         {

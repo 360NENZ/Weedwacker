@@ -2,6 +2,7 @@
 using Vim.Math3d;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet;
+using Weedwacker.GameServer.Packet.Recv;
 using Weedwacker.GameServer.Packet.Send;
 using Weedwacker.GameServer.Systems.World;
 using Weedwacker.Shared.Network.Proto;
@@ -35,6 +36,7 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonIgnore] public Connection? Session; // Set by HandleGetPlayerTokenReq
         [BsonIgnore] public string Token { get; set; } // Obtained and used When Logging in
         [BsonIgnore] public uint EnterSceneToken;
+        [BsonIgnore] private bool Paused;
         [BsonIgnore] public bool HasSentLoginPackets { get; private set; }
         [BsonIgnore] private ulong NextGuid = 0;
         [BsonIgnore] public SceneLoadState SceneLoadState = SceneLoadState.NONE;
@@ -60,8 +62,6 @@ namespace Weedwacker.GameServer.Systems.Player
             ResinManager = new(this);
             ExpManager = new(this);
             BattlePassManager = new(this);
-            Inventory = new(this);
-            TeamManager = new(this);
             GadgetManager = new(this);
             EnergyManager = new(this);
         }
@@ -101,20 +101,55 @@ namespace Weedwacker.GameServer.Systems.Player
 
         public async Task OnLoginAsync()
         {
+            // Create world
+            World.World world = new(this);
+
+
             // Show opening cutscene if player has no avatars
             if (Avatars.GetAvatarCount() == 0)
             {
                 await OnCreate();
+                await world.AddPlayerAsync(this, EnterReason.Login, EnterType.Self, true);
             }
+            else
+                await world.AddPlayerAsync(this, EnterReason.Login);
+
+            //await SendPacketAsync(new PacketPlayerDataNotify(this));
 
             // Multiplayer setting
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_PLAYER_MP_SETTING_TYPE, (int)MpSettingType.EnterAfterApply, false);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_IS_MP_MODE_AVAILABLE, 1, false);
 
-            await ResinManager.OnLoginAsync();
+            //await ResinManager.OnLoginAsync();
         }
 
+        // Called by DatabaseManager
+        public async Task OnLoadAsync()
+        {
+            PropManager = new(this);
+            ResinManager = new(this);
+            ExpManager = new(this);
+            BattlePassManager = new(this);
+            GadgetManager = new(this);
+            EnergyManager = new(this);
+        }
         public bool IsInMultiplayer() { return World != null && World.IsMultiplayer; }
+
+        //TODO
+        public void SetPaused(bool newPauseState)
+        {
+            bool oldPauseState = Paused;
+            Paused = newPauseState;
+
+            if (newPauseState && !oldPauseState)
+            {
+                //StaminaManager.StopSustainedStaminaHandler();
+            }
+            else if (oldPauseState && !newPauseState)
+            {
+                //StaminaManager.StartSustainedStaminaHandler();
+            }
+        }
 
         public OnlinePlayerInfo GetOnlinePlayerInfo()
         {

@@ -23,8 +23,8 @@ namespace Weedwacker.GameServer
         public bool UseSecretKey { get; set; } = false;
         private byte[] SecretKey = new byte[0x1000];
         public Player? Player { get; set; }
-        private int ClientTime;
-        public uint LastPingTime { get; private set; }
+        private uint ClientTime;
+        public long LastPingTime { get; private set; }
         private uint LastClientSeq = 10;
         public static readonly List<OpCode> BANNED_PACKETS  = new List<OpCode>(){ OpCode.WindSeedClientNotify, OpCode.PlayerLuaShellNotify };
 
@@ -48,6 +48,13 @@ namespace Weedwacker.GameServer
             CancelToken.Cancel();
             CancelToken.Dispose();
         }
+
+        public void UpdateLastPingTime(uint clientTime)
+        {
+            ClientTime = clientTime;
+            LastPingTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+        }
+
 #if DEBUG
         static void LogPacket(string sendOrRecv, ushort opcode, byte[] payload)
         {

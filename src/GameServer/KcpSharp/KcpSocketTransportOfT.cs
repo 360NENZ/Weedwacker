@@ -132,11 +132,12 @@ namespace KcpSharp
                     }
                     catch (Exception ex)
                     {
-                        if (!HandleExceptionWrapper(ex))
+                        /*if (!HandleExceptionWrapper(ex))
                         {
                             break;
                         }
                         error = true;
+                        */
                     }
 
                     if (bytesReceived != 0 && bytesReceived <= _mtu)

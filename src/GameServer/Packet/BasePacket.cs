@@ -18,7 +18,7 @@ namespace Weedwacker.GameServer.Packet
         public byte[] Data { get; protected set; } = Array.Empty<byte>();
 
         // Encryption
-        protected bool UseDispatchKey;
+        protected bool UseDispatchKey = false;
         protected bool ShouldEncrypt = true;
 
         public BasePacket(OpCode opcode)
@@ -38,9 +38,9 @@ namespace Weedwacker.GameServer.Packet
             ShouldBuildHeader = buildHeader;
         }
 
-        public BasePacket(ushort opcode, bool buildHeader, bool useDispatchKey)
+        public BasePacket(OpCode opcode, bool buildHeader, bool useDispatchKey)
         {
-            Opcode = opcode;
+            Opcode = (ushort)opcode;
             ShouldBuildHeader = buildHeader;
             UseDispatchKey = useDispatchKey;
         }
@@ -80,7 +80,7 @@ namespace Weedwacker.GameServer.Packet
             {
                 Crypto.Xor(packet, UseDispatchKey ? Crypto.DISPATCH_KEY : Crypto.ENCRYPT_KEY);
             }
-
+            var asString = Convert.ToHexString(packet);
             return packet;
         }
     }

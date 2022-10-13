@@ -63,5 +63,12 @@ namespace Weedwacker.GameServer
             BinaryPrimitives.WriteUInt32BigEndian(data, value);
             bw.Write(data);
         }
+
+        public static void WriteUInt64BE(this BinaryWriter bw, ulong value)
+        {
+            var data = new byte[8];
+            BinaryPrimitives.WriteUInt64BigEndian(data, value);
+            bw.Write(data);
+        }
     }
 }

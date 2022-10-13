@@ -9,6 +9,7 @@ using Weedwacker.GameServer.Packet;
 using static Weedwacker.GameServer.Extensions;
 using Weedwacker.Shared.Utils;
 using Weedwacker.GameServer.Systems.Player;
+using System.Text;
 
 namespace Weedwacker.GameServer
 {
@@ -20,11 +21,13 @@ namespace Weedwacker.GameServer
         public readonly IPEndPoint RemoteEndPoint;
         public SessionState State { get; set; } = SessionState.INACTIVE;
         public bool UseSecretKey { get; set; } = false;
+        private byte[] SecretKey = new byte[0x1000];
         public Player? Player { get; set; }
         private int ClientTime;
         public uint LastPingTime { get; private set; }
         private uint LastClientSeq = 10;
         public static readonly List<OpCode> BANNED_PACKETS  = new List<OpCode>(){ OpCode.WindSeedClientNotify, OpCode.PlayerLuaShellNotify };
+
         public Connection(KcpConversation conversation, IPEndPoint remote)
         {
             Conversation = conversation;
@@ -98,7 +101,7 @@ namespace Weedwacker.GameServer
         {
             byte[] gamePacket = data.ToArray();
             // Decrypt and turn back into a packet
-            Crypto.Xor(gamePacket, UseSecretKey ? Crypto.ENCRYPT_KEY : Crypto.DISPATCH_KEY);
+            Crypto.Xor(gamePacket, UseSecretKey ? SecretKey : Crypto.DISPATCH_KEY);
             await using var ms = new MemoryStream(gamePacket);
             using var br = new BinaryReader(ms);
             // Log
@@ -285,8 +288,23 @@ namespace Weedwacker.GameServer
                     }
             }
 #endif
-            // TODO SendPacketEvent event.
             await Conversation.SendAsync(await packet.BuildPacketAsync(), CancelToken.Token);  
+        }
+
+        public async Task SetSecretKey(ulong seed)
+        {
+            var mt = new Crypto.MT19937(seed);
+            mt.Seed(mt.Int63());
+            mt.Int63();
+
+            await using var ms = new MemoryStream(0x1000);
+            using var bw = new BinaryWriter(ms);
+            for (int i = 0; i < 0x1000; i += 8)
+            {
+                bw.WriteUInt64BE(mt.Int63());
+            }
+
+            SecretKey = ms.ToArray();
         }
     }
 }

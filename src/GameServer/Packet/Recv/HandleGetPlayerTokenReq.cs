@@ -45,6 +45,9 @@ namespace Weedwacker.GameServer.Packet.Recv
 
             // Set session state
             session.UseSecretKey = true;
+            ulong randSeed = (ulong)Random.Shared.NextInt64();
+            //await session.SetSecretKey(randSeed);
+            await session.SetSecretKey(Crypto.ENCRYPT_SEED);
             session.State = SessionState.WAITING_FOR_LOGIN;
 
             // Only Game Version >= 2.7.50 has this
@@ -56,6 +59,7 @@ namespace Weedwacker.GameServer.Packet.Recv
 
                     byte[] client_seed_encrypted = Convert.FromBase64String(req.ClientSeed);
                     byte[] client_seed = signer.Decrypt(client_seed_encrypted, RSAEncryptionPadding.Pkcs1);
+                    //byte[] encryptSeed = BitConverter.GetBytes(randSeed);
                     byte[] encryptSeed = BitConverter.GetBytes(Crypto.ENCRYPT_SEED);
                     Crypto.Xor(client_seed, encryptSeed);
                     byte[] seed_bytes = client_seed;

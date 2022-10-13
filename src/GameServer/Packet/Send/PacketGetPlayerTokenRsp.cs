@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Google.Protobuf;
+﻿using Google.Protobuf;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.Shared.Network.Proto;
 using Weedwacker.Shared.Utils;
@@ -12,10 +7,8 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketGetPlayerTokenRsp : BasePacket
     {
-        public PacketGetPlayerTokenRsp(Connection session, string token): base(OpCode.GetPlayerTokenRsp, true)
+        public PacketGetPlayerTokenRsp(Connection session, string token): base(OpCode.GetPlayerTokenRsp, true, true)
         {
-
-            UseDispatchKey = true;
 
             GetPlayerTokenRsp p = new GetPlayerTokenRsp()
             {
@@ -35,9 +28,8 @@ namespace Weedwacker.GameServer.Packet.Send
             Data = p.ToByteArray();
         }
 
-        public PacketGetPlayerTokenRsp(Connection session, int retcode, string msg, int blackEndTime) : base(OpCode.GetPlayerTokenRsp, true)
+        public PacketGetPlayerTokenRsp(Connection session, int retcode, string msg, int blackEndTime) : base(OpCode.GetPlayerTokenRsp, true, true)
         {
-            UseDispatchKey = true;
 
             GetPlayerTokenRsp p = new GetPlayerTokenRsp()
             {
@@ -53,9 +45,8 @@ namespace Weedwacker.GameServer.Packet.Send
             Data = p.ToByteArray();
         }
 
-        public PacketGetPlayerTokenRsp(Connection session, string encryptedSeed, string encryptedSeedSign, string token) : base(OpCode.GetPlayerTokenRsp, true)
+        public PacketGetPlayerTokenRsp(Connection session, string encryptedSeed, string encryptedSeedSign, string token) : base(OpCode.GetPlayerTokenRsp, true, true)
         {
-            UseDispatchKey = true;
 
             GetPlayerTokenRsp p = new GetPlayerTokenRsp()
             {
@@ -63,12 +54,12 @@ namespace Weedwacker.GameServer.Packet.Send
                 Token = token,
                 AccountType = 1,
                 IsProficientPlayer = session.Player.Profile.HeroName != "", // Not sure what this checks
-                SecretKeySeed = Crypto.ENCRYPT_SEED,
-                SecurityCmdBuffer = ByteString.CopyFrom(Crypto.ENCRYPT_SEED_BUFFER),
+                //SecretKeySeed = Crypto.ENCRYPT_SEED,
+                //SecurityCmdBuffer = ByteString.CopyFrom(Crypto.ENCRYPT_SEED_BUFFER),
                 PlatformType = 3,
                 ChannelId = 1,
                 CountryCode = "US",
-                ClientVersionRandomKey = "c25-314dd05b0b5f",
+                //ClientVersionRandomKey = "c25-314dd05b0b5f",
                 RegPlatform = 3,
                 ClientIpStr = GameServer.Configuration.Server.AccessAddress,
                 EncryptedSeed = encryptedSeed,

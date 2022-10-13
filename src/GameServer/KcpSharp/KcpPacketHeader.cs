@@ -70,7 +70,7 @@ namespace KcpSharp
             BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(4), Timestamp);
             BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(8), SerialNumber);
             BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(12), Unacknowledged);
-            BinaryPrimitives.WriteInt32LittleEndian(destination.Slice(16), payloadLength);
+            BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(16), (uint)payloadLength);
         }
     }
 }

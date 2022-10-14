@@ -1,4 +1,5 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Driver;
 using Weedwacker.GameServer.Database;
 
 namespace Weedwacker.GameServer.Systems.Player
@@ -68,11 +69,9 @@ namespace Weedwacker.GameServer.Systems.Player
             // Put into maps
             Avatars.Add(avatar.AvatarId, avatar);
             AvatarsGuid.Add(avatar.Guid, avatar);
-            var updateQuery = new UpdateQueryBuilder<AvatarManager>();
-            updateQuery.SetFilter(w => w.OwnerId == OwnerId);
-            updateQuery.AddValueToSet(w => w.Avatars[avatar.AvatarId], avatar);
-            Tuple<string,string> updateString = updateQuery.Build();
-            var result = await DatabaseManager.UpdateAvatarsAsync(updateString);
+            var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
+            var update = Builders<AvatarManager>.Update.Set(w => w.Avatars[avatar.AvatarId], avatar);
+            var result = await DatabaseManager.UpdateAvatarsAsync(filter, update);
             
             return result.IsAcknowledged;
         }

@@ -51,7 +51,7 @@ namespace Weedwacker.GameServer.Systems.Player
             }
 
             // Add resin.
-            int currentResin = Owner.PlayerProperties[PlayerProperty.PROP_PLAYER_RESIN];
+            int currentResin = Owner.PlayerProperties.GetValueOrDefault(PlayerProperty.PROP_PLAYER_RESIN);
             int newResin = currentResin + amount;
 
             if (await Owner.PropManager.SetPropertyAsync(PlayerProperty.PROP_PLAYER_RESIN, newResin))
@@ -134,13 +134,12 @@ namespace Weedwacker.GameServer.Systems.Player
             }
             else
             {
-                // Send Initial PropNotify and ResinChangeNotify. Official Behaviour
                 await RechargeResin();
             }
 
             // In case server administrators change the resin cap while players are capped,
             // we need to restart recharging here.
-            int currentResin = Owner.PlayerProperties[PlayerProperty.PROP_PLAYER_RESIN];
+            int currentResin = Owner.PlayerProperties.GetValueOrDefault(PlayerProperty.PROP_PLAYER_RESIN);
             int currentTime = (int)(DateTimeOffset.Now.ToUnixTimeMilliseconds() / 1000);
 
             if (currentResin < GameServer.Configuration.Server.GameOptions.ResinOptions.Cap && Owner.NextResinRefresh == 0)

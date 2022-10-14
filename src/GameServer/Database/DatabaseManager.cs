@@ -1,8 +1,8 @@
-﻿using MongoDB.Bson.IO;
+﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
-using Weedwacker.GameServer.Systems.Inventory;
+using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Systems.Player;
 using Weedwacker.Shared.Utils;
 
@@ -20,6 +20,11 @@ namespace Weedwacker.GameServer.Database
 
         public static async Task Initialize()
         {
+            
+            BsonSerializer.RegisterSerializer(new EnumSerializer<PlayerProperty>(BsonType.String));
+            BsonSerializer.RegisterSerializer(new EnumSerializer<FightProperty>(BsonType.String));
+            BsonSerializer.RegisterSerializer(new EnumSerializer<ItemType>(BsonType.String));
+
             DbClient = new MongoClient(GameServer.Configuration.Database.ConnectionUri);
             // Databases and collections are implicitly created
             Database = DbClient.GetDatabase(GameServer.Configuration.Database.Database);
@@ -37,10 +42,11 @@ namespace Weedwacker.GameServer.Database
             {
                 Properties = Database.GetCollection<DatabaseProperties>("dbProperties").Find(w => true).First();
             }
+
             Logger.WriteLine("Connected to GameServer database");
         }
 
-        public static async Task<Player?> CreatePlayerFromAccountUidAsync( string accountUid, string heroName = "", int gameUid = 0)
+        public static async Task<Player?> CreatePlayerFromAccountUidAsync(string accountUid, string heroName = "", int gameUid = 0)
         {
             //Make sure there are no name or id collisions
             var queryResult = await Players.FindAsync(w => w.Profile.HeroName == heroName || w.AccountUid == accountUid || w.GameUid == gameUid);
@@ -70,18 +76,11 @@ namespace Weedwacker.GameServer.Database
             await Players.ReplaceOneAsync<Player>(w => w.AccountUid == player.AccountUid, player);
         }
 
-        public static async Task UpdatePlayerAsync(Tuple<string?,string> queryFilterAndUpdate)
+        public static async Task UpdatePlayerAsync(FilterDefinition<Player> filter, UpdateDefinition<Player> update)
         {
-
-            string? filterString = queryFilterAndUpdate.Item1;
-            var filter = filterString == null ? Builders<Player>.Filter.And(filterString) : Builders<Player>.Filter.Empty;
-
-            string updateString = queryFilterAndUpdate.Item2;
-            var pipeline = new EmptyPipelineDefinition<Player>().AppendStage<Player, Player, Player>(updateString);
-            var update = Builders<Player>.Update.Pipeline(pipeline);
-
             await Players.UpdateOneAsync(filter, update);
         }
+
         public static async Task<Player?> GetPlayerByAccountUidAsync(string uid)
         {
             var matches = await Players.FindAsync(w => w.AccountUid == uid);
@@ -105,16 +104,8 @@ namespace Weedwacker.GameServer.Database
             await Avatars.ReplaceOneAsync<AvatarManager>(w => w.OwnerId == avatars.OwnerId, avatars);
         }
 
-        public static async Task<UpdateResult> UpdateAvatarsAsync(Tuple<string?, string> queryFilterAndUpdate)
+        public static async Task<UpdateResult> UpdateAvatarsAsync(FilterDefinition<AvatarManager> filter, UpdateDefinition<AvatarManager> update)
         {
-
-            string? filterString = queryFilterAndUpdate.Item1;
-            var filter = filterString == null ? Builders<AvatarManager>.Filter.And(filterString) : Builders<AvatarManager>.Filter.Empty;
-
-            string updateString = queryFilterAndUpdate.Item2;
-            var pipeline = new EmptyPipelineDefinition<AvatarManager>().AppendStage<AvatarManager, AvatarManager, AvatarManager>(updateString);
-            var update = Builders<AvatarManager>.Update.Pipeline(pipeline);
-
             return await Avatars.UpdateOneAsync(filter, update);
         }
 
@@ -136,15 +127,8 @@ namespace Weedwacker.GameServer.Database
             return inventory;
         }
 
-        public static async Task<UpdateResult> UpdateInventoryAsync(Tuple<string?, string> queryFilterAndUpdate)
+        public static async Task<UpdateResult> UpdateInventoryAsync(FilterDefinition<InventoryManager> filter, UpdateDefinition<InventoryManager> update)
         {
-            string? filterString = queryFilterAndUpdate.Item1;
-            var filter = filterString == null ? Builders<InventoryManager>.Filter.And(filterString) : Builders<InventoryManager>.Filter.Empty;
-
-            string updateString = queryFilterAndUpdate.Item2;
-            var pipeline = new EmptyPipelineDefinition<InventoryManager>().AppendStage<InventoryManager, InventoryManager, InventoryManager>(updateString);
-            var update = Builders<InventoryManager>.Update.Pipeline(pipeline);
-
             return await Inventories.UpdateOneAsync(filter, update);
         }
 
@@ -158,16 +142,8 @@ namespace Weedwacker.GameServer.Database
             await Teams.ReplaceOneAsync<TeamManager>(w => w.OwnerId == teams.OwnerId, teams);
         }
 
-        public static async Task<UpdateResult> UpdateTeamsAsync(Tuple<string?, string> queryFilterAndUpdate)
+        public static async Task<UpdateResult> UpdateTeamsAsync(FilterDefinition<TeamManager> filter, UpdateDefinition<TeamManager> update)
         {
-
-            string? filterString = queryFilterAndUpdate.Item1;
-            var filter = filterString == null ? Builders<TeamManager>.Filter.And(filterString) : Builders<TeamManager>.Filter.Empty;
-
-            string updateString = queryFilterAndUpdate.Item2;
-            var pipeline = new EmptyPipelineDefinition<TeamManager>().AppendStage<TeamManager, TeamManager, TeamManager>(updateString);
-            var update = Builders<TeamManager>.Update.Pipeline(pipeline);
-
             return await Teams.UpdateOneAsync(filter, update);
         }
 

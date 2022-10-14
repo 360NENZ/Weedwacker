@@ -14,13 +14,16 @@ namespace Weedwacker.GameServer.Systems.Player
     {
         [BsonId] public int OwnerId; // GameUid
         [BsonIgnore] internal Player Owner;
+        [BsonIgnore] public ShopManager ShopManager;
         [BsonElement] public Dictionary<ItemType, SubInventory> SubInventories { get; private set; }
        
 
         [BsonIgnore] public Dictionary<ulong, GameItem> GuidMap = new();
         public InventoryManager(Player owner)
         {
+            OwnerId = owner.GameUid;
             Owner = owner;
+            ShopManager = new(owner);
             SubInventories = new()
             {
                 { ItemType.ITEM_WEAPON, new WeaponTab(Owner, this)}, //Weapon tab includes MATERIAL_WEAPON_EXP_STONE
@@ -377,6 +380,7 @@ namespace Weedwacker.GameServer.Systems.Player
         public async Task OnLoadAsync(Player owner)
         {
             Owner = owner;
+            await ShopManager.OnLoadAsync(owner);
             foreach(SubInventory sub in SubInventories.Values)
             {
                 await sub.OnLoadAsync(owner, this);

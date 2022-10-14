@@ -1,4 +1,5 @@
-﻿using Weedwacker.GameServer.Database;
+﻿using MongoDB.Driver;
+using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet.Send;
 using Weedwacker.Shared.Network.Proto;
@@ -143,15 +144,12 @@ namespace Weedwacker.GameServer.Systems.Player
                         // Update player with packet
                         await Owner.SendPacketAsync(new PacketPlayerPropNotify(Owner, prop));
                         
-
                         if (value - currentValue != 0)
                         {
                             // Update Database
-                            var updateQuery = new UpdateQueryBuilder<Player>();
-                            updateQuery.SetFilter(w => w.AccountUid == Owner.AccountUid);
-                            updateQuery.AddValueToSet(w => w.PlayerProperties[prop], value);
-                            var queryStrings = updateQuery.Build();
-                            await DatabaseManager.UpdatePlayerAsync(queryStrings);
+                            var filter = Builders<Player>.Filter.Where(p => p.AccountUid == Owner.AccountUid);
+                            var update = Builders<Player>.Update.Set($"PlayerProperties.{prop}", value);
+                            await DatabaseManager.UpdatePlayerAsync(filter, update);
 
                             await Owner.SendPacketAsync(new PacketPlayerPropChangeNotify(prop, value - currentValue));
 

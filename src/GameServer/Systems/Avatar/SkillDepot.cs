@@ -1,4 +1,5 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Driver;
 using Weedwacker.GameServer.Data.BinOut.Talent.AvatarTalents;
 using Weedwacker.GameServer.Data.Common;
 using Weedwacker.GameServer.Data.Common.ConfigTalentTypes;
@@ -121,11 +122,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
             Skills[skillId] = level;
 
             // Update Database
-            var updateQuery = new UpdateQueryBuilder<AvatarManager>();
-            updateQuery.SetFilter(w => w.OwnerId == Owner.GameUid);
-            updateQuery.AddValueToSet(w => w.Avatars[Character.AvatarId].SkillDepots[DepotId].Skills[skillId], level);
-            Tuple<string, string> updateString = updateQuery.Build();
-            var result = await DatabaseManager.UpdateAvatarsAsync(updateString);
+            var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
+            var update = Builders<AvatarManager>.Update.Set(w => w.Avatars[Character.AvatarId].SkillDepots[DepotId].Skills[skillId], level);
+            var result = await DatabaseManager.UpdateAvatarsAsync(filter, update);
 
             // Packet
             await Owner.SendPacketAsync(new PacketAvatarSkillChangeNotify(Character, DepotId, skillId, oldLevel, level));
@@ -148,11 +147,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
             Talents.Add(talentData);
 
             // Update Database
-            var updateQuery = new UpdateQueryBuilder<AvatarManager>();
-            updateQuery.SetFilter(w => w.OwnerId == Owner.GameUid);
-            updateQuery.AddValueToSet(w => w.Avatars[Character.AvatarId].SkillDepots[DepotId].Talents, Talents);
-            Tuple<string, string> updateString = updateQuery.Build();
-            var result = await DatabaseManager.UpdateAvatarsAsync(updateString);
+            var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
+            var update = Builders<AvatarManager>.Update.Set(w => w.Avatars[Character.AvatarId].SkillDepots[DepotId].Talents, Talents);
+            var result = await DatabaseManager.UpdateAvatarsAsync(filter, update);
 
             // Packet
             await Owner.SendPacketAsync(new PacketAvatarUnlockTalentNotify(Character, DepotId, talentId));

@@ -168,7 +168,7 @@ namespace Weedwacker.GameServer
                             }
                         case Shared.Enums.ServerDebugMode.WHITELIST: 
                             {
-                                if (GameServer.Configuration.Server.DebugWhitelist.Contains(Enum.GetName(typeof(OpCode), opcode)))
+                                if (GameServer.Configuration.Server.DebugWhitelist.Contains((OpCode)opcode))
                                 {
                                     LogPacket("RECV", opcode, payload);
                                 }
@@ -176,7 +176,7 @@ namespace Weedwacker.GameServer
                             }
                         case Shared.Enums.ServerDebugMode.BLACKLIST: 
                             {
-                                if (!GameServer.Configuration.Server.DebugBlacklist.Contains(Enum.GetName(typeof(OpCode), opcode)))
+                                if (!GameServer.Configuration.Server.DebugBlacklist.Contains((OpCode)opcode))
                                 {
                                     LogPacket("RECV", opcode, payload);
                                 }
@@ -279,7 +279,7 @@ namespace Weedwacker.GameServer
                     }
                 case Shared.Enums.ServerDebugMode.WHITELIST:
                     {
-                        if (GameServer.Configuration.Server.DebugWhitelist.Contains(Enum.GetName(typeof(OpCode), packet.Opcode)))
+                        if (GameServer.Configuration.Server.DebugWhitelist.Contains((OpCode)packet.Opcode))
                         {
                             LogPacket("SEND", packet.Opcode, packet.Data);
                         }
@@ -287,7 +287,7 @@ namespace Weedwacker.GameServer
                     }
                 case Shared.Enums.ServerDebugMode.BLACKLIST:
                     {
-                        if (!GameServer.Configuration.Server.DebugBlacklist.Contains(Enum.GetName(typeof(OpCode), packet.Opcode)))
+                        if (!GameServer.Configuration.Server.DebugBlacklist.Contains((OpCode)packet.Opcode))
                         {
                             LogPacket("SEND", packet.Opcode, packet.Data);
                         }

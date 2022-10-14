@@ -1,4 +1,5 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Driver;
 using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
@@ -41,12 +42,9 @@ namespace Weedwacker.GameServer.Systems.Inventory
                         material.Count += count;
 
                         // Update Database
-                        var updateQueryMat = new UpdateQueryBuilder<InventoryManager>();
-                        updateQueryMat.SetFilter(w => w.OwnerId == Owner.GameUid);
-                        updateQueryMat.AddValueToSet(w =>
-                            (w.SubInventories[ItemType.ITEM_WEAPON] as FurnitureTab).Materials[itemId].Count, material.Count);
-                        var queryStringsMat = updateQueryMat.Build();
-                        await DatabaseManager.UpdateInventoryAsync(queryStringsMat);
+                        var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
+                        var update = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_FURNITURE}.Materials.{itemId}.Count", material.Count);
+                        var result = await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                         //TODO update codex
                         return material;
@@ -59,12 +57,9 @@ namespace Weedwacker.GameServer.Systems.Inventory
                     Materials.Add(itemId, newMaterial);
 
                     // Update Database
-                    var updateQueryMat = new UpdateQueryBuilder<InventoryManager>();
-                    updateQueryMat.SetFilter(w => w.OwnerId == Owner.GameUid);
-                    updateQueryMat.AddValueToSet(w =>
-                        (w.SubInventories[ItemType.ITEM_WEAPON] as FurnitureTab).Materials[itemId], newMaterial);
-                    var queryStringsMat = updateQueryMat.Build();
-                    await DatabaseManager.UpdateInventoryAsync(queryStringsMat);
+                    var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
+                    var update = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_FURNITURE}.Materials.{itemId}", newMaterial);
+                    var result = await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                     //TODO update codex
                     return newMaterial;
@@ -85,24 +80,18 @@ namespace Weedwacker.GameServer.Systems.Inventory
                     material.Count -= count;
 
                     // Update Database
-                    var updateQueryMat = new UpdateQueryBuilder<InventoryManager>();
-                    updateQueryMat.SetFilter(w => w.OwnerId == Owner.GameUid);
-                    updateQueryMat.AddValueToSet(w =>
-                        (w.SubInventories[ItemType.ITEM_WEAPON] as FurnitureTab).Materials[material.ItemId].Count, material.Count);
-                    var queryStringsMat = updateQueryMat.Build();
-                    await DatabaseManager.UpdateInventoryAsync(queryStringsMat);
+                    var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
+                    var update = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_FURNITURE}.Materials.{material.ItemId}.Count", material.Count);
+                    var result = await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                     return true;
                 }
                 else if (material.Count - count == 0)
                 {
                     // Update Database
-                    var updateQueryMat = new UpdateQueryBuilder<InventoryManager>();
-                    updateQueryMat.SetFilter(w => w.OwnerId == Owner.GameUid);
-                    updateQueryMat.AddValueToUnSet(w =>
-                        (w.SubInventories[ItemType.ITEM_WEAPON] as FurnitureTab).Materials[material.ItemId], material);
-                    var queryStringsMat = updateQueryMat.Build();
-                    await DatabaseManager.UpdateInventoryAsync(queryStringsMat);
+                    var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
+                    var update = Builders<InventoryManager>.Update.Unset($"SubInventories.{ItemType.ITEM_FURNITURE}.Materials.{material.ItemId}");
+                    var result = await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                     Materials.Remove(material.ItemId);
                     return true;

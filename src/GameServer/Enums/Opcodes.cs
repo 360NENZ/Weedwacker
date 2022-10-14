@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Weedwacker.GameServer.Enums
 {
@@ -24,6 +26,8 @@ namespace Weedwacker.GameServer.Enums
             OpCodeName = name;
         }
     }
+
+    [JsonConverter(typeof(StringEnumConverter))]
 #pragma warning disable CS3009 // Base type is not CLS-compliant
     public enum OpCode : ushort
 #pragma warning restore CS3009 // Base type is not CLS-compliant

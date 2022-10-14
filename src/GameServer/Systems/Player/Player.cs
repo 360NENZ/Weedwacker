@@ -1,4 +1,6 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson.Serialization.Options;
 using Vim.Math3d;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet;
@@ -30,7 +32,7 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonElement("Rotation")] public float[] RotationArray { get => new[] { Rotation.X, Rotation.Y, Rotation.Z }; set => Rotation = new(value[0], value[1], value[2]); }
         public int NextResinRefresh;
         public int LastDailyReset;
-        public Dictionary<PlayerProperty, int> PlayerProperties = new(); // SET ONLY THROUGH THE PROPMANAGER
+        public Dictionary<PlayerProperty, int> PlayerProperties { get; set; } = new(); // SET ONLY THROUGH THE PROPMANAGER
         [BsonIgnore] public PlayerPropertyManager PropManager;
         [BsonIgnore] public ResinManager ResinManager;
         [BsonIgnore] public Connection? Session; // Set by HandleGetPlayerTokenReq
@@ -71,7 +73,7 @@ namespace Weedwacker.GameServer.Systems.Player
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_PLAYER_LEVEL, 1, false);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_IS_SPRING_AUTO_USE, 1, false);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_SPRING_AUTO_USE_PERCENT, 50, false);
-            await PropManager.SetPropertyAsync(PlayerProperty.PROP_PLAYER_RESIN, 160, false);
+            await ResinManager.AddResinAsync(160);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_IS_FLYABLE, 0, false);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_MAX_STAMINA, 10000, false);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_CUR_PERSIST_STAMINA, 10000, false);
@@ -120,7 +122,7 @@ namespace Weedwacker.GameServer.Systems.Player
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_PLAYER_MP_SETTING_TYPE, (int)MpSettingType.EnterAfterApply, false);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_IS_MP_MODE_AVAILABLE, 1, false);
 
-            //await ResinManager.OnLoginAsync();
+            await ResinManager.OnLoginAsync();
         }
 
         // Called by DatabaseManager

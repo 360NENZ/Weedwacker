@@ -14,7 +14,7 @@ namespace Weedwacker.GameServer.Systems.Player
     {
         [BsonId] public int OwnerId; // GameUid
         [BsonIgnore] internal Player Owner;
-        [BsonIgnore] public ShopManager ShopManager;
+        [BsonElement] public ShopManager ShopManager { get; private set; }
         [BsonElement] public Dictionary<ItemType, SubInventory> SubInventories { get; private set; }
        
 

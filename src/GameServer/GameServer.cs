@@ -54,5 +54,11 @@ namespace Weedwacker.GameServer
             await Database.DatabaseManager.Initialize();
             Listener.StartListener();
         }
+
+        public static int GetShopNextRefreshTime(int shopType)
+        {
+            //TODO
+            return int.MaxValue;
+        }
     }
 }

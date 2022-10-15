@@ -1,6 +1,7 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using Weedwacker.GameServer.Data;
+using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Systems.Player;
 using Weedwacker.Shared.Network.Proto;
@@ -17,7 +18,8 @@ namespace Weedwacker.GameServer.Systems.Inventory
         {
             Customer = customer;
             ShopType = shopType;
-            Goods = (List<ShopGoodInfo>)GameData.ShopGoodsDataMap.Values.Where(w => w.shopType == shopType);
+            var allGoods = GameData.ShopGoodsDataMap.Values.Where(w => w.shopType == shopType).ToList();
+            allGoods.ForEach(w => Goods.Add(new ShopGoodInfo(w)));
             NextRefreshTime = GameServer.GetShopNextRefreshTime(shopType);
         }
 

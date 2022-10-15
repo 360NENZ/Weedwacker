@@ -17,6 +17,12 @@ namespace Weedwacker.GameServer.Systems.Inventory
             Data = GameData.ShopGoodsDataMap[goodsId];
         }
 
+        public ShopGoodInfo(ShopGoodsData data)
+        {
+            GoodsId = data.goodsId;
+            Data = data;
+        }
+
         public void ResetBoughtNum()
         {
             BoughtNum = 0;

@@ -27,6 +27,7 @@ namespace Weedwacker.GameServer.Database
         static DatabaseProperties Properties;
         static readonly ReplaceOptions Replace = new() { IsUpsert = true };
         static readonly BulkWriteOptions BulkWrite = new() { IsOrdered = false };
+        static System.Timers.Timer? UpdateTimer;
 
         // Aggregate update operations, and bulkWrite periodically
         static ConcurrentBag<WriteModel<Player>> PlayerWrites = new();
@@ -65,11 +66,11 @@ namespace Weedwacker.GameServer.Database
             Logger.WriteLine("Connected to GameServer database");
 
             // Create a timer with a five second interval.
-            var aTimer = new System.Timers.Timer(5000);
+            UpdateTimer = new System.Timers.Timer(5000);
             // Hook up the Elapsed event for the timer. 
-            aTimer.Elapsed += BulkUpdate;
-            aTimer.AutoReset = true;
-            aTimer.Enabled = true;
+            UpdateTimer.Elapsed += BulkUpdate;
+            UpdateTimer.AutoReset = true;
+            UpdateTimer.Enabled = true;
         }
 
         private static async void BulkUpdate(object? source, ElapsedEventArgs e)

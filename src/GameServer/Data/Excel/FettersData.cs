@@ -11,11 +11,11 @@ namespace Weedwacker.GameServer.Data.Excel
         [JsonProperty]
         public readonly int[] costumeIds;
         [JsonProperty]
-        public readonly int[] tips;
+        public readonly long[] tips;
         [JsonProperty]
         public readonly long voiceTitleTextMapHash;
         [JsonProperty]
-        public readonly int voiceFile;
+        public readonly int? voiceFile;
         [JsonProperty]
         public readonly long voiceFileTextTextMapHash;
         [JsonProperty]

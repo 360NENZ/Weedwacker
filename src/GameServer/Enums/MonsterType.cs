@@ -7,6 +7,9 @@ namespace Weedwacker.GameServer.Enums
     public enum MonsterType
     {
         MONSTER_ORDINARY,
+        MONSTER_ENV_ANIMAL,
+        MONSTER_FISH,
+        MONSTER_PARTNER,
         MONSTER_BOSS
     }
 }

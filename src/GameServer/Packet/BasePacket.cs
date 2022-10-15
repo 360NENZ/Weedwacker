@@ -17,10 +17,6 @@ namespace Weedwacker.GameServer.Packet
         private byte[] Header = Array.Empty<byte>();
         public byte[] Data { get; protected set; } = Array.Empty<byte>();
 
-        // Encryption
-        protected bool UseDispatchKey = false;
-        protected bool ShouldEncrypt = true;
-
         public BasePacket(OpCode opcode)
         {
             Opcode = (ushort)opcode;
@@ -36,13 +32,6 @@ namespace Weedwacker.GameServer.Packet
         {
             Opcode = (ushort)opcode;
             ShouldBuildHeader = buildHeader;
-        }
-
-        public BasePacket(OpCode opcode, bool buildHeader, bool useDispatchKey)
-        {
-            Opcode = (ushort)opcode;
-            ShouldBuildHeader = buildHeader;
-            UseDispatchKey = useDispatchKey;
         }
 
         public BasePacket BuildHeader(uint clientSequence)

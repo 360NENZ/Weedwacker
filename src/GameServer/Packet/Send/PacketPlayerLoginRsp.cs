@@ -10,8 +10,6 @@ namespace Weedwacker.GameServer.Packet.Send
 
         public PacketPlayerLoginRsp(Connection session) : base(Enums.OpCode.PlayerLoginRsp,1)
         {
-            UseDispatchKey = true;
-
             RegionInfo info;
 
 

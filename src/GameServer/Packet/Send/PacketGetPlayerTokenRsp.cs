@@ -7,7 +7,7 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketGetPlayerTokenRsp : BasePacket
     {
-        public PacketGetPlayerTokenRsp(Connection session, string token): base(OpCode.GetPlayerTokenRsp, true, true)
+        public PacketGetPlayerTokenRsp(Connection session, string token): base(OpCode.GetPlayerTokenRsp, true)
         {
 
             GetPlayerTokenRsp p = new GetPlayerTokenRsp()
@@ -28,7 +28,7 @@ namespace Weedwacker.GameServer.Packet.Send
             Data = p.ToByteArray();
         }
 
-        public PacketGetPlayerTokenRsp(Connection session, int retcode, string msg, int blackEndTime) : base(OpCode.GetPlayerTokenRsp, true, true)
+        public PacketGetPlayerTokenRsp(Connection session, int retcode, string msg, int blackEndTime) : base(OpCode.GetPlayerTokenRsp, true)
         {
 
             GetPlayerTokenRsp p = new GetPlayerTokenRsp()
@@ -45,7 +45,7 @@ namespace Weedwacker.GameServer.Packet.Send
             Data = p.ToByteArray();
         }
 
-        public PacketGetPlayerTokenRsp(Connection session, string encryptedSeed, string encryptedSeedSign, string token) : base(OpCode.GetPlayerTokenRsp, true, true)
+        public PacketGetPlayerTokenRsp(Connection session, ulong secretKeySeed, string encryptedSeed, string encryptedSeedSign, string token) : base(OpCode.GetPlayerTokenRsp, true)
         {
 
             GetPlayerTokenRsp p = new GetPlayerTokenRsp()
@@ -54,7 +54,7 @@ namespace Weedwacker.GameServer.Packet.Send
                 Token = token,
                 AccountType = 1,
                 IsProficientPlayer = session.Player.Profile.HeroName != "", // Not sure what this checks
-                SecretKeySeed = Crypto.ENCRYPT_SEED,
+                SecretKeySeed = secretKeySeed,
                 //SecurityCmdBuffer = ByteString.CopyFrom(Crypto.ENCRYPT_SEED_BUFFER),
                 PlatformType = 3,
                 ChannelId = 1,

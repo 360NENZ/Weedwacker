@@ -44,6 +44,8 @@ namespace Weedwacker.GameServer.Enums
         MATERIAL_SPICE_FOOD = 37,
         MATERIAL_ACTIVITY_ROBOT = 38,
         MATERIAL_ACTIVITY_GEAR = 39,
-        MATERIAL_ACTIVITY_JIGSAW = 40 // Event tab?
+        MATERIAL_ACTIVITY_JIGSAW = 40, // Event tab?
+        MATERIAL_ARANARA,
+        MATERIAL_DESHRET_MANUAL,
     }
 }

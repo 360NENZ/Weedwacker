@@ -4,11 +4,10 @@ using Newtonsoft.Json.Converters;
 namespace Weedwacker.GameServer.Enums
 {
     [JsonConverter(typeof(StringEnumConverter))]
-    public enum VisionLevel
+    public enum ShopRefreshType
     {
-        VISION_LEVEL_LITTLE_REMOTE,
-        VISION_LEVEL_NEARBY,
-        VISION_LEVEL_SUPER_NEARBY,
-        VISION_LEVEL_SUPER
+        SHOP_REFRESH_DAILY,
+        SHOP_REFRESH_WEEKLY,
+        SHOP_REFRESH_MONTHLY
     }
 }

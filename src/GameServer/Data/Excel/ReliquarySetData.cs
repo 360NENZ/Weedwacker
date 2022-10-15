@@ -13,6 +13,6 @@ namespace Weedwacker.GameServer.Data.Excel
         [JsonProperty] public readonly int[] containsList;
         [JsonProperty] public readonly int DisableFilter;
         // Missing 2 properties
-        [JsonProperty] public readonly int[] textList;
+        [JsonProperty] public readonly long[] textList;
     }
 }

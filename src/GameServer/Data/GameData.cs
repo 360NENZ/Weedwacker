@@ -7,6 +7,7 @@ using Weedwacker.GameServer.Data.BinOut.Talent.RelicTalents;
 using Weedwacker.GameServer.Data.BinOut.Talent.TeamTalents;
 using Weedwacker.GameServer.Data.Common.ConfigTalentTypes;
 using Weedwacker.GameServer.Data.Excel;
+using Weedwacker.Shared.Utils;
 using static Weedwacker.GameServer.Data.SerializationSettings;
 
 namespace Weedwacker.GameServer.Data
@@ -40,7 +41,7 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<int, DungeonData> DungeonDataMap = new(); // id
         public readonly static SortedList<int, EnvAnimalGatherData> EnvAnimalGatherDataMap = new(); // animalId
         public readonly static SortedList<int, EquipAffixData> EquipAffixDataMap = new(); // affixId
-        public readonly static SortedList<int, GatherData> GatherDataMap = new(); // id
+        public readonly static SortedList<Tuple<int, int>, GatherData> GatherDataMap = new(); // <id, gadgetId>
         public readonly static SortedList<int, GadgetData> GadgetDataMap = new(); // id
         public readonly static SortedList<int, HomeWorldFurnitureData> HomeWorldFurnitureDataMap = new(); // id
         public readonly static SortedList<int, ItemData> ItemDataMap = new(); // id ItemData is subclassed, and loaded as MaterialData, ReliquaryData, and WeaponData
@@ -48,7 +49,9 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<int, MonsterData> MonsterDataMap = new(); // id
         public readonly static SortedList<int, MonsterDescribeData> MonsterDescribeDataMap = new(); // id
         public readonly static SortedList<string, RelicAffixConfigData> RelicAffixConfigDataMap = new(); // openConfig
+        public readonly static SortedList<int, ShopData> ShopDataMap = new(); // shopId
         public readonly static SortedList<int, RewardData> RewardDataMap = new(); // RewardId
+        public readonly static SortedList<int, ShopGoodsData> ShopGoodsDataMap = new(); // goodsId
         public readonly static SortedList<string, TeamResonanceConfigData> TeamResonanceConfigDataMap = new(); // openConfig
         public readonly static SortedList<string, WeaponAffixConfigData> WeaponAffixConfigDataMap = new(); // openConfig
         public readonly static SortedList<int, WeaponCurveData> WeaponCurveDataMap = new(); // level
@@ -89,7 +92,6 @@ namespace Weedwacker.GameServer.Data
         {
             var ra = typeof(DerivedType).GetResourceData();
             if (ra == null || !ra.GetResourceFile(path, out var fi)) return;
-            map.Clear();
             var objs = await LoadObjects<DerivedType[]>(fi);
             if (objs == null) return;
             foreach (var obj in objs)
@@ -123,11 +125,10 @@ namespace Weedwacker.GameServer.Data
             string excelPath = Path.Combine(resourcesPath, "ExcelBinOutput");
             string binPath = Path.Combine(resourcesPath, "BinOutput");
             await Task.WhenAll(new Task[]
-            {
-
+            {              
                 LoadData(excelPath, o => o.sortId, AvatarCodexDataMap),
-                LoadData(excelPath, o => o.skinId, AvatarCostumeDataMap),
-                LoadData(excelPath, o => o.level, AvatarCurveDataMap),
+                LoadData(excelPath, o => o.skinId, AvatarCostumeDataMap),               
+                LoadData(excelPath, o => o.level, AvatarCurveDataMap),                  
                 LoadData(excelPath, o => o.id, AvatarDataMap),
                 LoadData(excelPath, o => o.fetterLevel, AvatarFetterLevelDataMap),
                 LoadData(excelPath, o => o.flycloakId, AvatarFlycloakDataMap),
@@ -135,19 +136,19 @@ namespace Weedwacker.GameServer.Data
                 LoadData(excelPath, o => Tuple.Create(o.avatarPromoteId, o.promoteLevel), AvatarPromoteDataMap),
                 LoadData(excelPath, o => o.id, AvatarSkillDataMap),
                 LoadData(excelPath, o => o.id, AvatarSkillDepotDataMap),
-                LoadData(excelPath, o => o.talentId, AvatarTalentDataMap),
-                LoadData(excelPath, o => o.id, DungeonDataMap),
+                LoadData(excelPath, o => o.talentId, AvatarTalentDataMap),              
+                LoadData(excelPath, o => o.id, DungeonDataMap),               
                 LoadData(excelPath, o => o.animalId, EnvAnimalGatherDataMap),
-                LoadData(excelPath, o => o.affixId, EquipAffixDataMap),
-                LoadData(excelPath, o => o.avatarId, FetterCharacterCardDataMap),
-                LoadData(excelPath, o => o.fetterId, FetterInfoDataMap),
-                LoadData(excelPath, o => o.fetterId, FettersDataMap),
-                LoadData(excelPath, o => o.fetterId, FetterStoryDataMap),
-                LoadData(excelPath, o => o.id, GatherDataMap),
-                LoadData(excelPath, o => o.id, GadgetDataMap),
+                LoadData(excelPath, o => o.affixId, EquipAffixDataMap),              
+                LoadData(excelPath, o => o.avatarId, FetterCharacterCardDataMap),             
+                LoadData(excelPath, o => o.fetterId, FetterInfoDataMap),               
+                LoadData(excelPath, o => o.fetterId, FettersDataMap),                   
+                LoadData(excelPath, o => o.fetterId, FetterStoryDataMap),               
+                LoadData(excelPath, o => Tuple.Create(o.id, o.gadgetId), GatherDataMap),                
+                LoadData(excelPath, o => o.id, GadgetDataMap),               
                 LoadData(excelPath, o => o.id, HomeWorldFurnitureDataMap),
                 LoadData<ItemData, int, MaterialData>(excelPath, o => o.id, ItemDataMap),
-                LoadData(excelPath, o => o.level, MonsterCurveDataMap),
+                LoadData(excelPath, o => o.level, MonsterCurveDataMap),              
                 LoadData(excelPath, o => o.id, MonsterDataMap),
                 LoadData(excelPath, o => o.id, MonsterDescribeDataMap),
                 LoadData(excelPath, o => o.fetterId, PhotographExpressionDataMap),
@@ -156,14 +157,17 @@ namespace Weedwacker.GameServer.Data
                 LoadData<ItemData, int, ReliquaryData>(excelPath, o => o.id, ItemDataMap),
                 LoadData(excelPath, o => o.id, ReliquaryAffixDataMap),
                 LoadData(excelPath, o => o.id, ReliquaryMainPropDataMap),
-                LoadData(excelPath, o => Tuple.Create(o.rank, o.level), ReliquaryLevelDataMap),
-                LoadData(excelPath, o => o.setId, ReliquarySetDataMap),
+                LoadData(excelPath, o => Tuple.Create(o.rank, o.level), ReliquaryLevelDataMap),               
+                LoadData(excelPath, o => o.setId, ReliquarySetDataMap),               
                 LoadData(excelPath, o => o.rewardId, RewardDataMap),
                 LoadData(excelPath, o => o.id, SceneDataMap),
-                LoadData(excelPath, o => o.teamResonanceId, TeamResonanceDataMap),
+                LoadData(excelPath, o => o.shopId, ShopDataMap),
+                LoadData(excelPath, o=> o.goodsId, ShopGoodsDataMap),
+                LoadData(excelPath, o => o.teamResonanceId, TeamResonanceDataMap),               
                 LoadData<ItemData, int, WeaponData>(excelPath, o => o.id, ItemDataMap),
                 LoadData(excelPath, o => o.level, WeaponCurveDataMap),
                 LoadData(excelPath, o => Tuple.Create(o.weaponPromoteId, o.promoteLevel), WeaponPromoteDataMap),
+                
                 //LoadData(Path.Combine(binPath, "/AbilityGroup"), o => ????, PlayerElementAbilityDataMap), // TODO
                 //LoadFolder(Path.Combine(binPath, "/AbilityGroup/Talent/AvatarTalents"), o => ????, AvatarTalentConfigDataMap),
                 //LoadFolder(Path.Combine(binPath, "/AbilityGroup/Talent/EquipTalents"), o => ????, WeaponAffixConfigDataMap),
@@ -171,6 +175,8 @@ namespace Weedwacker.GameServer.Data
                 //LoadFolder(Path.Combine(binPath, "/AbilityGroup/Talent/TeamTalents"), o => ????, TeamResonanceConfigDataMap),
                 //LoadFolder(Path.Combine(binPath, "/Scene/Point"), o => ????, ScenePointDataMap)
             });
+
+            Logger.DebugWriteLine("Loaded Resources");
         }
     }
 }

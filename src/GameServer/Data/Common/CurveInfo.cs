@@ -1,10 +1,8 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Weedwacker.GameServer.Enums;
 
 namespace Weedwacker.GameServer.Data.Common
 {
-	[JsonConverter(typeof(StringEnumConverter))]
 	public class CurveInfo
 	{
         [JsonProperty]

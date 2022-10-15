@@ -47,6 +47,7 @@ namespace Weedwacker.GameServer.Enums
         ITEM_USE_COMBINE_ITEM = 43,
         ITEM_USE_UNLOCK_HOME_MODULE = 44,
         ITEM_USE_UNLOCK_HOME_BGM = 45,
-        ITEM_USE_ADD_REGIONAL_PLAY_VAR = 46
+        ITEM_USE_ADD_REGIONAL_PLAY_VAR = 46,
+        ITEM_USE_ADD_AVATAR_EXTRA_PROPERTY
     }
 }

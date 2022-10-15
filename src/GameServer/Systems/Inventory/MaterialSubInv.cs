@@ -182,6 +182,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
                 case MaterialType.MATERIAL_ACTIVITY_GEAR:
                     return await QuestTab.AddItemAsync(itemId);
                 default:
+                    //TODO MATERIAL_ARANARA,MATERIAL_SUMO_BUFF,MATERIAL_ACTIVITY_JIGSAW,MATERIAL_DESHRET_MANUAL
                     Logger.WriteErrorLine("Unknown material: " + itemId);
                     return null;
             }

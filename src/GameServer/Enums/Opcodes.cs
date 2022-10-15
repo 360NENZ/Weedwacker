@@ -12,7 +12,7 @@ namespace Weedwacker.GameServer.Enums
     [AttributeUsage(AttributeTargets.Class)]
     public class OpCodeAttribute : Attribute
     {
-        public readonly int OpCodeNum;
+        public readonly ushort OpCodeNum;
         public readonly string OpCodeName;
 
         public OpCodeAttribute(ushort value)

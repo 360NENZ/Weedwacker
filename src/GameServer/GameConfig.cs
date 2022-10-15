@@ -1,4 +1,5 @@
-﻿using Weedwacker.Shared.Utils;
+﻿using Weedwacker.GameServer.Enums;
+using Weedwacker.Shared.Utils;
 using Weedwacker.Shared.Utils.Configuration;
 
 namespace Weedwacker.GameServer
@@ -26,8 +27,8 @@ namespace Weedwacker.GameServer
         public class ServerJson
         {
 #if DEBUG
-            public HashSet<string> DebugWhitelist = new HashSet<string>();
-            public HashSet<string> DebugBlacklist = new HashSet<string>();
+            public HashSet<OpCode> DebugWhitelist = new();
+            public HashSet<OpCode> DebugBlacklist = new() { OpCode.PingReq, OpCode.PingRsp};
 #endif
             /* This is the address used in the default region. */
             public string AccessAddress = "127.0.0.1";
@@ -42,7 +43,7 @@ namespace Weedwacker.GameServer
             /* Kcp internal work interval (milliseconds) */
             public int KcpInterval = 20;
             /* Controls whether packets should be logged in console or not */
-            public Shared.Enums.ServerDebugMode LogPackets = Shared.Enums.ServerDebugMode.NONE;
+            public Shared.Enums.ServerDebugMode LogPackets = Shared.Enums.ServerDebugMode.BLACKLIST;
 
             /* needed for authentication, and for some game systems */
             public string WebServerUrl = "https://127.0.0.1";

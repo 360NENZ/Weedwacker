@@ -9,6 +9,7 @@ namespace Weedwacker.GameServer.Data.Excel
         [JsonProperty] public readonly GadgetType type;
         [JsonProperty] public readonly string jsonName;
         [JsonProperty] public readonly bool hasMove;
+        [JsonProperty] public readonly bool hasAudio;
         [JsonProperty] public readonly string[] tags;
         [JsonProperty] public readonly string itemJsonName;
         [JsonProperty] public readonly string inteeIconName;

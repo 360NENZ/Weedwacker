@@ -1,5 +1,5 @@
 ﻿
-namespace Weedwacker.GameServer.Systems.Player.ItemUseOp
+namespace Weedwacker.GameServer.Systems.Inventory.ItemUseOp
 {
     [AttributeUsage(AttributeTargets.Class)]
     internal class ItemUseAttribute : Attribute

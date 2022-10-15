@@ -11,22 +11,21 @@ namespace Weedwacker.GameServer.Systems.Inventory
     internal class PromoteTab : MaterialsTab
     {
         [BsonIgnore] public new const int InventoryLimit = 9999;
-        public new Dictionary<int, MaterialItem> Items = new(); // ItemId
 
         public PromoteTab(Player.Player owner, InventoryManager inventory) : base(owner, inventory) { }
 
         internal override async Task<GameItem?> AddItemAsync(int itemId, int count = 1)
         {
-            if (Items.TryGetValue(itemId, out MaterialItem material))
+            if (Items.TryGetValue(itemId, out GameItem? material))
             {
-                if (material.ItemData.stackLimit >= material.Count + count)
+                if ((material as MaterialItem).ItemData.stackLimit >= material.Count + count)
                 {
                     material.Count += count;
 
                     // Update Database
                     var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
                     var update = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_MATERIAL}.PromoteTab.Items.{itemId}.Count", material.Count);
-                    var result = await DatabaseManager.UpdateInventoryAsync(filter, update);
+                    await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                     //TODO update codex
                     return material;
@@ -41,7 +40,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
                 // Update Database
                 var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
                 var update = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_MATERIAL}.PromoteTab.Items.{material.ItemId}", newMaterial);
-                var result = await DatabaseManager.UpdateInventoryAsync(filter, update);
+                await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                 //TODO update codex
                 return newMaterial;
@@ -50,7 +49,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
         internal override async Task<bool> RemoveItemAsync(GameItem item, int count = 1)
         {
-            if (Items.TryGetValue((item as MaterialItem).ItemId, out MaterialItem material))
+            if (Items.TryGetValue(item.ItemId, out GameItem? material))
             {
                 if (material.Count - count >= 1)
                 {
@@ -59,7 +58,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
                     // Update Database
                     var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
                     var update = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_MATERIAL}.PromoteTab.Items.{material.ItemId}.Count", material.Count);
-                    var result = await DatabaseManager.UpdateInventoryAsync(filter, update);
+                    await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                     return true;
                 }
@@ -68,7 +67,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
                     // Update Database
                     var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
                     var update = Builders<InventoryManager>.Update.Unset($"SubInventories.{ItemType.ITEM_MATERIAL}.PromoteTab.Items.{material.ItemId}");
-                    var result = await DatabaseManager.UpdateInventoryAsync(filter, update);
+                    await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                     Items.Remove(material.ItemId);
                     return true;

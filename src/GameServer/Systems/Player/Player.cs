@@ -1,6 +1,5 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Bson.Serialization.Options;
 using Vim.Math3d;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet;
@@ -23,7 +22,6 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonIgnore] public Scene? Scene { get; private set; }
         [BsonElement] public int SceneId { get; private set; }
         [BsonElement] public int RegionId { get; private set; }
-        [BsonElement] public short WorldLevel = 1;
         [BsonIgnore] public uint PeerId;
         [BsonIgnore] public Vector3 Position;
         [BsonIgnore] public Vector3 Rotation;
@@ -42,30 +40,29 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonIgnore] public bool HasSentLoginPackets { get; private set; }
         [BsonIgnore] private ulong NextGuid = 0;
         [BsonIgnore] public SceneLoadState SceneLoadState = SceneLoadState.NONE;
-        [BsonIgnore] public AvatarManager? Avatars; // Loaded by DatabaseManager
-        [BsonIgnore] public InventoryManager Inventory; // Loaded by DatabaseManager
-        [BsonIgnore] public ExpManager ExpManager; // Loaded by DatabaseManager
+        [BsonIgnore] public Avatar.AvatarManager? Avatars; // Loaded by DatabaseManager
         [BsonIgnore] public BattlePassManager BattlePassManager; // Loaded by DatabaseManager
-        [BsonIgnore] public TeamManager TeamManager; // Loaded by DatabaseManager
         [BsonIgnore] public EnergyManager EnergyManager; // Loaded by DatabaseManager
+        [BsonIgnore] public ExpManager ExpManager; // Loaded by DatabaseManager
         [BsonIgnore] public ClientGadgetEntityManager GadgetManager; // Loaded by DatabaseManager
+        [BsonIgnore] public Inventory.InventoryManager Inventory; // Loaded by DatabaseManager
+        [BsonIgnore] public Social.SocialManager SocialManager; // Loaded by DatabaseManager
+        [BsonIgnore] public TeamManager TeamManager; // Loaded by DatabaseManager
+
 
         public Player(string heroName, string accountUid, int gameUid)
         {
-            Profile = new()
-            {
-                HeroName = heroName,
-                NameCardId = 210001,
-            };
+            Profile = new(heroName);
 
             AccountUid = accountUid;
+            BattlePassManager = new(this);
+            EnergyManager = new(this);
+            ExpManager = new(this);
+            GadgetManager = new(this);
             GameUid = gameUid;
             PropManager = new(this);
             ResinManager = new(this);
-            ExpManager = new(this);
-            BattlePassManager = new(this);
-            GadgetManager = new(this);
-            EnergyManager = new(this);
+            SocialManager = new(this);
         }
 
         private async Task OnCreate()
@@ -167,7 +164,7 @@ namespace Weedwacker.GameServer.Systems.Player
                 AvatarId = (uint)TeamManager.Teams[TeamManager.CurrentTeamIndex].AvatarInfo[TeamManager.CurrentCharacterIndex].AvatarId, // current selected avatar
                 OnlineId = AccountUid, // not sure if correct
                 //PsnId = 42069,
-                WorldLevel = (uint)WorldLevel
+                WorldLevel = (uint)Profile.WorldLevel
             };
 
             if (World != null)

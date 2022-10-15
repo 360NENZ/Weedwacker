@@ -3,12 +3,12 @@ using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.Shared.Network.Proto;
 
-namespace Weedwacker.GameServer.Systems.Inventory
+namespace Weedwacker.GameServer.Systems.Shop
 {
     internal class ShopGoodInfo
     {
         [BsonElement] public int GoodsId { get; private set; }
-        [BsonIgnore]public ShopGoodsData Data { get; private set; }
+        [BsonIgnore] public ShopGoodsData Data { get; private set; }
         public int BoughtNum { get; private set; } = 0;
 
         public ShopGoodInfo(int goodsId)

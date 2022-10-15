@@ -12,20 +12,23 @@ namespace Weedwacker.GameServer.Systems.Avatar
     internal class FetterSystem
     {
         public const uint DEFAULT_STATE = (uint)FetterState.NOT_OPEN;
-        [BsonIgnore]
-        private Player.Player Owner; // Loaded by DatabaseManager
-        [BsonIgnore]
-        private Avatar Avatar; // Loaded by DatabaseManager
+        [BsonIgnore] private Player.Player Owner; // Loaded by DatabaseManager
+        [BsonIgnore] private Avatar Avatar; // Loaded by DatabaseManager
         public FetterCharacterCardData CardData;
         public FetterInfoData FetterInfoData; // General info
-        public SortedList<int, FetterStoryData> FetterStoryData; // fetterId
-        public SortedList<int, FettersData> FettersData; // fetterId
-        public SortedList<int, PhotographPosenameData> PhotographPosenameData; // fetterId
-        public SortedList<int, PhotographExpressionData> PhotographExpressionData; // fetterId
+        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
+        [BsonElement] public SortedList<int, FetterStoryData> FetterStoryData; // fetterId
+        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
+        [BsonElement] public SortedList<int, FettersData> FettersData; // fetterId
+        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
+        [BsonElement] public SortedList<int, PhotographPosenameData> PhotographPosenameData; // fetterId
+        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
+        [BsonElement] public SortedList<int, PhotographExpressionData> PhotographExpressionData; // fetterId
         [BsonIgnore]
         public static readonly SortedList<int, AvatarFetterLevelData> FetterLevelData = GameData.AvatarFetterLevelDataMap; // level Friendship exp breakpoints
         public int FetterLevel { get; private set; } = 1;
         public int FetterExp { get; private set; } = 0;
+        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
         public SortedList<int, FetterData> FetterStates { get; private set; } = new();
 
 

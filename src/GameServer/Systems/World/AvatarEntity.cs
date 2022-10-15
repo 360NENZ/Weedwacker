@@ -109,10 +109,10 @@ namespace Weedwacker.GameServer.Systems.World
         {
             SceneAvatarInfo avatarInfo = new SceneAvatarInfo()
             {
-                Uid = (uint)Avatar.Owner.GameUid,
+                Uid = (uint)Avatar.GetOwner().GameUid,
                 AvatarId = (uint)Avatar.AvatarId,
                 Guid = Avatar.Guid,
-                PeerId = Avatar.Owner.PeerId,
+                PeerId = Avatar.GetOwner().PeerId,
                 CostumeId = (uint)Avatar.Costume,
                 WearingFlycloakId = (uint)Avatar.FlyCloak,
                 BornTime = (uint)Avatar.BornTime,

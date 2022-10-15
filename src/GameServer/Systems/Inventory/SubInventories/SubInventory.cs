@@ -8,10 +8,12 @@ namespace Weedwacker.GameServer.Systems.Inventory
         typeof(PromoteTab), typeof(QuestTab), typeof(RelicTab), typeof(WeaponTab))]
     internal abstract class SubInventory
     {
-        [BsonIgnore] protected Player.Player Owner;
-        [BsonIgnore] protected Player.InventoryManager Inventory;
+        [BsonIgnore] protected Player.Player? Owner;
+        [BsonIgnore] protected InventoryManager? Inventory;
 
-        public SubInventory(Player.Player owner, Player.InventoryManager inventory)
+        // MONGODB ONLY
+        public SubInventory() { }
+        public SubInventory(Player.Player owner, InventoryManager inventory)
         {
             Owner = owner;
             Inventory = inventory;
@@ -24,6 +26,6 @@ namespace Weedwacker.GameServer.Systems.Inventory
         internal abstract Task<bool> RemoveItemAsync(GameItem item, int count = 1);
 
         // Called by DatabaseManager
-        public abstract Task OnLoadAsync(Player.Player owner, Player.InventoryManager inventory);
+        public abstract Task OnLoadAsync(Player.Player owner, InventoryManager inventory);
     }
 }

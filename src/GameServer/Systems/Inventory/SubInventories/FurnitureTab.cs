@@ -11,7 +11,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
     internal class FurnitureTab : InventoryTab
     {
         [BsonIgnore] public new const int InventoryLimit = 2000;
-        public new Dictionary<int, FurnitureItem> Items = new(); // ItemId
+        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
         public Dictionary<int, MaterialItem> Materials = new(); // ItemId
 
         public FurnitureTab(Player.Player owner, InventoryManager inventory) : base(owner, inventory) { }
@@ -30,12 +30,13 @@ namespace Weedwacker.GameServer.Systems.Inventory
             }
         }
 
-        internal override async Task<GameItem> AddItemAsync(int itemId, int count = 1)
+        //TODO FurnitureItem
+        internal override async Task<GameItem?> AddItemAsync(int itemId, int count = 1)
         {
 
             if (GameData.ItemDataMap[itemId].itemType == ItemType.ITEM_MATERIAL)
             {
-                if (Materials.TryGetValue(itemId, out MaterialItem material))
+                if (Materials.TryGetValue(itemId, out MaterialItem? material))
                 {
                     if (material.ItemData.stackLimit >= material.Count + count)
                     {
@@ -44,7 +45,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
                         // Update Database
                         var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
                         var update = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_FURNITURE}.Materials.{itemId}.Count", material.Count);
-                        var result = await DatabaseManager.UpdateInventoryAsync(filter, update);
+                        await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                         //TODO update codex
                         return material;
@@ -59,7 +60,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
                     // Update Database
                     var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
                     var update = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_FURNITURE}.Materials.{itemId}", newMaterial);
-                    var result = await DatabaseManager.UpdateInventoryAsync(filter, update);
+                    await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                     //TODO update codex
                     return newMaterial;
@@ -70,10 +71,10 @@ namespace Weedwacker.GameServer.Systems.Inventory
             return null;
         }
 
-
+        //TODO FurnitureItem
         internal override async Task<bool> RemoveItemAsync(GameItem item, int count = 1)
         {
-            if (Materials.TryGetValue((item as MaterialItem).ItemId, out MaterialItem material))
+            if (Materials.TryGetValue((item as MaterialItem).ItemId, out MaterialItem? material))
             {
                 if (material.Count - count >= 1)
                 {
@@ -82,7 +83,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
                     // Update Database
                     var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
                     var update = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_FURNITURE}.Materials.{material.ItemId}.Count", material.Count);
-                    var result = await DatabaseManager.UpdateInventoryAsync(filter, update);
+                    await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                     return true;
                 }
@@ -91,7 +92,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
                     // Update Database
                     var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
                     var update = Builders<InventoryManager>.Update.Unset($"SubInventories.{ItemType.ITEM_FURNITURE}.Materials.{material.ItemId}");
-                    var result = await DatabaseManager.UpdateInventoryAsync(filter, update);
+                    await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                     Materials.Remove(material.ItemId);
                     return true;

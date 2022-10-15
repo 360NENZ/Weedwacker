@@ -6,20 +6,20 @@ using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet.Send;
 using Weedwacker.GameServer.Systems.Inventory;
+using Weedwacker.GameServer.Systems.Shop;
 using Weedwacker.Shared.Utils;
 
-namespace Weedwacker.GameServer.Systems.Player
+namespace Weedwacker.GameServer.Systems.Inventory
 {
     internal class InventoryManager
     {
         [BsonId] public int OwnerId; // GameUid
-        [BsonIgnore] internal Player Owner;
-        [BsonElement] public ShopManager ShopManager { get; private set; }
+        [BsonIgnore] private Player.Player Owner;
+        [BsonElement] public ShopManager ShopManager;
         [BsonElement] public Dictionary<ItemType, SubInventory> SubInventories { get; private set; }
        
-
         [BsonIgnore] public Dictionary<ulong, GameItem> GuidMap = new();
-        public InventoryManager(Player owner)
+        public InventoryManager(Player.Player owner)
         {
             OwnerId = owner.GameUid;
             Owner = owner;
@@ -31,7 +31,6 @@ namespace Weedwacker.GameServer.Systems.Player
                 { ItemType.ITEM_MATERIAL, new MaterialSubInv(Owner, this) },
                 { ItemType.ITEM_FURNITURE, new FurnitureTab(Owner, this) } // Furniture tab includes MATERIAL_FURNITURE_FORMULA, MATERIAL_FURNITURE_SUITE_FORMULA, MATERIAL_ACTIVITY_ROBOT
             };
-            DatabaseManager.CreateInventoryAsync(this);
         }
 
         private int GetVirtualItemValue(int itemId)
@@ -173,7 +172,7 @@ namespace Weedwacker.GameServer.Systems.Player
                 {
                     var material = (SubInventories[ItemType.ITEM_MATERIAL] as MaterialSubInv).PromoteTab.Items[itemData.id];
                     if (material.Count < itemData.count) return false; // insufficient materials
-                    else materials.Add(material, itemData.count);
+                    else materials.Add((material as MaterialItem), itemData.count);
                 }
                 else if (GameData.ItemDataMap[itemData.id].itemType == ItemType.ITEM_VIRTUAL)
                 {
@@ -377,7 +376,7 @@ namespace Weedwacker.GameServer.Systems.Player
             return false;
         }
 
-        public async Task OnLoadAsync(Player owner)
+        public async Task OnLoadAsync(Player.Player owner)
         {
             Owner = owner;
             await ShopManager.OnLoadAsync(owner);

@@ -4,8 +4,8 @@ namespace Weedwacker.GameServer.Systems.Player
 {
     internal class ClientGadgetEntityManager
     {
-        public readonly Player Owner;
-        public readonly HashSet<ClientGadgetEntity> Gadgets = new();
+        private Player Owner;
+        public HashSet<ClientGadgetEntity> Gadgets { get; private set; } = new();
 
         public ClientGadgetEntityManager(Player owner)
         {

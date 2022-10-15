@@ -25,7 +25,7 @@ namespace Weedwacker.GameServer.Systems.World
             Host = owner;
             Players.Add(owner);
             LevelEntityId = GetNextEntityId(EntityIdType.MPLEVEL);
-            WorldLevel = owner.WorldLevel;
+            WorldLevel = owner.Profile.WorldLevel;
             GameServer.RegisterWorld(this);
         }
 

@@ -20,7 +20,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
     {
         [BsonElement] public int BornTime { get; private set; }
         [BsonElement] public int AvatarId { get; private set; }           // Id of avatar
-        [BsonIgnore] public Player.Player Owner { get; private set; } // Loaded by DatabaseManager
+        [BsonIgnore] private Player.Player Owner { get; set; } // Loaded by DatabaseManager
         [BsonIgnore] public AvatarCompiledData Data { get; private set; } // Loaded by DatabaseManager
         [BsonIgnore] public ulong Guid { get; private set; }           // Player unique Avatar id. Generated each session
         [BsonIgnore] public int EntityId { get; private set; }
@@ -31,7 +31,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         public int Satiation; // ?
         public int SatiationPenalty; // ?
         [BsonElement] public LifeState LifeState { get; private set; } = LifeState.LIFE_ALIVE;
-        public List<string> EquipOpenConfigs; // openConfigs from relics and weapon
+        public List<string> EquipOpenConfigs; // openConfigs from relics and weapon TODO
         [BsonElement] public int CurrentDepotId { get; private set; }
         [BsonElement] public Dictionary<int, SkillDepot> SkillDepots { get; private set; } = new();
         
@@ -75,6 +75,8 @@ namespace Weedwacker.GameServer.Systems.Avatar
             SetCurrentHp(FightProp[FightProperty.FIGHT_PROP_MAX_HP], false);
         }
 
+        public Player.Player GetOwner() { return Owner; }
+
         internal Avatar Clone()
         {
             throw new NotImplementedException();
@@ -102,9 +104,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
             // Update
             var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
             var update = Builders<AvatarManager>.Update.Set($"Avatars.{AvatarId}.FightProp.{FightProperty.FIGHT_PROP_CUR_HP}", value);
-            var result = await DatabaseManager.UpdateAvatarsAsync(filter, update);
+            await DatabaseManager.UpdateAvatarsAsync(filter, update);
             if(notifyClient) await Owner.SendPacketAsync(new PacketAvatarFightPropUpdateNotify(this, FightProperty.FIGHT_PROP_CUR_HP));
-            return result.IsAcknowledged;
+            return true;
         }
         public SkillDepot GetCurSkillDepot()
         {
@@ -115,10 +117,10 @@ namespace Weedwacker.GameServer.Systems.Avatar
             FlyCloak = cloakId;
             var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
             var update = Builders<AvatarManager>.Update.Set(w => w.Avatars[AvatarId].FlyCloak, FlyCloak);
-            var result = await DatabaseManager.UpdateAvatarsAsync(filter, update);
+            await DatabaseManager.UpdateAvatarsAsync(filter, update);
             await Owner.SendPacketAsync(new PacketAvatarFlycloakChangeNotify(this));
 
-            return result.IsAcknowledged;
+            return true;
         }
 
         static public int GetMinPromoteLevel(int level)
@@ -180,10 +182,11 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 // Update
                 var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
                 var updateQuery = Builders<AvatarManager>.Update.Set($"Avatars.{AvatarId}.{GetCurSkillDepot().Element.CurEnergyProp}", currentEnergy);
-                var result = await DatabaseManager.UpdateAvatarsAsync(filter, updateQuery);
+                await DatabaseManager.UpdateAvatarsAsync(filter, updateQuery);
 
                 await Owner.SendPacketAsync(new PacketAvatarFightPropUpdateNotify(this, GetCurSkillDepot().Element.CurEnergyProp));
-                return result.IsAcknowledged;
+
+                return true;
             }
             return true;
         }
@@ -198,9 +201,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 // Update
                 var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
                 var updateQuery = Builders<AvatarManager>.Update.Set($"Avatars.{AvatarId}.FightProp.{prop}", FlyCloak);
-                var result = await DatabaseManager.UpdateAvatarsAsync(filter, updateQuery);
+                await DatabaseManager.UpdateAvatarsAsync(filter, updateQuery);
                 await Owner.SendPacketAsync(new PacketAvatarFightPropUpdateNotify(this, prop));
-                return result.IsAcknowledged;
+                return true;
             }
             return true;
         }
@@ -228,8 +231,8 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
             // Update Database
             var inventoryFilter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-            var inventoryUpdate = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_RELIQUARY}.Items.{item.UniqueId}.EquippedAvatar", item.EquippedAvatar);
-            var result = await DatabaseManager.UpdateInventoryAsync(inventoryFilter, inventoryUpdate);
+            var inventoryUpdate = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_RELIQUARY}.Items.{item.Id}.EquippedAvatar", item.EquippedAvatar);
+            await DatabaseManager.UpdateInventoryAsync(inventoryFilter, inventoryUpdate);
 
             if (Owner.HasSentLoginPackets)
             {
@@ -257,8 +260,8 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
             // Update Database
             var inventoryFilter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-            var inventoryUpdate = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_WEAPON}.Items.{item.UniqueId}.EquippedAvatar", item.EquippedAvatar);
-            var result = await DatabaseManager.UpdateInventoryAsync(inventoryFilter, inventoryUpdate);
+            var inventoryUpdate = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_WEAPON}.Items.{item.Id}.EquippedAvatar", item.EquippedAvatar);
+            await DatabaseManager.UpdateInventoryAsync(inventoryFilter, inventoryUpdate);
 
             if (Owner.HasSentLoginPackets && notifyClient)
             {
@@ -284,8 +287,8 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
                 // Update Database
                 var inventoryFilter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-                var inventoryUpdate = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_RELIQUARY}.Items.{item.UniqueId}.EquippedAvatar", item.EquippedAvatar);
-                var result = await DatabaseManager.UpdateInventoryAsync(inventoryFilter, inventoryUpdate);
+                var inventoryUpdate = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_RELIQUARY}.Items.{item.Id}.EquippedAvatar", item.EquippedAvatar);
+                await DatabaseManager.UpdateInventoryAsync(inventoryFilter, inventoryUpdate);
 
                 await Owner.SendPacketAsync(new PacketAvatarEquipChangeNotify(this, slot));
                 await RecalcStatsAsync(notifyClient);
@@ -307,8 +310,8 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
                 // Update Database
                 var inventoryFilter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-                var inventoryUpdate = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_WEAPON}.Items.{item.UniqueId}.EquippedAvatar", item.EquippedAvatar);
-                var result = await DatabaseManager.UpdateInventoryAsync(inventoryFilter, inventoryUpdate);
+                var inventoryUpdate = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_WEAPON}.Items.{item.Id}.EquippedAvatar", item.EquippedAvatar);
+                await DatabaseManager.UpdateInventoryAsync(inventoryFilter, inventoryUpdate);
 
                 if (notifyClient) await Owner.SendPacketAsync(new PacketAvatarEquipChangeNotify(this, EquipType.EQUIP_WEAPON));
                 await RecalcStatsAsync(notifyClient);              
@@ -506,7 +509,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             // Update Database
             var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
             var updateQuery = Builders<AvatarManager>.Update.Set(w => w.Avatars[AvatarId].FightProp, FightProp);
-            var result = await DatabaseManager.UpdateAvatarsAsync(filter, updateQuery);
+            await DatabaseManager.UpdateAvatarsAsync(filter, updateQuery);
 
             // Packet
             if (Owner.HasSentLoginPackets)

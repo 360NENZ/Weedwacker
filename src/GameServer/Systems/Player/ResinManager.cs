@@ -5,7 +5,7 @@ namespace Weedwacker.GameServer.Systems.Player
 {
     internal class ResinManager
     {
-        readonly Player Owner;
+        private Player Owner;
 
         public ResinManager(Player owner) { Owner = owner; }
         public async Task<bool> UseResinAsync(int amount)

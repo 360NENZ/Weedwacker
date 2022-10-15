@@ -11,7 +11,8 @@ namespace Weedwacker.GameServer.Systems.Inventory
 	internal abstract class GameItem
     {
         [BsonId]
-		private ObjectId id;
+        [BsonElement("_id")]
+		public int Id { get; protected set; }
 		[BsonElement] public int ItemId { get; protected set; }
 		public int Count;
 		[BsonIgnore] public ulong Guid; // Player unique id. Generated each session

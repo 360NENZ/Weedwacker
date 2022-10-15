@@ -1,10 +1,14 @@
-﻿using Weedwacker.GameServer.Data;
+﻿using MongoDB.Bson.Serialization.Attributes;
+using Weedwacker.GameServer.Data;
 
-namespace Weedwacker.GameServer.Systems.Inventory
+namespace Weedwacker.GameServer.Systems.Shop
 {
     internal class ShopManager
     {
+        [BsonElement("_id")]
+        [BsonId] public int OwnerId { get; private set; }
         private Player.Player Owner;
+        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
         public SortedList<int, Shop> Shops = new(); // shopType
         public ShopManager(Player.Player owner)
         {

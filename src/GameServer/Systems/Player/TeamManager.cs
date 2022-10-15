@@ -12,8 +12,10 @@ namespace Weedwacker.GameServer.Systems.Player
     internal class TeamManager
     {
         [BsonId] public int OwnerId;
-        [BsonIgnore] private Player Owner;
+        private Player Owner;
+        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
         [BsonElement] public SortedList<int, TeamInfo> Teams { get; private set; } = new(); // <index, team>
+        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
         [BsonElement] public SortedList<int, TeamInfo> TowerTeams { get; private set; } = new(); // Store Abyss teams separately
         [BsonElement] public int CurrentTeamIndex { get; private set; } = 1;
         public int CurrentCharacterIndex = 0; // count from 0

@@ -1,5 +1,4 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
-using Weedwacker.GameServer.Systems.Player;
 
 namespace Weedwacker.GameServer.Systems.Inventory
 {
@@ -9,8 +8,12 @@ namespace Weedwacker.GameServer.Systems.Inventory
     internal abstract class InventoryTab : SubInventory
     {
         [BsonIgnore] public const int InventoryLimit = 9999;
-        public Dictionary<int, GameItem> Items;
+        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
+        public Dictionary<int, GameItem> Items = new();
 
-        protected InventoryTab(Player.Player owner, InventoryManager inventory) : base(owner, inventory) { }
+        protected InventoryTab(Player.Player owner, InventoryManager inventory) : base(owner, inventory)
+        {
+            Items = new();
+        }
     }
 }

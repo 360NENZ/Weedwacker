@@ -5,15 +5,11 @@ using Weedwacker.GameServer.Data.Common;
 using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet.Send;
-using Weedwacker.GameServer.Systems.Player;
-using Weedwacker.GameServer.Systems.Player.ItemUseOp;
+using Weedwacker.GameServer.Systems.Inventory.ItemUseOp;
 using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.Inventory
 {
-    [BsonKnownTypes(typeof(InventoryTab), typeof(BattlePassTab), typeof(FoodTab),
-    typeof(FurnitureTab), typeof(GadgetTab), typeof(MaterialsTab), typeof(PreciousTab),
-    typeof(PromoteTab), typeof(QuestTab), typeof(RelicTab), typeof(WeaponTab))]
     internal class MaterialSubInv : SubInventory
     {
         //MATERIAL_FOOD,MATERIAL_NOTICE_ADD_HP,MATERIAL_SPICE_FOOD
@@ -116,7 +112,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
             // Find the Handler for this opcode
             foreach (ItemUseData op in data.itemUse)
             {
-                if (op.useOp != ItemUseOp.ITEM_USE_NONE)
+                if (op.useOp != Enums.ItemUseOp.ITEM_USE_NONE)
                 {
                     var query =
                         from type in Assembly.GetExecutingAssembly().GetTypes()

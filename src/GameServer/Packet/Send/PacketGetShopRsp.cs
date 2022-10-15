@@ -10,7 +10,7 @@ namespace Weedwacker.GameServer.Packet.Send
         {
             GetShopRsp proto = new GetShopRsp();
 
-            if (player.Inventory.ShopManager.HasShop((int)shopType, out Systems.Inventory.Shop? shop))
+            if (player.Inventory.ShopManager.HasShop((int)shopType, out Systems.Shop.Shop? shop))
             {
                 var shopProto = shop.ToProto();
 

@@ -1,14 +1,14 @@
 ﻿using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Data.Excel;
 
-namespace Weedwacker.GameServer.Systems.Player.ItemUseOp
+namespace Weedwacker.GameServer.Systems.Inventory.ItemUseOp
 {
     internal abstract class BaseItemUse
     {
-        protected Player User;
+        protected Player.Player User;
         protected MaterialData ItemData;
 
-        public BaseItemUse(Player user, int itemId)
+        public BaseItemUse(Player.Player user, int itemId)
         {
             User = user;
             ItemData = (MaterialData)GameData.ItemDataMap[itemId];

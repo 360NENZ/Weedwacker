@@ -4,7 +4,7 @@ using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems
 {
-    public class ElementType
+    public abstract class ElementType
     {
         [JsonProperty]
         public readonly Enums.ElementType Type;

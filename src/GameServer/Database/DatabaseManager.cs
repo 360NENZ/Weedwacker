@@ -1,9 +1,15 @@
-﻿using MongoDB.Bson;
+﻿using System.Collections.Concurrent;
+using System.Timers;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using Weedwacker.GameServer.Enums;
+using Weedwacker.GameServer.Systems.Avatar;
+using Weedwacker.GameServer.Systems.Inventory;
 using Weedwacker.GameServer.Systems.Player;
+using Weedwacker.GameServer.Systems.Shop;
+using Weedwacker.GameServer.Systems.Social;
 using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Database
@@ -16,11 +22,22 @@ namespace Weedwacker.GameServer.Database
         static IMongoCollection<AvatarManager> Avatars;
         static IMongoCollection<InventoryManager> Inventories;
         static IMongoCollection<TeamManager> Teams;
+        static IMongoCollection<ShopManager> Shops;
+        static IMongoCollection<SocialManager> Social;
         static DatabaseProperties Properties;
+        static readonly ReplaceOptions Replace = new() { IsUpsert = true };
+        static readonly BulkWriteOptions BulkWrite = new() { IsOrdered = false };
+
+        // Aggregate update operations, and bulkWrite periodically
+        static ConcurrentBag<WriteModel<Player>> PlayerWrites = new();
+        static ConcurrentBag<WriteModel<AvatarManager>> AvatarWrites = new();
+        static ConcurrentBag<WriteModel<InventoryManager>> InventoryWrites = new();
+        static ConcurrentBag<WriteModel<TeamManager>> TeamWrites = new();
+        static ConcurrentBag<WriteModel<ShopManager>> ShopWrites = new();
+        static ConcurrentBag<WriteModel<SocialManager>> SocialWrites = new();
 
         public static async Task Initialize()
         {
-            
             BsonSerializer.RegisterSerializer(new EnumSerializer<PlayerProperty>(BsonType.String));
             BsonSerializer.RegisterSerializer(new EnumSerializer<FightProperty>(BsonType.String));
             BsonSerializer.RegisterSerializer(new EnumSerializer<ItemType>(BsonType.String));
@@ -32,6 +49,8 @@ namespace Weedwacker.GameServer.Database
             Avatars = Database.GetCollection<AvatarManager>("avatars");
             Inventories = Database.GetCollection<InventoryManager>("inventories");
             Teams = Database.GetCollection<TeamManager>("teams");
+            Shops = Database.GetCollection<ShopManager>("shops");
+            Social = Database.GetCollection<SocialManager>("social");
 
             if (Database.GetCollection<DatabaseProperties>("dbProperties").Find(w => true).FirstOrDefault() == null)
             {
@@ -44,6 +63,26 @@ namespace Weedwacker.GameServer.Database
             }
 
             Logger.WriteLine("Connected to GameServer database");
+
+            // Create a timer with a five second interval.
+            var aTimer = new System.Timers.Timer(5000);
+            // Hook up the Elapsed event for the timer. 
+            aTimer.Elapsed += BulkUpdate;
+            aTimer.AutoReset = true;
+            aTimer.Enabled = true;
+        }
+
+        private static async void BulkUpdate(object? source, ElapsedEventArgs e)
+        {
+            await Task.WhenAll(new Task[]
+            {
+                new Task(() => {if (PlayerWrites.Any()) Players.BulkWriteAsync(PlayerWrites, BulkWrite); PlayerWrites.Clear(); }),
+                new Task(() => {if (AvatarWrites.Any()) Avatars.BulkWriteAsync(AvatarWrites, BulkWrite); AvatarWrites.Clear(); }),
+                new Task(() => {if (InventoryWrites.Any()) Inventories.BulkWriteAsync(InventoryWrites, BulkWrite); InventoryWrites.Clear(); }),
+                new Task(() => {if (TeamWrites.Any()) Teams.BulkWriteAsync(TeamWrites, BulkWrite); TeamWrites.Clear(); }),
+                new Task(() => {if (ShopWrites.Any()) Shops.BulkWriteAsync(ShopWrites, BulkWrite); ShopWrites.Clear(); }),
+                new Task(() => {if (SocialWrites.Any()) Social.BulkWriteAsync(SocialWrites, BulkWrite); SocialWrites.Clear(); }),
+            });
         }
 
         public static async Task<Player?> CreatePlayerFromAccountUidAsync(string accountUid, string heroName = "", int gameUid = 0)
@@ -76,9 +115,10 @@ namespace Weedwacker.GameServer.Database
             await Players.ReplaceOneAsync<Player>(w => w.AccountUid == player.AccountUid, player);
         }
 
-        public static async Task UpdatePlayerAsync(FilterDefinition<Player> filter, UpdateDefinition<Player> update)
+        public static Task UpdatePlayerAsync(FilterDefinition<Player> filter, UpdateDefinition<Player> update)
         {
-            await Players.UpdateOneAsync(filter, update);
+            PlayerWrites.Add(new UpdateOneModel<Player>(filter, update));
+            return Task.CompletedTask;
         }
 
         public static async Task<Player?> GetPlayerByAccountUidAsync(string uid)
@@ -86,27 +126,26 @@ namespace Weedwacker.GameServer.Database
             var matches = await Players.FindAsync(w => w.AccountUid == uid);
             var player = await matches.FirstOrDefaultAsync() ?? await CreatePlayerFromAccountUidAsync(uid);
             //Attach player systems to the player
-            player.Avatars = await GetAvatarsByPlayerAsync(player) ?? new AvatarManager(player); // Load avatars before inventory, so that we can attach weapons while loading them
-            player.Inventory = await GetInventoryByPlayerAsync(player) ?? new InventoryManager(player);
-            player.TeamManager = await GetTeamsByPlayerAsync(player) ?? new TeamManager(player);
+            player.Avatars = await GetAvatarsByPlayerAsync(player) ?? await SaveAvatarsAsync(new AvatarManager(player)); // Load avatars before inventory, so that we can attach weapons while loading them
+            player.Inventory = await GetInventoryByPlayerAsync(player) ?? await SaveInventoryAsync(new InventoryManager(player));
+            player.Inventory.ShopManager = await GetShopsByPlayerAsync(player) ?? await SaveShopsAsync(new ShopManager(player));
+            player.SocialManager = await GetSocialByPlayerAsync(player) ?? await SaveSocialAsync(new SocialManager(player));
+            player.TeamManager = await GetTeamsByPlayerAsync(player) ?? await SaveTeamsAsync(new TeamManager(player));
             await player.OnLoadAsync();
 
             return player;
         }
 
-        public static async Task<AvatarManager?> CreateAvatarStorageAsync(AvatarManager avatars)
+        public static async Task<AvatarManager> SaveAvatarsAsync(AvatarManager avatars)
         {
-            await Avatars.InsertOneAsync(avatars);
+            await Avatars.ReplaceOneAsync<AvatarManager>(w => w.OwnerId == avatars.OwnerId, avatars, Replace);
             return avatars;
         }
-        public static async Task SaveAvatarsAsync(AvatarManager avatars)
-        {
-            await Avatars.ReplaceOneAsync<AvatarManager>(w => w.OwnerId == avatars.OwnerId, avatars);
-        }
 
-        public static async Task<UpdateResult> UpdateAvatarsAsync(FilterDefinition<AvatarManager> filter, UpdateDefinition<AvatarManager> update)
+        public static Task UpdateAvatarsAsync(FilterDefinition<AvatarManager> filter, UpdateDefinition<AvatarManager> update)
         {
-            return await Avatars.UpdateOneAsync(filter, update);
+            AvatarWrites.Add(new UpdateOneModel<AvatarManager>(filter, update));
+            return Task.CompletedTask;
         }
 
         private static async Task<AvatarManager?> GetAvatarsByPlayerAsync(Player owner)
@@ -115,36 +154,34 @@ namespace Weedwacker.GameServer.Database
             if (avatars != null) await avatars.OnLoadAsync(owner);
             return avatars;
         }
+        public static async Task<InventoryManager> SaveInventoryAsync(InventoryManager inventory)
+        {
+            await Inventories.ReplaceOneAsync<InventoryManager>(w => w.OwnerId == inventory.OwnerId, inventory, Replace);
+            return inventory;
+        }
         private static async Task<InventoryManager?> GetInventoryByPlayerAsync(Player owner)
         {
             InventoryManager inventory = await Database.GetCollection<InventoryManager>("inventories").Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
             if (inventory != null) await inventory.OnLoadAsync(owner);
             return inventory;
         }
-        public static async Task<InventoryManager?> CreateInventoryAsync(InventoryManager inventory)
+
+        public static Task UpdateInventoryAsync(FilterDefinition<InventoryManager> filter, UpdateDefinition<InventoryManager> update)
         {
-            await Inventories.InsertOneAsync(inventory);
-            return inventory;
+            InventoryWrites.Add(new UpdateOneModel<InventoryManager>(filter, update));
+            return Task.CompletedTask;
         }
 
-        public static async Task<UpdateResult> UpdateInventoryAsync(FilterDefinition<InventoryManager> filter, UpdateDefinition<InventoryManager> update)
+        public static async Task<TeamManager> SaveTeamsAsync(TeamManager teams)
         {
-            return await Inventories.UpdateOneAsync(filter, update);
-        }
-
-        public static async Task<TeamManager?> CreateTeamStorageAsync(TeamManager teams)
-        {
-            await Teams.InsertOneAsync(teams);
+            await Teams.ReplaceOneAsync<TeamManager>(w => w.OwnerId == teams.OwnerId, teams, Replace);
             return teams;
         }
-        public static async Task SaveTeamsAsync(TeamManager teams)
-        {
-            await Teams.ReplaceOneAsync<TeamManager>(w => w.OwnerId == teams.OwnerId, teams);
-        }
 
-        public static async Task<UpdateResult> UpdateTeamsAsync(FilterDefinition<TeamManager> filter, UpdateDefinition<TeamManager> update)
+        public static Task UpdateTeamsAsync(FilterDefinition<TeamManager> filter, UpdateDefinition<TeamManager> update)
         {
-            return await Teams.UpdateOneAsync(filter, update);
+            TeamWrites.Add(new UpdateOneModel<TeamManager>(filter, update));
+            return Task.CompletedTask;
         }
 
         private static async Task<TeamManager?> GetTeamsByPlayerAsync(Player owner)
@@ -152,6 +189,44 @@ namespace Weedwacker.GameServer.Database
             TeamManager teams = await Database.GetCollection<TeamManager>("teams").Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
             if (teams != null) await teams.OnLoadAsync(owner);
             return teams;
+        }
+
+        public static async Task<ShopManager> SaveShopsAsync(ShopManager shops)
+        {
+            await Shops.ReplaceOneAsync<ShopManager>(w => w.OwnerId == shops.OwnerId, shops, Replace);
+            return shops;
+        }
+
+        public static Task UpdateShopsAsync(FilterDefinition<ShopManager> filter, UpdateDefinition<ShopManager> update)
+        {
+            ShopWrites.Add(new UpdateOneModel<ShopManager>(filter, update));
+            return Task.CompletedTask;
+        }
+
+        private static async Task<ShopManager?> GetShopsByPlayerAsync(Player owner)
+        {
+            ShopManager shops = await Database.GetCollection<ShopManager>("shops").Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
+            if (shops != null) await shops.OnLoadAsync(owner);
+            return shops;
+        }
+
+        public static async Task<SocialManager> SaveSocialAsync(SocialManager social)
+        {
+            await Social.ReplaceOneAsync<SocialManager>(w => w.OwnerId == social.OwnerId, social);
+            return social;
+        }
+
+        public static Task UpdateSocialAsync(FilterDefinition<SocialManager> filter, UpdateDefinition<SocialManager> update)
+        {
+            SocialWrites.Add(new UpdateOneModel<SocialManager>(filter, update));
+            return Task.CompletedTask;
+        }
+
+        private static async Task<SocialManager?> GetSocialByPlayerAsync(Player owner)
+        {
+            SocialManager social = await Database.GetCollection<SocialManager>("social").Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
+            if (social != null) await social.OnLoadAsync(owner);
+            return social;
         }
     }
 }

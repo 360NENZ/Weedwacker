@@ -26,7 +26,7 @@ namespace Weedwacker.GameServer.Systems.Player
         public const int MAX_FORGE_POINT = 300000;
         public const int MIN_HOME_COIN = 0;
 
-        private readonly Player Owner;
+        private Player Owner;
 
         public PlayerPropertyManager(Player owner) { Owner = owner; }
 
@@ -139,24 +139,25 @@ namespace Weedwacker.GameServer.Systems.Player
                 default:
                     int currentValue = Owner.PlayerProperties.GetValueOrDefault(prop);
                     Owner.PlayerProperties[prop] = value;
+
+                    if (value - currentValue != 0)
+                    {
+                        // Update Database
+                        var filter = Builders<Player>.Filter.Where(p => p.AccountUid == Owner.AccountUid);
+                        var update = Builders<Player>.Update.Set($"PlayerProperties.{prop}", value);
+                        await DatabaseManager.UpdatePlayerAsync(filter, update);
+
+                    }
+
                     if (sendPacket)
                     {
                         // Update player with packet
                         await Owner.SendPacketAsync(new PacketPlayerPropNotify(Owner, prop));
-                        
-                        if (value - currentValue != 0)
+                        await Owner.SendPacketAsync(new PacketPlayerPropChangeNotify(prop, value - currentValue));
+
+                        if (reason != PropChangeReason.None)
                         {
-                            // Update Database
-                            var filter = Builders<Player>.Filter.Where(p => p.AccountUid == Owner.AccountUid);
-                            var update = Builders<Player>.Update.Set($"PlayerProperties.{prop}", value);
-                            await DatabaseManager.UpdatePlayerAsync(filter, update);
-
-                            await Owner.SendPacketAsync(new PacketPlayerPropChangeNotify(prop, value - currentValue));
-
-                            if (reason != PropChangeReason.None)
-                            {
-                                await Owner.SendPacketAsync(new PacketPlayerPropChangeReasonNotify(prop, currentValue, value, reason));
-                            }
+                            await Owner.SendPacketAsync(new PacketPlayerPropChangeReasonNotify(prop, currentValue, value, reason));
                         }
                     }
                     return true;

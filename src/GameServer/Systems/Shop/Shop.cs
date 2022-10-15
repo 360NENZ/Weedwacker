@@ -6,11 +6,11 @@ using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Systems.Player;
 using Weedwacker.Shared.Network.Proto;
 
-namespace Weedwacker.GameServer.Systems.Inventory
+namespace Weedwacker.GameServer.Systems.Shop
 {
     internal class Shop
     {
-        [BsonIgnore] Player.Player Customer;
+        private Player.Player Customer;
         [BsonElement] public int ShopType { get; private set; }
         [BsonElement] public List<ShopGoodInfo> Goods { get; private set; } = new();
         [BsonElement] public int NextRefreshTime { get; private set; } = int.MaxValue; //TODO
@@ -37,9 +37,9 @@ namespace Weedwacker.GameServer.Systems.Inventory
                 NextRefreshTime = nextRefresh;
                 Goods.ForEach(w => w.ResetBoughtNum());
                 //Update database
-                var filter1 = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Customer.GameUid);
-                var update1 = Builders<InventoryManager>.Update.Set(w => w.ShopManager.Shops[ShopType], this);
-                var result1 = await DatabaseManager.UpdateInventoryAsync(filter1, update1);
+                var filter1 = Builders<ShopManager>.Filter.Where(w => w.OwnerId == Customer.GameUid);
+                var update1 = Builders<ShopManager>.Update.Set(w => w.Shops[ShopType], this);
+                await DatabaseManager.UpdateShopsAsync(filter1, update1);
             }
         }
 

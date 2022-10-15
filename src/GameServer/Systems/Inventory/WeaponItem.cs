@@ -7,16 +7,16 @@ namespace Weedwacker.GameServer.Systems.Inventory
 {
     internal class WeaponItem : EquipItem
     {
-        [BsonId] public int UniqueId { get; protected set; }
-		public List<int>? Affixes { get; protected set; } = new();
+		[BsonElement] public List<int>? Affixes { get; protected set; } = new();
 		[BsonIgnore] public new int Count { get; protected set; } = 1;
-        public int Refinement { get; protected set; } = 0;
+        [BsonElement] public int Refinement { get; protected set; } = 0;
 		[BsonIgnore] public uint WeaponEntityId;
-		public int EquippedAvatar; // By avatarId
 		[BsonIgnore] public new WeaponData ItemData;
 
 		public WeaponItem(ulong guid, int itemId, int uniqueId) : base(guid, itemId)
 		{
+			Id = uniqueId;
+
 			ItemData = (WeaponData)GameData.ItemDataMap[ItemId];
 			Level = 1;
 

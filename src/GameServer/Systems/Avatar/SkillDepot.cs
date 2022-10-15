@@ -12,23 +12,25 @@ namespace Weedwacker.GameServer.Systems.Avatar
 {
     internal class SkillDepot
     {
-        public int DepotId { get; private set; }
-        [BsonIgnore]
-        private Player.Player Owner; // Loaded by DatabaseManager
-        [BsonIgnore]
-        private Avatar Character; // Loaded by DatabaseManager
-        public ushort PromoteLevel = 0; // Constellation rank
-        public int EnergySkill { get; private set; } // Ultimate elemental ability (Q)
-        public int EnergySkillLevel { get; private set; }
-        public ElementType Element { get; private set; } // Stores current and max energy
-        public int[] Abilities { get; private set; } // Just the hashes
-        public SortedList<int, int> Skills { get; private set; } // <skillId,level>
-        public SortedList<int, int> SubSkills { get; private set; } // <skillId,level>
-        public Dictionary<int, int> SkillExtraChargeMap { get; private set; } = new(); // Charges
-        public List<ProudSkillData> InherentProudSkillOpens { get; private set; } = new(); // proudSkillId
-        public List<AvatarTalentData> Talents { get; private set; } = new(); // last digit of id = constellationRank. Also contain the openConfig name, which is needed to apply AbilityEmbryos
+        [BsonElement] public int DepotId { get; private set; }
+        [BsonIgnore] private Player.Player Owner; // Loaded by DatabaseManager
+        [BsonIgnore] private Avatar Character; // Loaded by DatabaseManager
+        [BsonElement] public ushort PromoteLevel = 0; // Constellation rank
+        [BsonElement] public int EnergySkill { get; private set; } // Ultimate elemental ability (Q)
+        [BsonElement] public int EnergySkillLevel { get; private set; }
+        [BsonElement] public ElementType Element { get; private set; } // Stores current and max energy
+        [BsonElement] public int[] Abilities { get; private set; } // Just the hashes
+        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
+        [BsonElement] public SortedList<int, int> Skills { get; private set; } // <skillId,level>
+        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
+        [BsonElement] public SortedList<int, int> SubSkills { get; private set; } // <skillId,level>
+        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
+        [BsonElement] public Dictionary<int, int> SkillExtraChargeMap { get; private set; } = new(); // Charges
+        [BsonElement] public List<ProudSkillData> InherentProudSkillOpens { get; private set; } = new(); // proudSkillId
+        [BsonElement] public List<AvatarTalentData> Talents { get; private set; } = new(); // last digit of id = constellationRank. Also contain the openConfig name, which is needed to apply AbilityEmbryos
         //TODO
-        public Dictionary<int, int> ProudSkillExtraLevelMap { get; private set; } // <groupId,extraLevels> 
+        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
+        [BsonElement] public Dictionary<int, int> ProudSkillExtraLevelMap { get; private set; } // <groupId,extraLevels> 
 
         public SkillDepot(Avatar avatar, int depotId, Player.Player owner)
         {
@@ -124,7 +126,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             // Update Database
             var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
             var update = Builders<AvatarManager>.Update.Set(w => w.Avatars[Character.AvatarId].SkillDepots[DepotId].Skills[skillId], level);
-            var result = await DatabaseManager.UpdateAvatarsAsync(filter, update);
+            await DatabaseManager.UpdateAvatarsAsync(filter, update);
 
             // Packet
             await Owner.SendPacketAsync(new PacketAvatarSkillChangeNotify(Character, DepotId, skillId, oldLevel, level));
@@ -149,7 +151,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             // Update Database
             var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
             var update = Builders<AvatarManager>.Update.Set(w => w.Avatars[Character.AvatarId].SkillDepots[DepotId].Talents, Talents);
-            var result = await DatabaseManager.UpdateAvatarsAsync(filter, update);
+            await DatabaseManager.UpdateAvatarsAsync(filter, update);
 
             // Packet
             await Owner.SendPacketAsync(new PacketAvatarUnlockTalentNotify(Character, DepotId, talentId));

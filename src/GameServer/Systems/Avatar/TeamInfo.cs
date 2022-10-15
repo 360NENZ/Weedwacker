@@ -7,9 +7,10 @@ namespace Weedwacker.GameServer.Systems.Avatar
     internal class TeamInfo
     {
         public string TeamName;
+        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
         [BsonElement] public SortedList<int, Avatar> AvatarInfo { get; private set; } = new(); // <index, avatar>> clone avatars for abyss teams
         public List<TeamResonanceData> TeamResonances = new();
-        public readonly bool IsTowerTeam = false; //Don't allow any further team editing if it's an abyss team
+        [BsonElement] public bool IsTowerTeam { get; private set; } = false; //Don't allow any further team editing if it's an abyss team
         public TeamInfo(string name = "")
         {
             TeamName = name;

@@ -8,16 +8,14 @@ namespace Weedwacker.GameServer.Systems.Inventory
 {
     internal class ReliquaryItem : EquipItem
     {
-		[BsonId] public int UniqueId { get; protected set; }
 		[BsonElement] public int MainPropId { get; protected set; }
 		[BsonIgnore] public new int Count { get; protected set; } = 1;
-		public readonly List<int>? AppendPropIdList = new();
-		public int EquippedAvatar; // By avatarId
+		[BsonElement] public List<int>? AppendPropIdList { get; private set; } = new();
 		[BsonIgnore] public new ReliquaryData ItemData { get; protected set; }
 
 		public ReliquaryItem(ulong guid, int itemId, int uniqueId) : base(guid, itemId)
 		{
-			UniqueId = uniqueId;
+			Id = uniqueId;
 			Level = 1;
 
 			// Create main property

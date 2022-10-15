@@ -4,7 +4,7 @@ namespace Weedwacker.GameServer.Systems.Player
 {
     internal class BattlePassManager
     {
-        private readonly Player Owner;
+        private Player Owner;
 
         public BattlePassManager(Player owner)
         {

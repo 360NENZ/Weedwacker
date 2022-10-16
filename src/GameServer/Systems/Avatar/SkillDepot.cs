@@ -1,8 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
-using Weedwacker.GameServer.Data.BinOut.Talent.AvatarTalents;
 using Weedwacker.GameServer.Data.Common;
-using Weedwacker.GameServer.Data.Common.ConfigTalentTypes;
 using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Packet.Send;
@@ -19,7 +17,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         [BsonElement] public int EnergySkill { get; private set; } // Ultimate elemental ability (Q)
         [BsonElement] public int EnergySkillLevel { get; private set; }
         [BsonElement] public ElementType Element { get; private set; } // Stores current and max energy
-        [BsonElement] public int[] Abilities { get; private set; } // Just the hashes
+        [BsonElement] public ulong[] Abilities { get; private set; } // Just the hashes
         [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
         [BsonElement] public SortedList<int, int> Skills { get; private set; } // <skillId,level>
         [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]

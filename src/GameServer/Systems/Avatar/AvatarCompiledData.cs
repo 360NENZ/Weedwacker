@@ -16,7 +16,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         public readonly SortedList<int, AvatarPromoteData> PromoteData; // <promoteLevel,data> AKA Ascension
         public readonly SortedList<int, SortedList<int, AvatarTalentData>> TalentData; // <depotId,<talentId,data>> AKA Constellations
         public readonly SortedList<int, SortedList<int, ProudSkillData>> ProudSkillData; // <depotId,<proudSkillId,data>> Passives
-        public readonly SortedList<int, int[]>? AbilityNameHashes; //<depotId,List<Hashes>>
+        public readonly SortedList<int, ulong[]>? AbilityNameHashes; //<depotId,List<Hashes>>
         public readonly SortedList<int, AvatarCostumeData> CostumeData; // costumeId
         public readonly SortedList<int, AvatarCodexData> CodexData; // sortId Codex entry
         public static readonly SortedList<int, AvatarLevelData> LevelData = GameData.AvatarLevelDataMap; // <level,exp> Level exp breakpoints
@@ -75,12 +75,12 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 // Set embryo abilities (if player skill depot)
                 if (depot.skillDepotAbilityGroup != null && depot.skillDepotAbilityGroup.Length > 0)
                 {
-                    PlayerElementAbilityData abilityData = GameData.PlayerElementAbilityDataMap[depot.skillDepotAbilityGroup];
+                    AbilityGroupData? abilityData = GameData.AbilityGroupDataMap.GetValueOrDefault(depot.skillDepotAbilityGroup);
 
                     if (abilityData != null)
                     {
-                        List<int> hashes = new();
-                        foreach (PlayerElementAbilityData.TargetAbility ability in abilityData.targetAbilities)
+                        List<ulong> hashes = new();
+                        foreach (AbilityGroupData.TargetAbility ability in abilityData.targetAbilities)
                         {
                             hashes.Add(Utils.AbilityHash(ability.abilityName));
                         }
@@ -94,7 +94,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             CodexData = new SortedList<int, AvatarCodexData>(dictionary2);
 
             // Fetters
-            CardData = GameData.FetterCharacterCardDataMap[avatarId];
+            CardData = GameData.FetterCharacterCardDataMap.GetValueOrDefault(avatarId);
             FetterInfoData = GameData.FetterInfoDataMap.Where(w => w.Value.avatarId == avatarId).FirstOrDefault().Value;
             var dictionary3 = GameData.FettersDataMap.Where(w => w.Value.avatarId == avatarId).ToDictionary(w => w.Key, w => w.Value);
             FettersData = new SortedList<int, FettersData>(dictionary3);

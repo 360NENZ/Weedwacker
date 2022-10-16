@@ -3,30 +3,50 @@ using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
-namespace Weedwacker.GameServer.Data.Common.ConfigTalentTypes
+namespace Weedwacker.GameServer.Data.BinOut.Talent
 {
-    internal class ModifyAbility : ConfigTalent
+    internal class ModifyAbility : BaseConfigTalent
     {
         [JsonProperty] public readonly string abilityName;
         [JsonProperty] public readonly string paramSpecial;
-        [JsonProperty] public readonly object paramDelta;
-        [JsonProperty] public readonly float paramRatio;
-        [JsonProperty] public float paramDeltaUseThisDudeTrustMe { get; private set; }
+        [JsonProperty] public readonly object? paramDelta;
+        [JsonProperty] public readonly object? paramRatio;
+        [JsonProperty] public double? paramDeltaUseThisDudeTrustMe { get; private set; }
+        [JsonProperty] public double? paramRatioForReal { get; private set; }
 
         [OnDeserialized]
         internal void OnDeserializedMethod(StreamingContext context)
         {
-            string val = paramDelta as string;
-            if (string.IsNullOrEmpty(val))
+            if (paramDelta != null)
             {
-                paramDeltaUseThisDudeTrustMe = (float)paramDelta;
+                string val = paramDelta as string;
+                if (string.IsNullOrEmpty(val))
+                {
+                    paramDeltaUseThisDudeTrustMe = (double)paramDelta;
+                }
+                else
+                {
+                    var culture = (CultureInfo)CultureInfo.CurrentCulture.Clone();
+                    culture.NumberFormat.NumberDecimalSeparator = ".";
+                    string newString = Regex.Replace((string)paramDelta, "(%)", "");
+                    paramDeltaUseThisDudeTrustMe = double.Parse(newString, culture) / 100;
+                }
             }
-            else
+
+            if (paramRatio != null)
             {
-                var culture = (CultureInfo)CultureInfo.CurrentCulture.Clone();
-                culture.NumberFormat.NumberDecimalSeparator = ".";
-                string newString = Regex.Replace((string)paramDelta, "(%)", "");
-                paramDeltaUseThisDudeTrustMe = float.Parse(newString, culture)/100;
+                string val2 = paramRatio as string;
+                if (string.IsNullOrEmpty(val2))
+                {
+                    paramDeltaUseThisDudeTrustMe = (double)paramRatio;
+                }
+                else
+                {
+                    var culture = (CultureInfo)CultureInfo.CurrentCulture.Clone();
+                    culture.NumberFormat.NumberDecimalSeparator = ".";
+                    string newString = Regex.Replace((string)paramRatio, "(%)", "");
+                    paramDeltaUseThisDudeTrustMe = double.Parse(newString, culture) / 100;
+                }
             }
         }
     }

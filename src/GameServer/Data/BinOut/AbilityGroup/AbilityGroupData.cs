@@ -1,14 +1,14 @@
 ﻿using Newtonsoft.Json;
+using Weedwacker.GameServer.Enums;
 
 namespace Weedwacker.GameServer.Data.BinOut.AbilityGroup
 {
-    [Resource("AbilityGroup_Other_PlayerElementAbility.json")]
-    internal class PlayerElementAbilityData
+    internal class AbilityGroupData
     {
         [JsonProperty]
-        public readonly string abilityGroupSourceType;
+        public readonly AbilityGroupSourceType abilityGroupSourceType;
         [JsonProperty]
-        public readonly string abilityGroupTargetType;
+        public readonly AbilityGroupTargetType abilityGroupTargetType;
         [JsonProperty]
         public readonly List<TargetAbility> targetAbilities;
             

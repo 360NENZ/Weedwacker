@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 
-namespace Weedwacker.GameServer.Data.Common.ConfigTalentTypes
+namespace Weedwacker.GameServer.Data.BinOut.Talent
 {
-    internal class AddAbility : ConfigTalent
+    internal class AddAbility : BaseConfigTalent
     {
         [JsonProperty] public readonly string abilityName;
     }

@@ -1,7 +1,9 @@
-﻿namespace Weedwacker.GameServer.Data.BinOut.Scene.Point
+﻿using Newtonsoft.Json;
+
+namespace Weedwacker.GameServer.Data.BinOut.Scene.Point
 {
     internal class ScenePointData
     {
-        public readonly Dictionary<string, BasePoint>? points;
+        [JsonProperty] public readonly Dictionary<string, BasePoint>? points;
     }
 }

@@ -1,7 +1,6 @@
 ﻿namespace Weedwacker.GameServer.Data.BinOut.Scene.Point
 {
-    internal class SceneTransPoint : TransPoint
+    internal class TransPointNormal : TransPoint
     {
-        
     }
 }

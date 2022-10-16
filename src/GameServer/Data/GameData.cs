@@ -1,11 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 using Weedwacker.GameServer.Data.BinOut.AbilityGroup;
 using Weedwacker.GameServer.Data.BinOut.Scene.Point;
-using Weedwacker.GameServer.Data.BinOut.Talent.AvatarTalents;
-using Weedwacker.GameServer.Data.BinOut.Talent.EquipTalents;
-using Weedwacker.GameServer.Data.BinOut.Talent.RelicTalents;
-using Weedwacker.GameServer.Data.BinOut.Talent.TeamTalents;
-using Weedwacker.GameServer.Data.Common.ConfigTalentTypes;
+using Weedwacker.GameServer.Data.BinOut.Scene.SceneNpcBorn;
+using Weedwacker.GameServer.Data.BinOut.Talent;
 using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.Shared.Utils;
 using static Weedwacker.GameServer.Data.SerializationSettings;
@@ -26,7 +25,7 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<Tuple<int, int>, AvatarPromoteData> AvatarPromoteDataMap = new(); // <<PromoteId,promoteLevel>,Data>
         public readonly static SortedList<int, AvatarSkillData> AvatarSkillDataMap = new(); // SkillId
         public readonly static SortedList<int, AvatarSkillDepotData> AvatarSkillDepotDataMap = new(); // SkillDepotId
-        public readonly static SortedList<string, AvatarTalentConfigData> AvatarTalentConfigDataMap = new(); // openConfig
+        public readonly static ConcurrentDictionary<string, BaseConfigTalent[]> AvatarTalentConfigDataMap = new(); // openConfig
         public readonly static SortedList<int, AvatarTalentData> AvatarTalentDataMap = new(); // talentId
         public readonly static SortedList<int, FetterCharacterCardData> FetterCharacterCardDataMap = new(); // avatarId
         public readonly static SortedList<int, FetterInfoData> FetterInfoDataMap = new(); // fetterId
@@ -34,10 +33,10 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<int, FetterStoryData> FetterStoryDataMap = new(); // fetterId
         public readonly static SortedList<int, PhotographExpressionData> PhotographExpressionDataMap = new(); // fetterId
         public readonly static SortedList<int, PhotographPosenameData> PhotographPosenameDataMap = new(); // fetterId
-        public readonly static SortedList<string, PlayerElementAbilityData> PlayerElementAbilityDataMap = new(); //skillDepotAbilityGroup
         public readonly static SortedList<int, ProudSkillData> ProudSkillDataMap = new(); // proudSkillId
         //---------------------------------------------------------------------------------------------------------------------------------//
-
+        public readonly static ConcurrentDictionary<string, AbilityGroupData> AbilityGroupDataMap = new(); // openConfig name
+        public readonly static SortedList<int, AvatarHeroEntityData> AvatarHeroEntityDataMap = new();
         public readonly static SortedList<int, DungeonData> DungeonDataMap = new(); // id
         public readonly static SortedList<int, EnvAnimalGatherData> EnvAnimalGatherDataMap = new(); // animalId
         public readonly static SortedList<int, EquipAffixData> EquipAffixDataMap = new(); // affixId
@@ -48,47 +47,87 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<int, MonsterCurveData> MonsterCurveDataMap = new(); // level
         public readonly static SortedList<int, MonsterData> MonsterDataMap = new(); // id
         public readonly static SortedList<int, MonsterDescribeData> MonsterDescribeDataMap = new(); // id
-        public readonly static SortedList<string, RelicAffixConfigData> RelicAffixConfigDataMap = new(); // openConfig
+        public readonly static SortedList<string, BaseConfigTalent[]> RelicAffixConfigDataMap = new(); // openConfig
         public readonly static SortedList<int, ShopData> ShopDataMap = new(); // shopId
         public readonly static SortedList<int, RewardData> RewardDataMap = new(); // RewardId
         public readonly static SortedList<int, ShopGoodsData> ShopGoodsDataMap = new(); // goodsId
-        public readonly static SortedList<string, TeamResonanceConfigData> TeamResonanceConfigDataMap = new(); // openConfig
-        public readonly static SortedList<string, WeaponAffixConfigData> WeaponAffixConfigDataMap = new(); // openConfig
+        public readonly static ConcurrentDictionary<string, BaseConfigTalent[]> TeamResonanceConfigDataMap = new(); // openConfig
+        public readonly static ConcurrentDictionary<string, BaseConfigTalent[]> WeaponAffixConfigDataMap = new(); // openConfig
         public readonly static SortedList<int, WeaponCurveData> WeaponCurveDataMap = new(); // level
-        public readonly static SortedList<Tuple<int,int>, WeaponPromoteData> WeaponPromoteDataMap = new(); // <weaponPromoteId, promoteLevel>
+        public readonly static SortedList<Tuple<int, int>, WeaponPromoteData> WeaponPromoteDataMap = new(); // <weaponPromoteId, promoteLevel>
         public readonly static SortedList<int, ReliquaryAffixData> ReliquaryAffixDataMap = new(); // id
         public readonly static SortedList<int, ReliquaryMainPropData> ReliquaryMainPropDataMap = new(); // id
         public readonly static SortedList<Tuple<int, int>, ReliquaryLevelData> ReliquaryLevelDataMap = new(); // <rank, level>
         public readonly static SortedList<int, ReliquarySetData> ReliquarySetDataMap = new(); // setid
         public readonly static SortedList<int, SceneData> SceneDataMap = new(); //id
-        public readonly static SortedList<string, ScenePointData> ScenePointDataMap = new(); // filename
+        public readonly static ConcurrentDictionary<string, ScenePointData> ScenePointDataMap = new(); // filename
+        public readonly static ConcurrentDictionary<int, SceneNpcBornData> SceneNpcBornDataMap = new(); // sceneId
         public readonly static SortedList<int, TeamResonanceData> TeamResonanceDataMap = new(); // teamResonanceId 
 
 
 
-        static readonly JsonSerializer Serializer = new();
-
-        // To handle $type
-        static JsonSerializerSettings settings = new()
+        static readonly JsonSerializer Serializer = new()
         {
+            // To handle $type
             TypeNameHandling = TypeNameHandling.Objects,
             SerializationBinder = new KnownTypesBinder
             {
-                KnownTypes = new List<Type> { typeof(AddAbility), typeof(AddTalentExtraLevel), typeof(ModifyAbility),
-                    typeof(ModifySkillCD), typeof(ModifySkillPoint), typeof(UnlockTalentParam), typeof(DungeonEntry), typeof(DungeonExit), typeof(SceneTransPoint) }
+                KnownTypes = new List<Type> {
+                    // Ability Types
+                    typeof(AddAbility), typeof(AddTalentExtraLevel), typeof(ModifyAbility), typeof(ModifySkillCD), typeof(ModifySkillPoint), typeof(UnlockTalentParam),
+                    typeof(UnlockControllerConditions),
+                    // Point Types
+                    typeof(DungeonEntry), typeof(DungeonExit), typeof(DungeonQuitPoint), typeof(DungeonSlipRevivePoint), typeof(DungeonWayPoint), typeof(SceneBuildingPoint),
+                    typeof(SceneTransPoint), typeof(PersonalSceneJumpPoint), typeof(SceneVehicleSummonPoint), typeof(TransPointStatue), typeof(TransPointNormal),
+                    typeof(VehicleSummonPoint), typeof(VirtualTransPoint)}
             }
         };
-    
-        static async Task LoadFolder<Obj, Key>(string path, Func<Obj, Key> keySelector, SortedList<Key, Obj> map) where Key : notnull
+
+        
+
+
+        static async Task LoadBinOutFolder<Obj, Key>(string path, Func<Obj, Key> keySelector, IDictionary<Key, Obj> map) where Key : notnull
         {
-            string[] filePaths = Directory.GetFiles(path, ".json", SearchOption.TopDirectoryOnly);
+            map.Clear();
+            string[] filePaths = Directory.GetFiles(path, "*.json", SearchOption.TopDirectoryOnly);
             var tasks = new List<Task>();
-            foreach (string filePath in filePaths) { tasks.Add(LoadData(filePath, keySelector, map)); }
-            await Task.WhenAll(tasks);
+            filePaths.AsParallel().ForAll(async file => { 
+                var filePath = new FileInfo(file);
+                using var sr = new StringReader(await File.ReadAllTextAsync(filePath.FullName));
+                string fileName = filePath.Name;
+                using var jr = new JsonTextReader(sr);
+                var fileData = Serializer.Deserialize<Obj>(jr);
+
+                Key key = keySelector(fileData);
+                map.Add(key, fileData);
+            });                         
+        }
+
+        static async Task LoadBinOutFolder<Obj>(string path, IDictionary<string, Obj> map, bool isDictionaryJson = true)
+        {
+            map.Clear();
+            string[] filePaths = Directory.GetFiles(path, "*.json", SearchOption.TopDirectoryOnly);
+            filePaths.AsParallel().ForAll(async file =>
+            {
+                var filePath = new FileInfo(file);
+                using var sr = new StringReader(await File.ReadAllTextAsync(filePath.FullName));
+                using var jr = new JsonTextReader(sr);
+                if (isDictionaryJson)
+                {
+                    var fileData = Serializer.Deserialize<Dictionary<string, Obj>>(jr);
+                    fileData.AsParallel().ForAll(w => map.Add(w.Key, w.Value));
+                }
+                else
+                {
+                    var fileData = Serializer.Deserialize<Obj>(jr);
+                    // Use the name (without ".json") of the file as the key
+                    map.Add(Regex.Replace(filePath.Name, "\\.json", ""), fileData);
+                }
+            });
         }
 
         // To handle derived types
-        static async Task LoadData<Obj, Key, DerivedType>(string path, Func<Obj, Key> keySelector, SortedList<Key, Obj> map) where Key : notnull where DerivedType : Obj
+        static async Task LoadExcel<Obj, Key, DerivedType>(string path, Func<Obj, Key> keySelector, SortedList<Key, Obj> map) where Key : notnull where DerivedType : Obj
         {
             var ra = typeof(DerivedType).GetResourceData();
             if (ra == null || !ra.GetResourceFile(path, out var fi)) return;
@@ -97,7 +136,7 @@ namespace Weedwacker.GameServer.Data
             foreach (var obj in objs)
                 map.Add(keySelector(obj), obj);
         }
-        static async Task LoadData<Obj, Key>(string path, Func<Obj, Key> keySelector, SortedList<Key, Obj> map) where Key : notnull
+        static async Task LoadExcel<Obj, Key>(string path, Func<Obj, Key> keySelector, SortedList<Key, Obj> map) where Key : notnull
         {
             var ra = typeof(Obj).GetResourceData();
             if (ra == null || !ra.GetResourceFile(path, out var fi)) return;
@@ -122,58 +161,60 @@ namespace Weedwacker.GameServer.Data
         static ResourceAttribute? GetResourceData(this Type res) => Attribute.GetCustomAttribute(res, typeof(ResourceAttribute)) as ResourceAttribute;
         public static async Task LoadAllResourcesAsync(string resourcesPath)
         {
-            string excelPath = Path.Combine(resourcesPath, "ExcelBinOutput");
-            string binPath = Path.Combine(resourcesPath, "BinOutput");
+            string excelPath = Path.Combine(resourcesPath, "ExcelBinOutput/");
+            string binPath = Path.Combine(resourcesPath, "BinOutput/");
             await Task.WhenAll(new Task[]
-            {              
-                LoadData(excelPath, o => o.sortId, AvatarCodexDataMap),
-                LoadData(excelPath, o => o.skinId, AvatarCostumeDataMap),               
-                LoadData(excelPath, o => o.level, AvatarCurveDataMap),                  
-                LoadData(excelPath, o => o.id, AvatarDataMap),
-                LoadData(excelPath, o => o.fetterLevel, AvatarFetterLevelDataMap),
-                LoadData(excelPath, o => o.flycloakId, AvatarFlycloakDataMap),
-                LoadData(excelPath, o => o.Level, AvatarLevelDataMap),
-                LoadData(excelPath, o => Tuple.Create(o.avatarPromoteId, o.promoteLevel), AvatarPromoteDataMap),
-                LoadData(excelPath, o => o.id, AvatarSkillDataMap),
-                LoadData(excelPath, o => o.id, AvatarSkillDepotDataMap),
-                LoadData(excelPath, o => o.talentId, AvatarTalentDataMap),              
-                LoadData(excelPath, o => o.id, DungeonDataMap),               
-                LoadData(excelPath, o => o.animalId, EnvAnimalGatherDataMap),
-                LoadData(excelPath, o => o.affixId, EquipAffixDataMap),              
-                LoadData(excelPath, o => o.avatarId, FetterCharacterCardDataMap),             
-                LoadData(excelPath, o => o.fetterId, FetterInfoDataMap),               
-                LoadData(excelPath, o => o.fetterId, FettersDataMap),                   
-                LoadData(excelPath, o => o.fetterId, FetterStoryDataMap),               
-                LoadData(excelPath, o => Tuple.Create(o.id, o.gadgetId), GatherDataMap),                
-                LoadData(excelPath, o => o.id, GadgetDataMap),               
-                LoadData(excelPath, o => o.id, HomeWorldFurnitureDataMap),
-                LoadData<ItemData, int, MaterialData>(excelPath, o => o.id, ItemDataMap),
-                LoadData(excelPath, o => o.level, MonsterCurveDataMap),              
-                LoadData(excelPath, o => o.id, MonsterDataMap),
-                LoadData(excelPath, o => o.id, MonsterDescribeDataMap),
-                LoadData(excelPath, o => o.fetterId, PhotographExpressionDataMap),
-                LoadData(excelPath, o => o.fetterId, PhotographPosenameDataMap),
-                LoadData(excelPath, o => o.proudSkillId, ProudSkillDataMap),
-                LoadData<ItemData, int, ReliquaryData>(excelPath, o => o.id, ItemDataMap),
-                LoadData(excelPath, o => o.id, ReliquaryAffixDataMap),
-                LoadData(excelPath, o => o.id, ReliquaryMainPropDataMap),
-                LoadData(excelPath, o => Tuple.Create(o.rank, o.level), ReliquaryLevelDataMap),               
-                LoadData(excelPath, o => o.setId, ReliquarySetDataMap),               
-                LoadData(excelPath, o => o.rewardId, RewardDataMap),
-                LoadData(excelPath, o => o.id, SceneDataMap),
-                LoadData(excelPath, o => o.shopId, ShopDataMap),
-                LoadData(excelPath, o=> o.goodsId, ShopGoodsDataMap),
-                LoadData(excelPath, o => o.teamResonanceId, TeamResonanceDataMap),               
-                LoadData<ItemData, int, WeaponData>(excelPath, o => o.id, ItemDataMap),
-                LoadData(excelPath, o => o.level, WeaponCurveDataMap),
-                LoadData(excelPath, o => Tuple.Create(o.weaponPromoteId, o.promoteLevel), WeaponPromoteDataMap),
-                
-                //LoadData(Path.Combine(binPath, "/AbilityGroup"), o => ????, PlayerElementAbilityDataMap), // TODO
-                //LoadFolder(Path.Combine(binPath, "/AbilityGroup/Talent/AvatarTalents"), o => ????, AvatarTalentConfigDataMap),
-                //LoadFolder(Path.Combine(binPath, "/AbilityGroup/Talent/EquipTalents"), o => ????, WeaponAffixConfigDataMap),
-                //LoadFolder(Path.Combine(binPath, "/AbilityGroup/Talent/RelicTalents"), o => ????, RelicAffixConfigDataMap),
-                //LoadFolder(Path.Combine(binPath, "/AbilityGroup/Talent/TeamTalents"), o => ????, TeamResonanceConfigDataMap),
-                //LoadFolder(Path.Combine(binPath, "/Scene/Point"), o => ????, ScenePointDataMap)
+            {
+                LoadExcel(excelPath, o => o.sortId, AvatarCodexDataMap),
+                LoadExcel(excelPath, o => o.skinId, AvatarCostumeDataMap),
+                LoadExcel(excelPath, o => o.level, AvatarCurveDataMap),
+                LoadExcel(excelPath, o => o.id, AvatarDataMap),
+                LoadExcel(excelPath, o => o.fetterLevel, AvatarFetterLevelDataMap),
+                LoadExcel(excelPath, o => o.flycloakId, AvatarFlycloakDataMap),
+                LoadExcel(excelPath, o => o.avatarId, AvatarHeroEntityDataMap),
+                LoadExcel(excelPath, o => o.Level, AvatarLevelDataMap),
+                LoadExcel(excelPath, o => Tuple.Create(o.avatarPromoteId, o.promoteLevel), AvatarPromoteDataMap),
+                LoadExcel(excelPath, o => o.id, AvatarSkillDataMap),
+                LoadExcel(excelPath, o => o.id, AvatarSkillDepotDataMap),
+                LoadExcel(excelPath, o => o.talentId, AvatarTalentDataMap),
+                LoadExcel(excelPath, o => o.id, DungeonDataMap),
+                LoadExcel(excelPath, o => o.animalId, EnvAnimalGatherDataMap),
+                LoadExcel(excelPath, o => o.affixId, EquipAffixDataMap),
+                LoadExcel(excelPath, o => o.avatarId, FetterCharacterCardDataMap),
+                LoadExcel(excelPath, o => o.fetterId, FetterInfoDataMap),
+                LoadExcel(excelPath, o => o.fetterId, FettersDataMap),
+                LoadExcel(excelPath, o => o.fetterId, FetterStoryDataMap),
+                LoadExcel(excelPath, o => Tuple.Create(o.id, o.gadgetId), GatherDataMap),
+                LoadExcel(excelPath, o => o.id, GadgetDataMap),
+                LoadExcel(excelPath, o => o.id, HomeWorldFurnitureDataMap),
+                LoadExcel<ItemData, int, MaterialData>(excelPath, o => o.id, ItemDataMap),
+                LoadExcel(excelPath, o => o.level, MonsterCurveDataMap),
+                LoadExcel(excelPath, o => o.id, MonsterDataMap),
+                LoadExcel(excelPath, o => o.id, MonsterDescribeDataMap),
+                LoadExcel(excelPath, o => o.fetterId, PhotographExpressionDataMap),
+                LoadExcel(excelPath, o => o.fetterId, PhotographPosenameDataMap),
+                LoadExcel(excelPath, o => o.proudSkillId, ProudSkillDataMap),
+                LoadExcel<ItemData, int, ReliquaryData>(excelPath, o => o.id, ItemDataMap),
+                LoadExcel(excelPath, o => o.id, ReliquaryAffixDataMap),
+                LoadExcel(excelPath, o => o.id, ReliquaryMainPropDataMap),
+                LoadExcel(excelPath, o => Tuple.Create(o.rank, o.level), ReliquaryLevelDataMap),
+                LoadExcel(excelPath, o => o.setId, ReliquarySetDataMap),
+                LoadExcel(excelPath, o => o.rewardId, RewardDataMap),
+                LoadExcel(excelPath, o => o.id, SceneDataMap),
+                LoadExcel(excelPath, o => o.shopId, ShopDataMap),
+                LoadExcel(excelPath, o=> o.goodsId, ShopGoodsDataMap),
+                LoadExcel(excelPath, o => o.teamResonanceId, TeamResonanceDataMap),
+                LoadExcel<ItemData, int, WeaponData>(excelPath, o => o.id, ItemDataMap),
+                LoadExcel(excelPath, o => o.level, WeaponCurveDataMap),
+                LoadExcel(excelPath, o => Tuple.Create(o.weaponPromoteId, o.promoteLevel), WeaponPromoteDataMap),
+
+                LoadBinOutFolder(Path.Combine(binPath, "Scene/SceneNpcBorn"), o => o.sceneId,  SceneNpcBornDataMap),
+                LoadBinOutFolder(Path.Combine(binPath, "AbilityGroup"), AbilityGroupDataMap),
+                LoadBinOutFolder(Path.Combine(binPath, "Talent/AvatarTalents"), AvatarTalentConfigDataMap),
+                LoadBinOutFolder(Path.Combine(binPath, "Talent/EquipTalents"), WeaponAffixConfigDataMap),
+                LoadBinOutFolder(Path.Combine(binPath, "Talent/RelicTalents"), RelicAffixConfigDataMap),
+                LoadBinOutFolder(Path.Combine(binPath, "Talent/TeamTalents"), TeamResonanceConfigDataMap),
+                LoadBinOutFolder(Path.Combine(binPath, "Scene/Point"), ScenePointDataMap, false)
             });
 
             Logger.DebugWriteLine("Loaded Resources");

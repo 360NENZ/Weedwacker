@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Weedwacker.GameServer.Enums;
 
 namespace Weedwacker.GameServer.Data.BinOut.Scene.Point
 {
@@ -12,5 +13,7 @@ namespace Weedwacker.GameServer.Data.BinOut.Scene.Point
         [JsonProperty] public readonly string? mapVisibility;
         [JsonProperty] public readonly bool forbidSimpleUnlock;
         [JsonProperty] public readonly bool groupLimit;
+        [JsonProperty] public readonly DungeonEntryType dungeonEntryType;
+        [JsonProperty] public readonly int[] dungeonRosterList;
     }
 }

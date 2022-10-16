@@ -45,7 +45,7 @@ namespace Weedwacker.GameServer.Systems
         [JsonProperty]
         public new readonly int DepotValue = 2;
         [JsonProperty]
-        public new readonly int ConfigHash = Utils.AbilityHash("TeamResonance_Fire_Lv2");
+        public new readonly ulong ConfigHash = Utils.AbilityHash("TeamResonance_Fire_Lv2");
     }
 
     public class Water : ElementType
@@ -61,7 +61,7 @@ namespace Weedwacker.GameServer.Systems
         [JsonProperty]
         public new readonly int DepotValue = 3;
         [JsonProperty]
-        public new readonly int ConfigHash = Utils.AbilityHash("TeamResonance_Water_Lv2");
+        public new readonly ulong ConfigHash = Utils.AbilityHash("TeamResonance_Water_Lv2");
     }
     public class Wind : ElementType
     {
@@ -76,7 +76,7 @@ namespace Weedwacker.GameServer.Systems
         [JsonProperty]
         public new readonly int DepotValue = 4;
         [JsonProperty]
-        public new readonly int ConfigHash = Utils.AbilityHash("TeamResonance_Wind_Lv2");
+        public new readonly ulong ConfigHash = Utils.AbilityHash("TeamResonance_Wind_Lv2");
     }
     public class Ice : ElementType
     {
@@ -91,7 +91,7 @@ namespace Weedwacker.GameServer.Systems
         [JsonProperty]
         public new readonly int DepotValue = 5;
         [JsonProperty]
-        public new readonly int ConfigHash = Utils.AbilityHash("TeamResonance_Ice_Lv2");
+        public new readonly ulong ConfigHash = Utils.AbilityHash("TeamResonance_Ice_Lv2");
     }
     public class Rock : ElementType
     {
@@ -106,7 +106,7 @@ namespace Weedwacker.GameServer.Systems
         [JsonProperty]
         public new readonly int DepotValue = 6;
         [JsonProperty]
-        public new readonly int ConfigHash = Utils.AbilityHash("TeamResonance_Rock_Lv2");
+        public new readonly ulong ConfigHash = Utils.AbilityHash("TeamResonance_Rock_Lv2");
     }
 
     public class Electric : ElementType
@@ -122,7 +122,7 @@ namespace Weedwacker.GameServer.Systems
         [JsonProperty]
         public new readonly int DepotValue = 7;
         [JsonProperty]
-        public new readonly int ConfigHash = Utils.AbilityHash("TeamResonance_Electric_Lv2");
+        public new readonly ulong ConfigHash = Utils.AbilityHash("TeamResonance_Electric_Lv2");
     }
     public class Grass : ElementType
     {
@@ -137,7 +137,7 @@ namespace Weedwacker.GameServer.Systems
         [JsonProperty]
         public new readonly int DepotValue = 8;
         [JsonProperty]
-        public new readonly int ConfigHash = Utils.AbilityHash("TeamResonance_Grass_Lv2");
+        public new readonly ulong ConfigHash = Utils.AbilityHash("TeamResonance_Grass_Lv2");
     }
 
     public class Default : ElementType
@@ -151,7 +151,7 @@ namespace Weedwacker.GameServer.Systems
         [JsonProperty]
         public new readonly FightProperty MaxEnergyProp = FightProperty.FIGHT_PROP_MAX_FIRE_ENERGY;
         [JsonProperty]
-        public new readonly int ConfigHash = Utils.AbilityHash("TeamResonance_AllDifferent");
+        public new readonly ulong ConfigHash = Utils.AbilityHash("TeamResonance_AllDifferent");
     }
 
     public class Frozen : ElementType

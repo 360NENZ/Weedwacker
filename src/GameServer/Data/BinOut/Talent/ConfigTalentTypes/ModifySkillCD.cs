@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 
-namespace Weedwacker.GameServer.Data.Common.ConfigTalentTypes
+namespace Weedwacker.GameServer.Data.BinOut.Talent
 {
-    internal class ModifySkillCD : ConfigTalent
+    internal class ModifySkillCD : BaseConfigTalent
     {
         [JsonProperty] public readonly int overtime;
         [JsonProperty] public readonly float cdRatio;

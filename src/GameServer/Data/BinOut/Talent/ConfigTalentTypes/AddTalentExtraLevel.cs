@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 
-namespace Weedwacker.GameServer.Data.Common.ConfigTalentTypes
+namespace Weedwacker.GameServer.Data.BinOut.Talent
 {
-    internal class AddTalentExtraLevel : ConfigTalent
+    internal class AddTalentExtraLevel : BaseConfigTalent
     {
         [JsonProperty] public readonly string talentType;
         [JsonProperty] public readonly int talentIndex;

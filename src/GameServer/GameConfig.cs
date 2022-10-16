@@ -101,8 +101,8 @@ namespace Weedwacker.GameServer
                     "Avatar_Freeze_Duration_Reducer", "Avatar_Attack_ReviveEnergy", "Avatar_Component_Initializer", "Avatar_FallAnthem_Achievement_Listener"
                     };
 
-                public int[] DEFAULT_ABILITY_HASHES;
-                public int DEFAULT_ABILITY_NAME = Utils.AbilityHash("Default");
+                public ulong[] DEFAULT_ABILITY_HASHES;
+                public ulong DEFAULT_ABILITY_NAME = Utils.AbilityHash("Default");
 
                 public ConstantsJson()
                 {

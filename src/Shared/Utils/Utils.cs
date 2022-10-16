@@ -2,16 +2,15 @@
 {
     public static class Utils
     {
-        public static int AbilityHash(string str)
+        public static ulong AbilityHash(string str)
         {
-            int v7 = 0;
-            int v8 = 0;
-            char[] toChar = str.ToCharArray();
-            while (v8 < str.Length)
+            ulong hash = 0;
+            char[] asCharArray = str.ToCharArray();
+            for (int i = 0; i < str.Length; i++)
             {
-                v7 = toChar[v8++] + 131 * v7;
+                hash = ((asCharArray[i] + 131 * hash) & 0xFFFFFFFF) >> 0;
             }
-            return v7;
+            return hash;
         }
     }
 

@@ -70,7 +70,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             Avatars.Add(avatar.AvatarId, avatar);
             AvatarsGuid.Add(avatar.Guid, avatar);
             var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-            var update = Builders<AvatarManager>.Update.Set($"Avatars.{avatar.AvatarId}", avatar);
+            var update = Builders<AvatarManager>.Update.Set($"{nameof(Avatars)}.{avatar.AvatarId}", avatar);
             await DatabaseManager.UpdateAvatarsAsync(filter, update); 
 
             bool addToTeam = false;

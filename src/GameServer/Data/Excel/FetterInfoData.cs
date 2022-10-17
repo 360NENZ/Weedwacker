@@ -35,12 +35,6 @@ namespace Weedwacker.GameServer.Data.Excel
         [JsonProperty]
         public readonly long avatarConstellationAfterTextMapHash;
         [JsonProperty]
-        public readonly int fetterId;
-        [JsonProperty]
         public readonly int avatarId;
-        [JsonProperty]
-        public new readonly FetterCond[] openConds;
-        [JsonProperty]
-        public new readonly FetterCond[] finishConds;
     }
 }

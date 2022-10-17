@@ -5,9 +5,7 @@ namespace Weedwacker.GameServer.Data.Common
 {
     public class FetterCond
     {
-        [JsonProperty]
-        public readonly FetterCondType condType;
-        [JsonProperty]
-        public readonly int[] paramList;
+        [JsonProperty] public readonly FetterCondType condType;
+        [JsonProperty] public readonly int[] paramList;
     }
 }

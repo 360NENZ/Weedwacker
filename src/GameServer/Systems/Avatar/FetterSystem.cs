@@ -27,8 +27,13 @@ namespace Weedwacker.GameServer.Systems.Avatar
         [BsonSerializer(typeof(IntSortedListSerializer<FetterData>))]
         public SortedList<int, FetterData> FetterStates { get; private set; } = new();
 
+        public static Task<FetterSystem> CreateAsync(Avatar avatar, Player.Player owner)
+        {
+            var ret = new FetterSystem(avatar, owner);
+            return ret.InitializeAsync();
+        }
 
-        public FetterSystem(Avatar avatar, Player.Player owner)
+        private FetterSystem(Avatar avatar, Player.Player owner)
         {
             Owner = owner;
             Avatar = avatar;
@@ -50,8 +55,6 @@ namespace Weedwacker.GameServer.Systems.Avatar
             {
                 FetterStates.Add(expressionData.fetterId, new FetterData() { FetterId = (uint)expressionData.fetterId, FetterState = DEFAULT_STATE });
             }
-
-            Initialize();
         }
 
         public async Task OnLoadAsync(Player.Player owner, Avatar avatar)
@@ -60,17 +63,24 @@ namespace Weedwacker.GameServer.Systems.Avatar
             Avatar = avatar;
         }
 
-        public async Task Initialize()
+        private async Task<FetterSystem> InitializeAsync()
         {
             var allFetters = FetterStoryData.Values.Concat<FetterBaseClass>(FettersData.Values).Concat(PhotographPosenameData.Values).Concat(PhotographExpressionData.Values).Append(FetterInfoData);
-            foreach (FetterBaseClass fetter in allFetters.Where(w => FetterStates[w.fetterId].FetterState == 1))
+            var notOpen = allFetters.Where(w => FetterStates[w.fetterId].FetterState == 1);
+            foreach (var fetter in notOpen)
             {
-                await EvaluateFetterState(fetter, true, false);
+                if (true || fetter.openConds != null)
+                    await EvaluateFetterState(fetter, true, false);
+                else FetterStates[fetter.fetterId].FetterState++;
             }
-            foreach (FetterBaseClass fetter in allFetters.Where(w => FetterStates[w.fetterId].FetterState == 2))
+            var open = allFetters.Where(w => FetterStates[w.fetterId].FetterState == 2);
+            foreach (var fetter in open)
             {
-                await EvaluateFetterState(fetter, false, false);
+                if(true || fetter.finishConds != null)
+                    await EvaluateFetterState(fetter, false, false);
             }
+
+            return this;
         }
 
         private async Task<uint> EvaluateFetterState(FetterBaseClass fetter, bool openOrFinish, bool notifyPlayer) // Returns: fetterState
@@ -90,7 +100,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 Task<bool>[] condEvaluation = new Task<bool>[resultLength];
                 for (int i = 0; i < resultLength; i++)
                 {
-                    var cond = fetter.openConds[i];
+                    var cond = openOrFinish ? fetter.openConds[i] : fetter.finishConds[i];
                     condEvaluation[i] = EvaluateFetterCond(fetter.fetterId, cond);
                 }
                 bool[] condResult = await Task.WhenAll(condEvaluation);

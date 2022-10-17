@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Weedwacker.GameServer.Data.Common;
+using Weedwacker.GameServer.Enums;
 
 namespace Weedwacker.GameServer.Data.Excel
 {
@@ -7,7 +8,7 @@ namespace Weedwacker.GameServer.Data.Excel
     internal class FettersData : FetterBaseClass
     {
         [JsonProperty]
-        public readonly int initialFetterState;
+        public readonly FetterState initialFetterState;
         [JsonProperty]
         public readonly int[] costumeIds;
         [JsonProperty]
@@ -21,12 +22,6 @@ namespace Weedwacker.GameServer.Data.Excel
         [JsonProperty]
         public readonly long voiceTitleLockedTextMapHash;
         [JsonProperty]
-        public new readonly int fetterId;
-        [JsonProperty]
         public readonly int avatarId;
-        [JsonProperty]
-        public new readonly FetterCond[] openConds;
-        [JsonProperty]
-        public new readonly FetterCond[] finishConds;
     }
 }

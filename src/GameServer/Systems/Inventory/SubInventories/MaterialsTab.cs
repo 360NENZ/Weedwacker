@@ -12,6 +12,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
     typeof(PromoteTab), typeof(QuestTab))]
     internal class MaterialsTab : InventoryTab
     {
+        private string mongoPathToItems = $"{nameof(InventoryManager.SubInventories)}.{ItemType.ITEM_MATERIAL}.{nameof(MaterialsTab)}.{nameof(Items)}";
         [BsonIgnore] public new const int InventoryLimit = 9999;
 
         public MaterialsTab(Player.Player owner, InventoryManager inventory) : base(owner, inventory) { }
@@ -36,7 +37,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
                     // Update Database
                     var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-                    var update = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_MATERIAL}.MaterialsTab.Items.{itemId}.Count", material.Count);
+                    var update = Builders<InventoryManager>.Update.Set($"{mongoPathToItems}.{itemId}.{nameof(GameItem.Count)}", material.Count);
                     await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                     //TODO update codex
@@ -51,7 +52,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
                 // Update Database
                 var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-                var update = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_MATERIAL}.MaterialsTab.Items.{itemId}", newMaterial);
+                var update = Builders<InventoryManager>.Update.Set($"{mongoPathToItems}.{itemId}", newMaterial);
                 await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                 //TODO update codex
@@ -69,7 +70,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
                     // Update Database
                     var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-                    var update = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_MATERIAL}.MaterialsTab.Items.{material.ItemId}.Count", material.Count);
+                    var update = Builders<InventoryManager>.Update.Set($"{mongoPathToItems}.{material.ItemId}.{nameof(GameItem.Count)}", material.Count);
                     await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                     return true;
@@ -78,7 +79,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
                 {
                     // Update Database
                     var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-                    var update = Builders<InventoryManager>.Update.Unset($"SubInventories.{ItemType.ITEM_MATERIAL}.MaterialsTab.Items.{material.ItemId}");
+                    var update = Builders<InventoryManager>.Update.Unset($"{mongoPathToItems}.{material.ItemId}");
                     await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                     Items.Remove(material.ItemId);

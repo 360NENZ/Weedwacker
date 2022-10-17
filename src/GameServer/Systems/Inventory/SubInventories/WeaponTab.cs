@@ -12,6 +12,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
     internal class WeaponTab : InventoryTab
     {
         [BsonIgnore] public new const int InventoryLimit = 2000;
+        private static string mongoPathToItems = $"{nameof(InventoryManager.SubInventories)}.{ItemType.ITEM_WEAPON}";
         [BsonElement] private int NextWeaponId = 1; // Is it possible to collect this many items? O.o
         // Use Mongodb unique (for the player) id for weapons
         [BsonSerializer(typeof(IntDictionarySerializer<MaterialItem>))]
@@ -47,7 +48,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
                         // Update Database
                         var filter1 = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-                        var update1 = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_WEAPON}.UpgradeMaterials.{itemId}.Count", material.Count);
+                        var update1 = Builders<InventoryManager>.Update.Set($"{mongoPathToItems}.{nameof(UpgradeMaterials)}.{itemId}.{nameof(GameItem.Count)}", material.Count);
                         await DatabaseManager.UpdateInventoryAsync(filter1, update1);
 
                         //TODO update codex
@@ -62,7 +63,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
                     // Update Database
                     var filter2 = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-                    var update2 = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_WEAPON}.UpgradeMaterials.{itemId}", newMaterial);
+                    var update2 = Builders<InventoryManager>.Update.Set($"{mongoPathToItems}.{nameof(UpgradeMaterials)}.{itemId}", newMaterial);
                     await DatabaseManager.UpdateInventoryAsync(filter2, update2);
 
                     //TODO update codex
@@ -80,7 +81,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
             // Update Database
             var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-            var update = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_WEAPON}.Items.{weapon.Id}", weapon).Inc($"SubInventories.{ItemType.ITEM_WEAPON}.NextWeaponId", 1);
+            var update = Builders<InventoryManager>.Update.Set($"{mongoPathToItems}.{nameof(Items)}.{weapon.Id}", weapon).Inc($"{mongoPathToItems}.{nameof(NextWeaponId)}", 1);
             await DatabaseManager.UpdateInventoryAsync(filter, update);
 
             //TODO update codex
@@ -99,7 +100,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
                 // Update Database
                 var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-                var update = Builders<InventoryManager>.Update.Unset($"SubInventories.{ItemType.ITEM_WEAPON}.Items.{weapon.Id}");
+                var update = Builders<InventoryManager>.Update.Unset($"{mongoPathToItems}.{nameof(Items)}.{weapon.Id}");
                 await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                 Items.Remove(weapon.Id);
@@ -113,7 +114,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
                     // Update Database
                     var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-                    var update = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_WEAPON}.UpgradeMaterials.{material.ItemId}.Count", material.Count);
+                    var update = Builders<InventoryManager>.Update.Set($"{mongoPathToItems}.{nameof(UpgradeMaterials)}.{material.ItemId}.{nameof(GameItem.Count)}", material.Count);
                     await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                     return true;
@@ -122,7 +123,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
                 {
                     // Update Database
                     var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-                    var update = Builders<InventoryManager>.Update.Unset($"SubInventories.{ItemType.ITEM_WEAPON}.UpgradeMaterials.{material.ItemId}.Count");
+                    var update = Builders<InventoryManager>.Update.Unset($"{mongoPathToItems}.{nameof(UpgradeMaterials)}.{material.ItemId}.{nameof(GameItem.Count)}");
                     await DatabaseManager.UpdateInventoryAsync(filter, update);
 
                     UpgradeMaterials.Remove(material.ItemId);

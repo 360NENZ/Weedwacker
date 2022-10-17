@@ -144,7 +144,7 @@ namespace Weedwacker.GameServer.Systems.Player
                     {
                         // Update Database
                         var filter = Builders<Player>.Filter.Where(p => p.AccountUid == Owner.AccountUid);
-                        var update = Builders<Player>.Update.Set($"PlayerProperties.{prop}", value);
+                        var update = Builders<Player>.Update.Set($"{nameof(Player.PlayerProperties)}.{prop}", value);
                         await DatabaseManager.UpdatePlayerAsync(filter, update);
 
                     }

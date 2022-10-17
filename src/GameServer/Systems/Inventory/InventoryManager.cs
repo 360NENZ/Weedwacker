@@ -56,7 +56,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
                 case 204: // Home Coin
                     return Owner.PlayerProperties[PlayerProperty.PROP_PLAYER_HOME_COIN];
                 default:
-                    Logger.WriteErrorLine("Unknown Virtual Item: " + itemId);
+                    Logger.WriteErrorLine($"Unknown Virtual Item: {itemId}");
                     return 0;
             }
         }
@@ -116,7 +116,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
             switch (itemData.itemType)
             {
                 case ItemType.ITEM_NONE:
-                    Logger.WriteErrorLine("Unknown item: " + itemId);
+                    Logger.WriteErrorLine($"Unknown item: {itemId}");
                     return null;
                 case ItemType.ITEM_VIRTUAL:
                     //Update  avatar/player properties, and update database
@@ -135,7 +135,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
                     updatedItem = await SubInventories[ItemType.ITEM_WEAPON].AddItemAsync(itemId, count);
                     break;
                 case ItemType.ITEM_DISPLAY:
-                    Logger.WriteErrorLine("Unhandled item: " + itemId);
+                    Logger.WriteErrorLine($"Unhandled item: {itemId}");
                     return null;
                 case ItemType.ITEM_FURNITURE:
                     // Add to inventory and update database
@@ -212,7 +212,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
                 case 204: // Home Coin
                 return await Owner.PropManager.AddHomeCoinAsync(count);
                 default:
-                    Logger.WriteErrorLine("Unknown Virtual Item: " + itemId);
+                    Logger.WriteErrorLine($"Unknown Virtual Item: {itemId}");
                     return false;
             }
         }
@@ -239,7 +239,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
                 case 204:  // Home Coin
                     return await Owner.PropManager.PayHomeCoinAsync(count);
                 default:
-                    Logger.WriteErrorLine("Unknown Virtual Item: " + itemId);
+                    Logger.WriteErrorLine($"Unknown Virtual Item: {itemId}");
                     return false;
             }
         }
@@ -331,7 +331,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
             if (avatar != null && GuidMap.TryGetValue(equipGuid, out GameItem weapon) && weapon.ItemData.itemType == ItemType.ITEM_WEAPON)
             {
-                // Is it equipped ot another avatar?
+                // Is it equipped at another avatar?
                 Avatar.Avatar? otherAvatar = Owner.Avatars.Avatars.Values.Where(a => a.GetWeapon() == weapon && a != avatar).FirstOrDefault();
                 if (otherAvatar != null)
                 {

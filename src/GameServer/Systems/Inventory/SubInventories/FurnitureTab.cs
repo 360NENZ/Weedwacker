@@ -11,7 +11,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
     internal class FurnitureTab : InventoryTab
     {
         [BsonIgnore] public new const int InventoryLimit = 2000;
-        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
+        [BsonSerializer(typeof(IntDictionarySerializer<MaterialItem>))]
         public Dictionary<int, MaterialItem> Materials = new(); // ItemId
 
         public FurnitureTab(Player.Player owner, InventoryManager inventory) : base(owner, inventory) { }

@@ -12,7 +12,7 @@ namespace Weedwacker.GameServer.Systems.Shop
     {
         private Player.Player Customer;
         [BsonElement] public int ShopType { get; private set; }
-        [BsonElement] public List<ShopGoodInfo> Goods { get; private set; } = new();
+        [BsonElement] public HashSet<ShopGoodInfo> Goods { get; private set; } = new();
         [BsonElement] public int NextRefreshTime { get; private set; } = int.MaxValue; //TODO
         public Shop(Player.Player customer, int shopType)
         {
@@ -35,7 +35,7 @@ namespace Weedwacker.GameServer.Systems.Shop
             if (NextRefreshTime <= nextRefresh)
             {
                 NextRefreshTime = nextRefresh;
-                Goods.ForEach(w => w.ResetBoughtNum());
+                Goods.AsParallel().ForAll(w => w.ResetBoughtNum());
                 //Update database
                 var filter1 = Builders<ShopManager>.Filter.Where(w => w.OwnerId == Customer.GameUid);
                 var update1 = Builders<ShopManager>.Update.Set(w => w.Shops[ShopType], this);

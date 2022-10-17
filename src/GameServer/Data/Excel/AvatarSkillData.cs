@@ -26,7 +26,7 @@ namespace Weedwacker.GameServer.Data.Excel
         [JsonProperty]
         public readonly int proudSkillGroupId;
         [JsonProperty]
-        public readonly string? costElemType;
+        public readonly Enums.ElementType costElemType;
         [JsonProperty]
         public readonly long nameTextMapHash;
         [JsonProperty]

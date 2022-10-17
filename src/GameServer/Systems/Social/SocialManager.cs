@@ -1,4 +1,5 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
+using Weedwacker.GameServer.Database;
 
 namespace Weedwacker.GameServer.Systems.Social
 {
@@ -6,9 +7,13 @@ namespace Weedwacker.GameServer.Systems.Social
     {
         [BsonId][BsonElement("_id")] public int OwnerId { get; private set; }
         [BsonIgnore] private Player.Player Owner;
-        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
+        [BsonSerializer(typeof(IntDictionarySerializer<Friendship>))]
         [BsonElement] public Dictionary<int, Friendship> Friends { get; private set; } = new(); // GameUid
-        [BsonElement] public List<int> BlackList { get; private set; } = new(); // GameUid
+        [BsonSerializer(typeof(IntDictionarySerializer<Friendship>))]
+        [BsonElement] public Dictionary<int, Friendship> PendingRequests { get; private set; } = new(); // GameUid
+        [BsonSerializer(typeof(IntDictionarySerializer<Friendship>))]
+        [BsonElement] public Dictionary<int, Friendship> BlackList { get; private set; } = new(); // GameUid why does it use the same proto lol
+        [BsonElement] public HashSet<int> EmojiIdList { get; private set; } = new();
 
         public SocialManager(Player.Player owner)
         {

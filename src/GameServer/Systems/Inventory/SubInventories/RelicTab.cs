@@ -11,9 +11,9 @@ namespace Weedwacker.GameServer.Systems.Inventory
     internal class RelicTab : InventoryTab
     {
         [BsonIgnore] public new const int InventoryLimit = 1500;
-        [BsonElement] private int NextRelicId = 1; // Is it possible to collect 4B items? O.o
+        [BsonElement] private int NextRelicId = 0; // Is it possible to collect 4B items? O.o
         // Use Mongodb unique (for the player) id for the relics
-        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
+        [BsonSerializer(typeof(IntDictionarySerializer<MaterialItem>))]
         public Dictionary<int, MaterialItem> UpgradeMaterials = new();
 
         public RelicTab(Player.Player owner, InventoryManager inventory) : base(owner, inventory) { }
@@ -78,7 +78,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
             // Update Database
             var filter2 = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-            var update2 = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_RELIQUARY}.Items.{relic.Id}", relic);
+            var update2 = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_RELIQUARY}.Items.{relic.Id}", relic).Inc($"SubInventories.{ItemType.ITEM_RELIQUARY}.NextRelicId", 1);
             await DatabaseManager.UpdateInventoryAsync(filter2, update2);
 
             //TODO update codex

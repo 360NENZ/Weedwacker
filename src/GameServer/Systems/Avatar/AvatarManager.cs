@@ -1,6 +1,7 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using Weedwacker.GameServer.Database;
+using Weedwacker.GameServer.Packet.Send;
 
 namespace Weedwacker.GameServer.Systems.Avatar
 {
@@ -10,11 +11,10 @@ namespace Weedwacker.GameServer.Systems.Avatar
         [BsonId]
         [BsonElement("_id")]
         public int OwnerId { get; private set; } // GameUid
-        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
+        [BsonSerializer(typeof(IntDictionarySerializer<Avatar>))]
         [BsonElement] public Dictionary<int, Avatar> Avatars { get; private set; }
         [BsonIgnore] private Player.Player Owner; // Loaded by DatabaseManager
-        [BsonIgnore]
-        public Dictionary<ulong, Avatar> AvatarsGuid { get; private set; } = new();
+        [BsonIgnore] public Dictionary<ulong, Avatar> AvatarsGuid { get; private set; } = new();
 
         public AvatarManager(Player.Player owner)
         {
@@ -26,6 +26,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         public async Task OnLoadAsync(Player.Player owner)
         {
             Owner = owner;
+            AvatarsGuid = new();
             var tasks = new List<Task>();
             foreach(Avatar avatar in Avatars.Values)
             {
@@ -58,7 +59,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             return Avatars.ContainsKey(id);
         }
 
-        public async Task<bool> AddAvatar(Avatar avatar)
+        public async Task<bool> AddAvatar(Avatar avatar, bool notify = true)
         {
             if (avatar.Data == null || HasAvatar(avatar.AvatarId))
             {
@@ -69,8 +70,16 @@ namespace Weedwacker.GameServer.Systems.Avatar
             Avatars.Add(avatar.AvatarId, avatar);
             AvatarsGuid.Add(avatar.Guid, avatar);
             var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-            var update = Builders<AvatarManager>.Update.Set(w => w.Avatars[avatar.AvatarId], avatar);
-            await DatabaseManager.UpdateAvatarsAsync(filter, update);
+            var update = Builders<AvatarManager>.Update.Set($"Avatars.{avatar.AvatarId}", avatar);
+            await DatabaseManager.UpdateAvatarsAsync(filter, update); 
+
+            bool addToTeam = false;
+            if(Owner.TeamManager.GetCurrentTeamInfo().AvatarInfo.Count < (Owner.IsInMultiplayer() ? GameServer.Configuration.Server.GameOptions.AvatarLimits.SinglePlayerTeam : GameServer.Configuration.Server.GameOptions.AvatarLimits.SinglePlayerTeam))
+            {
+                addToTeam = true;
+                Owner.TeamManager.GetCurrentTeamInfo().AddAvatar(avatar);
+            }
+            if (notify) await Owner.SendPacketAsync(new PacketAvatarAddNotify(avatar, addToTeam));
 
             return true; ;
         }

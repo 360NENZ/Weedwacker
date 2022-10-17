@@ -82,7 +82,7 @@ namespace Weedwacker.GameServer.Systems.World
             await player.SetSceneAsync(null);
 
             // Remove player avatars
-            List<AvatarEntity> team = player.TeamManager.ActiveTeam;
+            SortedSet<AvatarEntity> team = player.TeamManager.ActiveTeam;
             await RemoveEntitiesAsync(team, VisionType.Remove);
             team.Clear();
 
@@ -132,7 +132,7 @@ namespace Weedwacker.GameServer.Systems.World
             await AddEntityAsync(teamManager.GetCurrentAvatarEntity());
 
             // Notify the client of any extra skill charges
-            teamManager.ActiveTeam.ForEach(async x => await x.Avatar.GetCurSkillDepot().SendAvatarSkillInfoNotify());
+            teamManager.ActiveTeam.AsParallel().ForAll(async x => await x.Avatar.GetCurSkillDepot().SendAvatarSkillInfoNotify());
         }
 
         public async Task RespawnPlayerAsync(Player.Player player)

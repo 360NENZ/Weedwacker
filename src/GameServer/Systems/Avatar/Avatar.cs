@@ -31,8 +31,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
         public int Satiation; // ?
         public int SatiationPenalty; // ?
         [BsonElement] public LifeState LifeState { get; private set; } = LifeState.LIFE_ALIVE;
-        public List<string> EquipOpenConfigs; // openConfigs from relics and weapon TODO
+        public HashSet<string> EquipOpenConfigs; // openConfigs from relics and weapon TODO
         [BsonElement] public int CurrentDepotId { get; private set; }
+        [BsonSerializer(typeof(IntDictionarySerializer<SkillDepot>))]
         [BsonElement] public Dictionary<int, SkillDepot> SkillDepots { get; private set; } = new();
         
         [BsonElement] public FetterSystem Fetters { get; private set; }
@@ -72,7 +73,10 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
             // Set stats
             RecalcStatsAsync();
-            SetCurrentHp(FightProp[FightProperty.FIGHT_PROP_MAX_HP], false);
+            SetCurrentHp(FightProp[FightProperty.FIGHT_PROP_MAX_HP]);
+
+            var weapon = Owner.Inventory.AddItemByIdAsync(Data.GeneralData.initialWeapon).Result;
+            EquipWeapon((WeaponItem)weapon, false);
         }
 
         public Player.Player GetOwner() { return Owner; }
@@ -169,26 +173,32 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
         public float GetCurrentEnergy()
         {
-            return GetCurSkillDepot().Element.CurEnergy;
+            if (GetCurSkillDepot().Element != null)
+                return GetCurSkillDepot().Element.CurEnergy;
+            else
+                return 0;
         }
         public async Task<bool> SetCurrentEnergy(float currentEnergy, bool update = true)
         {
-            GetCurSkillDepot().Element.CurEnergy = currentEnergy;
-            FightProp[GetCurSkillDepot().Element.CurEnergyProp] = currentEnergy;
-
-            // false = used in RecalcStatsAsync or is in Tower team
-            if (update)
+            if (GetCurSkillDepot().Element != null)
             {
-                // Update
-                var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-                var updateQuery = Builders<AvatarManager>.Update.Set($"Avatars.{AvatarId}.{GetCurSkillDepot().Element.CurEnergyProp}", currentEnergy);
-                await DatabaseManager.UpdateAvatarsAsync(filter, updateQuery);
+                GetCurSkillDepot().Element.CurEnergy = currentEnergy;
+                FightProp[GetCurSkillDepot().Element.CurEnergyProp] = currentEnergy;
 
-                await Owner.SendPacketAsync(new PacketAvatarFightPropUpdateNotify(this, GetCurSkillDepot().Element.CurEnergyProp));
+                // false = used in RecalcStatsAsync or is in Tower team
+                if (update)
+                {
+                    // Update
+                    var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
+                    var updateQuery = Builders<AvatarManager>.Update.Set($"Avatars.{AvatarId}.{GetCurSkillDepot().Element.CurEnergyProp}", currentEnergy);
+                    await DatabaseManager.UpdateAvatarsAsync(filter, updateQuery);
 
+                    await Owner.SendPacketAsync(new PacketAvatarFightPropUpdateNotify(this, GetCurSkillDepot().Element.CurEnergyProp));
+                }
                 return true;
             }
-            return true;
+            else
+                return false;
         }
 
         public async Task<bool> AddToFightProperty(FightProperty prop, float value, bool update = true)
@@ -330,7 +340,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             float hpPercent = FightProp[FightProperty.FIGHT_PROP_MAX_HP] == 0 ? 1f : FightProp[FightProperty.FIGHT_PROP_CUR_HP] / FightProp[FightProperty.FIGHT_PROP_MAX_HP];
 
             // Store current energy value for later
-            float currentEnergy = FightProp[GetCurSkillDepot().Element.CurEnergyProp];
+            float currentEnergy = GetCurrentEnergy();
 
             // Clear properties
             foreach (FightProperty prop in FightProp.Keys)
@@ -379,12 +389,15 @@ namespace Weedwacker.GameServer.Systems.Avatar
                     }
                 }
                 // Artifact sub stats
-                foreach (int appendPropId in equip.AppendPropIdList)
+                if (equip.AppendPropIdList != null)
                 {
-                    ReliquaryAffixData affixData = GameData.ReliquaryAffixDataMap[appendPropId];
-                    if (affixData != null)
+                    foreach (int appendPropId in equip.AppendPropIdList)
                     {
-                        FightProp[affixData.propType] += affixData.propValue;
+                        ReliquaryAffixData affixData = GameData.ReliquaryAffixDataMap[appendPropId];
+                        if (affixData != null)
+                        {
+                            FightProp[affixData.propType] += affixData.propValue;
+                        }
                     }
                 }
                 // Set bonus
@@ -440,9 +453,12 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 WeaponCurveData curveData = GameData.WeaponCurveDataMap[weapon.Level];
                 if (curveData != null)
                 {
-                    foreach (WeaponProperty weaponProperty in weapon.ItemData.weaponProp)
+                    if (weapon.ItemData.weaponProp != null)
                     {
-                        FightProp[weaponProperty.propType] += WeaponCurveData.CalcValue(weaponProperty.initValue, curveData.GetArith(weaponProperty.type));
+                        foreach (WeaponProperty weaponProperty in weapon.ItemData.weaponProp)
+                        {
+                            FightProp[weaponProperty.propType] += WeaponCurveData.CalcValue(weaponProperty.initValue, curveData.GetArith(weaponProperty.type));
+                        }
                     }
                 }
                 // Weapon promotion stats

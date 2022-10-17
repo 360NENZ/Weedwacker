@@ -126,10 +126,10 @@ namespace Weedwacker.GameServer.Systems.World
                 ServerBuffList =,
                 */
             };
-            Avatar.GetCurSkillDepot().Talents.ForEach(w => avatarInfo.TalentIdList.Add((uint)w.talentId));
-            Avatar.GetCurSkillDepot().Skills.AsParallel().ForAll(w => avatarInfo.SkillLevelMap.Add((uint)w.Key, (uint)w.Value));
-            Avatar.GetCurSkillDepot().InherentProudSkillOpens.ForEach(w => avatarInfo.InherentProudSkillList.Add((uint)w.proudSkillId));
-            Avatar.GetCurSkillDepot().ProudSkillExtraLevelMap.AsParallel().ForAll(w => avatarInfo.ProudSkillExtraLevelMap.Add((uint)w.Key, (uint)w.Value));
+            foreach(var talent in Avatar.GetCurSkillDepot().Talents) avatarInfo.TalentIdList.Add((uint)talent.talentId);
+            foreach (var skill in Avatar.GetCurSkillDepot().Skills) avatarInfo.SkillLevelMap.Add((uint)skill.Key, (uint)skill.Value);
+            foreach (var proudSkill in Avatar.GetCurSkillDepot().InherentProudSkillOpens) avatarInfo.InherentProudSkillList.Add((uint)proudSkill.proudSkillId);
+            foreach (var extra in Avatar.GetCurSkillDepot().ProudSkillExtraLevelMap) avatarInfo.ProudSkillExtraLevelMap.Add((uint)extra.Key, (uint)extra.Value);
             TeamInfo.TeamResonances.ForEach(w => avatarInfo.TeamResonanceList.Add((uint)w.teamResonanceId));
 
             foreach (EquipItem item in Avatar.Equips.Values)

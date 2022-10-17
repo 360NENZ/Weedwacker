@@ -16,9 +16,10 @@ namespace Weedwacker.GameServer.Packet.Send
 				RegionId = (uint)player.RegionId
 			};
 
-			player.PlayerProperties.AsParallel().ForAll(w => {
-				p.PropMap.Add((uint)w.Key, new PropValue() { Type = (uint)w.Key, Ival = w.Value, Val = (uint)w.Value});
-			});
+			foreach (var prop in player.PlayerProperties)
+			{
+				p.PropMap.Add((uint)prop.Key, new PropValue() { Type = (uint)prop.Key, Ival = prop.Value, Val = (uint)prop.Value});
+			}
 
 			Data = p.ToByteArray();
 		}

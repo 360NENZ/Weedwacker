@@ -33,9 +33,9 @@ namespace Weedwacker.GameServer.Data.Excel
         public class InherentProudSkillOpens
         {
             [JsonProperty]
-            public readonly int proudSkillGroupId;
+            public readonly int? proudSkillGroupId;
             [JsonProperty]
-            public readonly int needAvatarPromoteLevel;
+            public readonly int? needAvatarPromoteLevel;
         }
     }
 }

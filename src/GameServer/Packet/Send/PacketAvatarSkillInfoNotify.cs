@@ -5,7 +5,7 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketAvatarSkillInfoNotify : BasePacket
     {
-        public PacketAvatarSkillInfoNotify(ulong avatarGuid, Dictionary<int, int> skillExtraChargeMap) : base(Enums.OpCode.AvatarSkillInfoNotify)
+        public PacketAvatarSkillInfoNotify(ulong avatarGuid, IDictionary<int, int> skillExtraChargeMap) : base(Enums.OpCode.AvatarSkillInfoNotify)
         {
             var proto = new AvatarSkillInfoNotify()
             {

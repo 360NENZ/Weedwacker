@@ -14,7 +14,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
         [BsonIgnore] public new const int InventoryLimit = 2000;
         [BsonElement] private int NextWeaponId = 1; // Is it possible to collect this many items? O.o
         // Use Mongodb unique (for the player) id for weapons
-        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
+        [BsonSerializer(typeof(IntDictionarySerializer<MaterialItem>))]
         public Dictionary<int, MaterialItem> UpgradeMaterials = new(); // id
 
         public WeaponTab(Player.Player owner, InventoryManager inventory) : base(owner, inventory) { }
@@ -80,7 +80,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
             // Update Database
             var filter = Builders<InventoryManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-            var update = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_WEAPON}.Items.{weapon.Id}", weapon);
+            var update = Builders<InventoryManager>.Update.Set($"SubInventories.{ItemType.ITEM_WEAPON}.Items.{weapon.Id}", weapon).Inc($"SubInventories.{ItemType.ITEM_WEAPON}.NextWeaponId", 1);
             await DatabaseManager.UpdateInventoryAsync(filter, update);
 
             //TODO update codex

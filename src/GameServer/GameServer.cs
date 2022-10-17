@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,7 +19,7 @@ namespace Weedwacker.GameServer
         public static GameConfig Configuration;
         public static SortedList<int,Connection> OnlinePlayers = new(); // <gameUid,connection>
         private static HashSet<World> Worlds = new();
-        public static SortedList<int, AvatarCompiledData> AvatarInfo; // <avatarId,data>
+        public static SortedList<int, AvatarCompiledData> AvatarInfo = new(); // <avatarId,data>
         public static async Task<bool> VerifyToken(string accountUid, string token)
         {
             var req = JsonConvert.SerializeObject(new VerifyTokenRequestJson() { uid = accountUid, token = token });
@@ -37,13 +38,14 @@ namespace Weedwacker.GameServer
             Worlds.Add(world);
         }
 
-        public static AvatarCompiledData GetAvatarInfo(int avatarId)
+        public static AvatarCompiledData? GetAvatarInfo(int avatarId)
         {
-            if(!AvatarInfo.ContainsKey(avatarId))
+            if (AvatarInfo.TryGetValue(avatarId, out AvatarCompiledData? avatarInfo))
             {
-                AvatarInfo.Add(avatarId, new AvatarCompiledData(avatarId));
+                return avatarInfo;
             }
-            return AvatarInfo[avatarId];
+            else return null;
+            
         }
 
         public static async Task Start()
@@ -52,6 +54,12 @@ namespace Weedwacker.GameServer
             await GameData.LoadAllResourcesAsync(Configuration.structure.Resources);
             Shared.Utils.Crypto.LoadKeys(Configuration.structure.keys);
             await Database.DatabaseManager.Initialize();
+
+            foreach (int id in GameData.AvatarDataMap.Keys)
+            {
+                AvatarInfo.Add(id, new AvatarCompiledData(id));
+            }
+
             Listener.StartListener();
         }
 

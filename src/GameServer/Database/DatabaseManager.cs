@@ -2,6 +2,7 @@
 using System.Timers;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using Weedwacker.GameServer.Enums;
@@ -26,7 +27,7 @@ namespace Weedwacker.GameServer.Database
         static IMongoCollection<SocialManager> Social;
         static DatabaseProperties Properties;
         static readonly ReplaceOptions Replace = new() { IsUpsert = true };
-        static readonly BulkWriteOptions BulkWrite = new() { IsOrdered = false };
+        static readonly BulkWriteOptions BulkWrite = new() { IsOrdered = true };
         static System.Timers.Timer? UpdateTimer;
 
         // Aggregate update operations, and bulkWrite periodically
@@ -42,6 +43,27 @@ namespace Weedwacker.GameServer.Database
             BsonSerializer.RegisterSerializer(new EnumSerializer<PlayerProperty>(BsonType.String));
             BsonSerializer.RegisterSerializer(new EnumSerializer<FightProperty>(BsonType.String));
             BsonSerializer.RegisterSerializer(new EnumSerializer<ItemType>(BsonType.String));
+            BsonSerializer.RegisterSerializer(new EnumSerializer<LifeState>(BsonType.String));
+
+            /* Why is this not default behaviour??? */
+            var LongToLongDictionarySerializer = new DictionaryInterfaceImplementerSerializer<Dictionary<long, long>>(
+            dictionaryRepresentation: DictionaryRepresentation.Document,
+            keySerializer: new Int64Serializer(BsonType.String),
+            valueSerializer: BsonSerializer.SerializerRegistry.GetSerializer<long>());
+            BsonSerializer.RegisterSerializer(LongToLongDictionarySerializer);
+
+            var IntToIntDictionarySerializer = new DictionaryInterfaceImplementerSerializer<Dictionary<int, int>>(
+            dictionaryRepresentation: DictionaryRepresentation.Document,
+            keySerializer: new Int32Serializer(BsonType.String),
+            valueSerializer: BsonSerializer.SerializerRegistry.GetSerializer<int>());
+            BsonSerializer.RegisterSerializer(IntToIntDictionarySerializer);
+
+            var IntToIntSortedListSerializer = new DictionaryInterfaceImplementerSerializer<SortedList<int, int>>(
+            dictionaryRepresentation: DictionaryRepresentation.Document,
+            keySerializer: new Int32Serializer(BsonType.String),
+            valueSerializer: BsonSerializer.SerializerRegistry.GetSerializer<int>());
+            BsonSerializer.RegisterSerializer(IntToIntSortedListSerializer);
+            /* Why is this not default behaviour??? */
 
             DbClient = new MongoClient(GameServer.Configuration.Database.ConnectionUri);
             // Databases and collections are implicitly created
@@ -75,15 +97,12 @@ namespace Weedwacker.GameServer.Database
 
         private static async void BulkUpdate(object? source, ElapsedEventArgs e)
         {
-            await Task.WhenAll(new Task[]
-            {
-                new Task(() => {if (PlayerWrites.Any()) Players.BulkWriteAsync(PlayerWrites, BulkWrite); PlayerWrites.Clear(); }),
-                new Task(() => {if (AvatarWrites.Any()) Avatars.BulkWriteAsync(AvatarWrites, BulkWrite); AvatarWrites.Clear(); }),
-                new Task(() => {if (InventoryWrites.Any()) Inventories.BulkWriteAsync(InventoryWrites, BulkWrite); InventoryWrites.Clear(); }),
-                new Task(() => {if (TeamWrites.Any()) Teams.BulkWriteAsync(TeamWrites, BulkWrite); TeamWrites.Clear(); }),
-                new Task(() => {if (ShopWrites.Any()) Shops.BulkWriteAsync(ShopWrites, BulkWrite); ShopWrites.Clear(); }),
-                new Task(() => {if (SocialWrites.Any()) Social.BulkWriteAsync(SocialWrites, BulkWrite); SocialWrites.Clear(); }),
-            });
+            if (PlayerWrites.Any()) { await Players.BulkWriteAsync(PlayerWrites, BulkWrite); PlayerWrites.Clear(); }
+            if (AvatarWrites.Any()) { await Avatars.BulkWriteAsync(AvatarWrites, BulkWrite); AvatarWrites.Clear(); }
+            if (InventoryWrites.Any()) { await Inventories.BulkWriteAsync(InventoryWrites, BulkWrite); InventoryWrites.Clear(); }
+            if (TeamWrites.Any()) { await Teams.BulkWriteAsync(TeamWrites, BulkWrite); TeamWrites.Clear(); }
+            if (ShopWrites.Any()) { await Shops.BulkWriteAsync(ShopWrites, BulkWrite); ShopWrites.Clear(); }
+            if (SocialWrites.Any()) { await Social.BulkWriteAsync(SocialWrites, BulkWrite); SocialWrites.Clear(); }
         }
 
         public static async Task<Player?> CreatePlayerFromAccountUidAsync(string accountUid, string heroName = "", int gameUid = 0)
@@ -118,7 +137,7 @@ namespace Weedwacker.GameServer.Database
 
         public static Task UpdatePlayerAsync(FilterDefinition<Player> filter, UpdateDefinition<Player> update)
         {
-            PlayerWrites.Add(new UpdateOneModel<Player>(filter, update));
+            PlayerWrites.Add(new UpdateOneModel<Player>(filter, update) { IsUpsert = true });
             return Task.CompletedTask;
         }
 
@@ -145,7 +164,7 @@ namespace Weedwacker.GameServer.Database
 
         public static Task UpdateAvatarsAsync(FilterDefinition<AvatarManager> filter, UpdateDefinition<AvatarManager> update)
         {
-            AvatarWrites.Add(new UpdateOneModel<AvatarManager>(filter, update));
+            AvatarWrites.Add(new UpdateOneModel<AvatarManager>(filter, update) { IsUpsert = true });
             return Task.CompletedTask;
         }
 
@@ -169,7 +188,7 @@ namespace Weedwacker.GameServer.Database
 
         public static Task UpdateInventoryAsync(FilterDefinition<InventoryManager> filter, UpdateDefinition<InventoryManager> update)
         {
-            InventoryWrites.Add(new UpdateOneModel<InventoryManager>(filter, update));
+            InventoryWrites.Add(new UpdateOneModel<InventoryManager>(filter, update) { IsUpsert = true });
             return Task.CompletedTask;
         }
 
@@ -181,7 +200,7 @@ namespace Weedwacker.GameServer.Database
 
         public static Task UpdateTeamsAsync(FilterDefinition<TeamManager> filter, UpdateDefinition<TeamManager> update)
         {
-            TeamWrites.Add(new UpdateOneModel<TeamManager>(filter, update));
+            TeamWrites.Add(new UpdateOneModel<TeamManager>(filter, update) { IsUpsert = true });
             return Task.CompletedTask;
         }
 
@@ -200,7 +219,7 @@ namespace Weedwacker.GameServer.Database
 
         public static Task UpdateShopsAsync(FilterDefinition<ShopManager> filter, UpdateDefinition<ShopManager> update)
         {
-            ShopWrites.Add(new UpdateOneModel<ShopManager>(filter, update));
+            ShopWrites.Add(new UpdateOneModel<ShopManager>(filter, update) { IsUpsert = true });
             return Task.CompletedTask;
         }
 

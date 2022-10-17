@@ -6,7 +6,7 @@ namespace Weedwacker.GameServer.Systems.Player
     public class PlayerProfile
     {
         public int NameCardId = 210001;
-        public string? Nickname;
+        public string Nickname;
         public int Level = 1;
         public int WorldLevel = 1;
         public Tuple<int, int>? Birthday; // <Day,Month>
@@ -21,6 +21,7 @@ namespace Weedwacker.GameServer.Systems.Player
         public PlayerProfile(string heroName)
         {
             HeroName = heroName;
+            Nickname = heroName;
         }
     }
 

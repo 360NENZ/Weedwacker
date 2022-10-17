@@ -115,7 +115,10 @@ namespace Weedwacker.GameServer.Data
                 if (isDictionaryJson)
                 {
                     var fileData = Serializer.Deserialize<Dictionary<string, Obj>>(jr);
-                    fileData.AsParallel().ForAll(w => map.Add(w.Key, w.Value));
+                    foreach(var data in fileData)
+                    {
+                        map.Add(data.Key, data.Value);
+                    }
                 }
                 else
                 {

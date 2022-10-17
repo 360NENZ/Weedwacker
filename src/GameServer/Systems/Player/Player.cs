@@ -1,6 +1,9 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Driver;
 using Vim.Math3d;
+using Weedwacker.GameServer.Data;
+using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet;
 using Weedwacker.GameServer.Packet.Recv;
@@ -18,6 +21,7 @@ namespace Weedwacker.GameServer.Systems.Player
         public string AccountUid { get; private set; }
         [BsonElement] public int GameUid { get; private set; }
         [BsonElement] public PlayerProfile Profile;
+        [BsonElement] public int MainCharacterId { get; private set; } = 0;
         [BsonIgnore] public World.World? World;
         [BsonIgnore] public Scene? Scene { get; private set; }
         [BsonElement] public int SceneId { get; private set; }
@@ -37,7 +41,7 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonIgnore] public string Token { get; set; } // Obtained and used When Logging in
         [BsonIgnore] public uint EnterSceneToken;
         [BsonIgnore] private bool Paused;
-        [BsonIgnore] public bool HasSentLoginPackets { get; private set; }
+        [BsonIgnore] public bool HasSentLoginPackets { get; private set; } = false;
         [BsonIgnore] private ulong NextGuid = 0;
         [BsonIgnore] public SceneLoadState SceneLoadState = SceneLoadState.NONE;
         [BsonIgnore] public Avatar.AvatarManager? Avatars; // Loaded by DatabaseManager
@@ -87,7 +91,26 @@ namespace Weedwacker.GameServer.Systems.Player
             return ((ulong)GameUid << 32) + nextId;
         }
 
-        public string GetNickName()
+        public async Task<bool> SetMainCharacter(int avatarId, string heroName)
+        {
+            if (GameData.AvatarHeroEntityDataMap.ContainsKey(avatarId) && MainCharacterId == 0)
+            {
+                MainCharacterId = avatarId;
+                Profile.HeroName = heroName;
+                Profile.Nickname = heroName;
+
+                // Update Database
+                var filter = Builders<Player>.Filter.Where(w => w.AccountUid == AccountUid);
+                var update = Builders<Player>.Update.Set(w => w.Profile.HeroName, heroName).Set(w => w.Profile.Nickname, heroName).Set(w => w.MainCharacterId, avatarId);
+                await DatabaseManager.UpdatePlayerAsync(filter, update);
+                return true;
+            }
+            else
+                return false;
+
+        }
+
+        public string? GetNickName()
         {
             return Profile.Nickname;
         }
@@ -108,12 +131,19 @@ namespace Weedwacker.GameServer.Systems.Player
             if (Avatars.GetAvatarCount() == 0)
             {
                 await OnCreate();
+                return;
+
+            }
+            else if (SceneId == 0)
+            {
+                SceneId = 3;
                 await world.AddPlayerAsync(this, EnterReason.Login, EnterType.Self, true);
             }
             else
                 await world.AddPlayerAsync(this, EnterReason.Login);
 
-            //await SendPacketAsync(new PacketPlayerDataNotify(this));
+            await SendPacketAsync(new PacketPlayerDataNotify(this));
+            await SendPacketAsync(new PacketAvatarDataNotify(this));
 
             // Multiplayer setting
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_PLAYER_MP_SETTING_TYPE, (int)MpSettingType.EnterAfterApply, false);

@@ -8,7 +8,6 @@ namespace Weedwacker.GameServer.Systems.Inventory
     internal class WeaponItem : EquipItem
     {
 		[BsonElement] public List<int>? Affixes { get; protected set; } = new();
-		[BsonIgnore] public new int Count { get; protected set; } = 1;
         [BsonElement] public int Refinement { get; protected set; } = 0;
 		[BsonIgnore] public uint WeaponEntityId;
 		[BsonIgnore] public new WeaponData ItemData;

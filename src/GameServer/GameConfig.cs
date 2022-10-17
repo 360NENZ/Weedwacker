@@ -134,7 +134,7 @@ namespace Weedwacker.GameServer
 
             public class ResinOptionsJson
             {
-                public bool ResinUsage = false;
+                public bool ResinUsage = true;
                 public int Cap = 160;
                 public int RechargeTime = 480;
             }

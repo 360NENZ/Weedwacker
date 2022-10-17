@@ -2,6 +2,7 @@
 using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Data.Common;
 using Weedwacker.GameServer.Data.Excel;
+using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet.Send;
 using Weedwacker.Shared.Network.Proto;
@@ -14,21 +15,16 @@ namespace Weedwacker.GameServer.Systems.Avatar
         public const uint DEFAULT_STATE = (uint)FetterState.NOT_OPEN;
         [BsonIgnore] private Player.Player Owner; // Loaded by DatabaseManager
         [BsonIgnore] private Avatar Avatar; // Loaded by DatabaseManager
-        public FetterCharacterCardData CardData;
-        public FetterInfoData FetterInfoData; // General info
-        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
-        [BsonElement] public SortedList<int, FetterStoryData> FetterStoryData; // fetterId
-        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
-        [BsonElement] public SortedList<int, FettersData> FettersData; // fetterId
-        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
-        [BsonElement] public SortedList<int, PhotographPosenameData> PhotographPosenameData; // fetterId
-        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
-        [BsonElement] public SortedList<int, PhotographExpressionData> PhotographExpressionData; // fetterId
-        [BsonIgnore]
-        public static readonly SortedList<int, AvatarFetterLevelData> FetterLevelData = GameData.AvatarFetterLevelDataMap; // level Friendship exp breakpoints
+        [BsonIgnore] public FetterCharacterCardData CardData => GameServer.AvatarInfo[Avatar.AvatarId].CardData;
+        [BsonIgnore] public FetterInfoData FetterInfoData => GameServer.AvatarInfo[Avatar.AvatarId].FetterInfoData; // General info
+        [BsonIgnore] public SortedList<int, FetterStoryData> FetterStoryData => GameServer.AvatarInfo[Avatar.AvatarId].FetterStoryData; // fetterId
+        [BsonIgnore] public SortedList<int, FettersData> FettersData => GameServer.AvatarInfo[Avatar.AvatarId].FettersData; // fetterId
+        [BsonIgnore] public SortedList<int, PhotographPosenameData> PhotographPosenameData => GameServer.AvatarInfo[Avatar.AvatarId].PhotographPosenameData; // fetterId
+        [BsonIgnore] public SortedList<int, PhotographExpressionData> PhotographExpressionData => GameServer.AvatarInfo[Avatar.AvatarId].PhotographExpressionData; // fetterId
+        [BsonIgnore] public SortedList<int, AvatarFetterLevelData> FetterLevelData => GameData.AvatarFetterLevelDataMap; // level Friendship exp breakpoints
         public int FetterLevel { get; private set; } = 1;
         public int FetterExp { get; private set; } = 0;
-        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
+        [BsonSerializer(typeof(IntSortedListSerializer<FetterData>))]
         public SortedList<int, FetterData> FetterStates { get; private set; } = new();
 
 
@@ -36,12 +32,6 @@ namespace Weedwacker.GameServer.Systems.Avatar
         {
             Owner = owner;
             Avatar = avatar;
-            CardData = GameServer.AvatarInfo[avatar.AvatarId].CardData;
-            FetterInfoData = GameServer.AvatarInfo[avatar.AvatarId].FetterInfoData;
-            FetterStoryData = GameServer.AvatarInfo[avatar.AvatarId].FetterStoryData;
-            FettersData = GameServer.AvatarInfo[avatar.AvatarId].FettersData;
-            PhotographPosenameData = GameServer.AvatarInfo[avatar.AvatarId].PhotographPosenameData;
-            PhotographExpressionData = GameServer.AvatarInfo[avatar.AvatarId].PhotographExpressionData;
 
             FetterStates.Add(FetterInfoData.fetterId, new FetterData() { FetterId = (uint)FetterInfoData.fetterId, FetterState = DEFAULT_STATE });
             foreach(FetterStoryData storyData in FetterStoryData.Values)
@@ -66,8 +56,8 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
         public async Task OnLoadAsync(Player.Player owner, Avatar avatar)
         {
-            await Task.Run(() => Owner = owner);
-            await Task.Run(() => Avatar = avatar);
+            Owner = owner;
+            Avatar = avatar;
         }
 
         public async Task Initialize()

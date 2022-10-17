@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using Weedwacker.GameServer.Data;
+using Weedwacker.GameServer.Database;
 
 namespace Weedwacker.GameServer.Systems.Shop
 {
@@ -8,7 +9,7 @@ namespace Weedwacker.GameServer.Systems.Shop
         [BsonElement("_id")]
         [BsonId] public int OwnerId { get; private set; }
         private Player.Player Owner;
-        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
+        [BsonSerializer(typeof(IntSortedListSerializer<Shop>))]
         public SortedList<int, Shop> Shops = new(); // shopType
         public ShopManager(Player.Player owner)
         {
@@ -42,7 +43,7 @@ namespace Weedwacker.GameServer.Systems.Shop
         public async Task OnLoadAsync(Player.Player owner)
         {
             Owner = owner;
-            Shops.Values.AsParallel().ForAll(w => w.Goods.ForEach(p => p.OnLoadAsync()));
+            Shops.Values.AsParallel().ForAll(w => w.Goods.AsParallel().ForAll(p => p.OnLoadAsync()));
         }
     }
 }

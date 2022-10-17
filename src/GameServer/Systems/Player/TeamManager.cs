@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using Vim.Math3d;
+using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet;
 using Weedwacker.GameServer.Packet.Send;
@@ -13,13 +14,13 @@ namespace Weedwacker.GameServer.Systems.Player
     {
         [BsonId] public int OwnerId;
         private Player Owner;
-        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
+        [BsonSerializer(typeof(IntSortedListSerializer<TeamInfo>))]
         [BsonElement] public SortedList<int, TeamInfo> Teams { get; private set; } = new(); // <index, team>
-        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
+        [BsonSerializer(typeof(IntSortedListSerializer<TeamInfo>))]
         [BsonElement] public SortedList<int, TeamInfo> TowerTeams { get; private set; } = new(); // Store Abyss teams separately
-        [BsonElement] public int CurrentTeamIndex { get; private set; } = 1;
+        [BsonElement] public int CurrentTeamIndex { get; private set; } = 1; // count from  0
         public int CurrentCharacterIndex = 0; // count from 0
-        [BsonIgnore] public List<AvatarEntity> ActiveTeam { get; private set; } = new();
+        [BsonIgnore] public SortedSet<AvatarEntity> ActiveTeam { get; private set; } = new();
         [BsonIgnore] public TeamInfo MpTeam = new();
         [BsonIgnore] public uint EntityId;
 
@@ -27,7 +28,7 @@ namespace Weedwacker.GameServer.Systems.Player
         {
             Owner = player;
             OwnerId = player.GameUid;
-            for (int i = 1; i <= GameServer.Configuration.Server.GameOptions.Constants.DEFAULT_TEAMS; i++)
+            for (int i = 0; i < GameServer.Configuration.Server.GameOptions.Constants.DEFAULT_TEAMS; i++)
             {
                 Teams.Add(i, new TeamInfo());
             }
@@ -93,7 +94,7 @@ namespace Weedwacker.GameServer.Systems.Player
         }
 
         public TeamInfo GetCurrentSinglePlayerTeamInfo() { return Teams[CurrentTeamIndex]; }
-        public AvatarEntity GetCurrentAvatarEntity() { return ActiveTeam[CurrentCharacterIndex]; }
+        public AvatarEntity GetCurrentAvatarEntity() { return ActiveTeam.ElementAt(CurrentCharacterIndex); }
 
         public bool IsSpawned()
         {
@@ -300,7 +301,7 @@ namespace Weedwacker.GameServer.Systems.Player
 
                 for (int i = 0; i < ActiveTeam.Count; i++)
                 {
-                    AvatarEntity entity = ActiveTeam[i];
+                    AvatarEntity entity = ActiveTeam.ElementAt(i);
                     if (entity.LiveState == LifeState.LIFE_ALIVE)
                     {
                         replaceIndex = i;

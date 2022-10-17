@@ -5,6 +5,7 @@ using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Packet.Send;
 using Weedwacker.GameServer.Systems.Player;
+using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.Avatar
 {
@@ -16,19 +17,15 @@ namespace Weedwacker.GameServer.Systems.Avatar
         [BsonElement] public ushort PromoteLevel = 0; // Constellation rank
         [BsonElement] public int EnergySkill { get; private set; } // Ultimate elemental ability (Q)
         [BsonElement] public int EnergySkillLevel { get; private set; }
-        [BsonElement] public ElementType Element { get; private set; } // Stores current and max energy
+        [BsonElement] public ElementType? Element { get; private set; } // Stores current and max energy
         [BsonElement] public ulong[] Abilities { get; private set; } // Just the hashes
-        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
-        [BsonElement] public SortedList<int, int> Skills { get; private set; } // <skillId,level>
-        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
-        [BsonElement] public SortedList<int, int> SubSkills { get; private set; } // <skillId,level>
-        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
-        [BsonElement] public Dictionary<int, int> SkillExtraChargeMap { get; private set; } = new(); // Charges
-        [BsonElement] public List<ProudSkillData> InherentProudSkillOpens { get; private set; } = new(); // proudSkillId
-        [BsonElement] public List<AvatarTalentData> Talents { get; private set; } = new(); // last digit of id = constellationRank. Also contain the openConfig name, which is needed to apply AbilityEmbryos
+        [BsonElement] public SortedList<int, int> Skills { get; private set; } = new(); // <skillId,level>
+        [BsonElement] public SortedList<int, int> SubSkills { get; private set; } = new(); // <skillId,level>
+        [BsonElement] public SortedList<int, int> SkillExtraChargeMap { get; private set; } = new(); // Charges
+        [BsonElement] public HashSet<ProudSkillData> InherentProudSkillOpens { get; private set; } = new(); // proudSkillId
+        [BsonElement] public HashSet<AvatarTalentData> Talents { get; private set; } = new(); // last digit of id = constellationRank. Also contain the openConfig name, which is needed to apply AbilityEmbryos
         //TODO
-        [BsonDictionaryOptions(MongoDB.Bson.Serialization.Options.DictionaryRepresentation.ArrayOfDocuments)]
-        [BsonElement] public Dictionary<int, int> ProudSkillExtraLevelMap { get; private set; } // <groupId,extraLevels> 
+        [BsonElement] public SortedList<int, int> ProudSkillExtraLevelMap { get; private set; } = new(); // <groupId,extraLevels> 
 
         public SkillDepot(Avatar avatar, int depotId, Player.Player owner)
         {
@@ -37,10 +34,49 @@ namespace Weedwacker.GameServer.Systems.Avatar
             DepotId = depotId;
             var avatarInfo = GameServer.AvatarInfo[avatar.AvatarId];
             EnergySkill = avatarInfo.SkillDepotData[depotId].energySkill;
-            EnergySkillLevel = 1;
-            Element = (ElementType)Activator.CreateInstance(Type.GetType(avatarInfo.SkillData[depotId][EnergySkill].costElemType));
-            Element.MaxEnergy = avatarInfo.SkillData[depotId][EnergySkill].costElemVal;
-            Abilities = avatarInfo.AbilityNameHashes[depotId];
+            // Hero Avatars don't have an element at the beginning
+            if (EnergySkill != 0)
+            {
+                EnergySkillLevel = 1;
+                Enums.ElementType type = avatarInfo.SkillData[depotId][EnergySkill].costElemType;
+                switch (type)
+                {
+                    case Enums.ElementType.Fire:
+                        Element = new Fire();
+                        break;
+                    case Enums.ElementType.Water:
+                        Element = new Water();
+                        break;
+                    case Enums.ElementType.Wind:
+                        Element = new Wind();
+                        break;
+                    case Enums.ElementType.Ice:
+                        Element = new Ice();
+                        break;
+                    case Enums.ElementType.Rock:
+                        Element = new Rock();
+                        break;
+                    case Enums.ElementType.Electric:
+                        Element = new Electric();
+                        break;
+                    case Enums.ElementType.Grass:
+                        Element = new Grass();
+                        break;
+                    default:
+                        Logger.WriteErrorLine("Unknown Avatar Element Type");
+                        break;
+                }
+                Element.MaxEnergy = avatarInfo.SkillData[depotId][EnergySkill].costElemVal;
+            }
+
+            foreach (int skillId in avatarInfo.SkillDepotData[depotId].skills)
+            { 
+                if (skillId != 0) Skills.Add(skillId, 1); 
+            }
+
+            if (avatarInfo.AbilityNameHashes.TryGetValue(depotId, out ulong[]? hashes))
+                Abilities = hashes;
+
             var inherentProudSkillGroups = avatarInfo.SkillDepotData[depotId].inherentProudSkillOpens.Where(w => w.needAvatarPromoteLevel <= 1).ToDictionary(q => q.proudSkillGroupId).Keys.ToList();
             foreach (int group in inherentProudSkillGroups)
             {
@@ -59,10 +95,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         }
         public uint GetCoreProudSkillLevel()
         {
-            // 6 if all unlocked
-            if (Talents.Count == 6) return 6;
-            // The Highest unlocked constellation rank (we can keep some lower ranks locked like this)
-            else return uint.Parse(new char[1] { Talents.Max().ToString().ToCharArray().Last() }); // hurr durr I can't parse a single char
+            return (uint)Talents.Count;
         }
 
         public List<int> GetSkillsAndEnergySkill()
@@ -103,7 +136,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             if (Character.PromoteLevel < proudSkill.breakLevel) return false;
 
             // Pay materials and mora if possible
-            if (! await Owner.Inventory.PayPromoteCostAsync(proudSkill.GetTotalCostItems())) return false;
+            if (!await Owner.Inventory.PayPromoteCostAsync(proudSkill.GetTotalCostItems())) return false;
 
             // Upgrade skill        
             return await SetSkillLevel(skillId, newLevel);
@@ -118,7 +151,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         public async Task<bool> SetSkillLevel(int skillId, int level)
         {
             if (level < 0 || level > 15) return false;
-            int oldLevel = Skills.GetValueOrDefault(skillId, 0);  
+            int oldLevel = Skills.GetValueOrDefault(skillId, 0);
             Skills[skillId] = level;
 
             // Update Database
@@ -153,7 +186,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
             // Packet
             await Owner.SendPacketAsync(new PacketAvatarUnlockTalentNotify(Character, DepotId, talentId));
-            
+
             //TODO openConfigs
 
             // Recalc + save avatar

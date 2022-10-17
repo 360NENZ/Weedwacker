@@ -379,6 +379,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
         public async Task OnLoadAsync(Player.Player owner)
         {
             Owner = owner;
+            GuidMap = new();
             await ShopManager.OnLoadAsync(owner);
             foreach(SubInventory sub in SubInventories.Values)
             {

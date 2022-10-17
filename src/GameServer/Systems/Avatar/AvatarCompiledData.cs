@@ -63,7 +63,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             AbilityNameHashes = new();
             foreach (AvatarSkillDepotData depot in SkillDepotData.Values)
             {
-                var dictionary = GameData.AvatarSkillDataMap.Where(w => depot.skills.Contains(w.Key) || depot.subSkills.Contains(w.Key)).ToDictionary(x => x.Key, x => x.Value);
+                var dictionary = GameData.AvatarSkillDataMap.Where(w => depot.skills.Contains(w.Key) || depot.subSkills.Contains(w.Key) || depot.energySkill == w.Key).ToDictionary(x => x.Key, x => x.Value);
                 SkillData.Add(depot.id, new SortedList<int, AvatarSkillData>(dictionary));
                 var dictionary9 = GameData.AvatarPromoteDataMap.Where(w => w.Key.Item1 == GeneralData.avatarPromoteId).ToDictionary(x => x.Key.Item2, x => x.Value);
                 PromoteData = new SortedList<int, AvatarPromoteData>(dictionary9);

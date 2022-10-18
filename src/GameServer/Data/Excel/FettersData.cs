@@ -8,7 +8,7 @@ namespace Weedwacker.GameServer.Data.Excel
     internal class FettersData : FetterBaseClass
     {
         [JsonProperty]
-        public readonly FetterState initialFetterState;
+        public readonly int type;
         [JsonProperty]
         public readonly int[] costumeIds;
         [JsonProperty]

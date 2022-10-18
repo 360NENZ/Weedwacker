@@ -45,7 +45,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             }
             foreach(FettersData fettersData in FettersData.Values)
             {
-                FetterStates.Add(fettersData.fetterId, new FetterData() { FetterId = (uint)fettersData.fetterId, FetterState = (uint)fettersData.initialFetterState });
+                FetterStates.Add(fettersData.fetterId, new FetterData() { FetterId = (uint)fettersData.fetterId, FetterState = DEFAULT_STATE });
             }
             foreach (PhotographPosenameData poseData in PhotographPosenameData.Values)
             {
@@ -69,15 +69,16 @@ namespace Weedwacker.GameServer.Systems.Avatar
             var notOpen = allFetters.Where(w => FetterStates[w.fetterId].FetterState == 1);
             foreach (var fetter in notOpen)
             {
-                if (true || fetter.openConds != null)
+                if (fetter.openConds != null)
                     await EvaluateFetterState(fetter, true, false);
                 else FetterStates[fetter.fetterId].FetterState++;
             }
             var open = allFetters.Where(w => FetterStates[w.fetterId].FetterState == 2);
             foreach (var fetter in open)
             {
-                if(true || fetter.finishConds != null)
+                if (fetter.finishConds != null)
                     await EvaluateFetterState(fetter, false, false);
+                else FetterStates[fetter.fetterId].FetterState++;
             }
 
             return this;

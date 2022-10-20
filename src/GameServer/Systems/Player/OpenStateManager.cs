@@ -40,16 +40,16 @@ namespace Weedwacker.GameServer.Systems.Player
 
         private async Task SetOpenStateAsync(int openState, int value, bool sendNotify = true)
         {
-            int previousValue = Owner.OpenStates.GetValueOrDefault((OpenStateType)openState, 0);
+            int previousValue = Owner.ProgressManager.OpenStates.GetValueOrDefault((OpenStateType)openState, 0);
 
             if (value != previousValue)
             {
-                Owner.OpenStates.Add((OpenStateType)openState, value);
+                Owner.ProgressManager.OpenStates.Add((OpenStateType)openState, value);
 
                 // Update Database
-                var filter = Builders<Player>.Filter.Where(w => w.AccountUid == Owner.AccountUid);
-                var update = Builders<Player>.Update.Set($"{nameof(Player.OpenStates)}.{(OpenStateType)openState}", value);
-                await DatabaseManager.UpdatePlayerAsync(filter, update);
+                var filter = Builders<ProgressManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
+                var update = Builders<ProgressManager>.Update.Set($"{nameof(ProgressManager.OpenStates)}.{(OpenStateType)openState}", value);
+                await DatabaseManager.UpdateProgressAsync(filter, update);
 
                 if (sendNotify)
                 {
@@ -131,7 +131,7 @@ namespace Weedwacker.GameServer.Systems.Player
         public async Task TryUnlockOpenStatesAsync(bool sendNotify)
         {
             // Get list of open states that are not yet unlocked.
-            var lockedStates = GameData.OpenStateDataMap.Where(s => Owner.OpenStates.GetValueOrDefault((OpenStateType)s.Key, 0) == 0);
+            var lockedStates = GameData.OpenStateDataMap.Where(s => Owner.ProgressManager.OpenStates.GetValueOrDefault((OpenStateType)s.Key, 0) == 0);
 
             // Try unlocking all of them.
             foreach (var state in lockedStates)

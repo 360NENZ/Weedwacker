@@ -12,8 +12,8 @@ namespace Weedwacker.GameServer.Packet.Send
 			int isMp = world.IsMultiplayer ? 1 : 0;
 
 			WorldDataNotify proto = new WorldDataNotify();
-			proto.WorldPropMap.Add(1, new PropValue() { Type = 1, Ival = worldLevel, Val = worldLevel });
-			proto.WorldPropMap.Add(2, new PropValue() { Type = 2, Ival = isMp, Val = isMp });
+			proto.WorldPropMap.Add(1, new PropValue() { Type = 1, Ival = worldLevel});
+			proto.WorldPropMap.Add(2, new PropValue() { Type = 2, Ival = isMp});
 
 			Data = proto.ToByteArray();
 		}

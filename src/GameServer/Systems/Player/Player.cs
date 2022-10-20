@@ -36,7 +36,6 @@ namespace Weedwacker.GameServer.Systems.Player
         public int NextResinRefresh;
         public int LastDailyReset;
         public Dictionary<PlayerProperty, int> PlayerProperties { get; set; } = new(); // SET ONLY THROUGH THE PROPMANAGER
-        public Dictionary<OpenStateType, int> OpenStates = new(); // SET ONLY THROUGH THE OPENSTATEMANAGER
         [BsonIgnore] public PlayerPropertyManager PropManager;
         [BsonIgnore] public OpenStateManager OpenStateManager;
         [BsonIgnore] public ResinManager ResinManager;
@@ -54,6 +53,7 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonIgnore] public ExpManager ExpManager; // Loaded by DatabaseManager
         [BsonIgnore] public ClientGadgetEntityManager GadgetManager; // Loaded by DatabaseManager
         [BsonIgnore] public Inventory.InventoryManager Inventory; // Loaded by DatabaseManager
+        [BsonIgnore] public ProgressManager ProgressManager; // Loaded by DatabaseManager
         [BsonIgnore] public Social.SocialManager SocialManager; // Loaded by DatabaseManager
         [BsonIgnore] public TeamManager TeamManager; // Loaded by DatabaseManager
 
@@ -69,6 +69,7 @@ namespace Weedwacker.GameServer.Systems.Player
             ExpManager = new(this);
             GadgetManager = new(this);
             GameUid = gameUid;
+            ProgressManager = new(this);
             PropManager = new(this);
             ResinManager = new(this);
             SocialManager = new(this);
@@ -78,13 +79,14 @@ namespace Weedwacker.GameServer.Systems.Player
         private async Task OnCreate()
         {
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_PLAYER_LEVEL, 1, false);
-            await PropManager.SetPropertyAsync(PlayerProperty.PROP_PLAYER_WORLD_LEVEL, 1, false);
+            await PropManager.SetPropertyAsync(PlayerProperty.PROP_PLAYER_WORLD_LEVEL, 0, false);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_IS_SPRING_AUTO_USE, 1, false);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_SPRING_AUTO_USE_PERCENT, 50, false);
             await ResinManager.AddResinAsync(160);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_IS_FLYABLE, 0, false);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_MAX_STAMINA, 10000, false);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_CUR_PERSIST_STAMINA, 10000, false);
+            ProgressManager.OnPlayerCreate();
 
             // Pick character
             Session.State = SessionState.PICKING_CHARACTER;
@@ -228,10 +230,10 @@ namespace Weedwacker.GameServer.Systems.Player
                 NameCardId = (uint)Profile.NameCardId,
                 Signature = Profile.Signature,
                 ProfilePicture = Profile.HeadImage,
-                AvatarId = (uint)TeamManager.Teams[TeamManager.CurrentTeamIndex].AvatarInfo[TeamManager.CurrentCharacterIndex].AvatarId, // current selected avatar
-                OnlineId = AccountUid, // not sure if correct
+                //AvatarId = (uint)TeamManager.Teams[TeamManager.CurrentTeamIndex].AvatarInfo[TeamManager.CurrentCharacterIndex].AvatarId, // current selected avatar
+                //OnlineId = AccountUid, // not sure if correct
                 //PsnId = 42069,
-                WorldLevel = (uint)Profile.WorldLevel
+                //WorldLevel = (uint)Profile.WorldLevel
             };
 
             if (World != null)

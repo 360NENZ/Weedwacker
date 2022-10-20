@@ -11,7 +11,7 @@ namespace Weedwacker.GameServer.Packet.Send
         {
             OpenStateUpdateNotify proto = new OpenStateUpdateNotify();
 
-            foreach ( var openState in player.OpenStates)
+            foreach ( var openState in player.ProgressManager.OpenStates)
             {
                 proto.OpenStateMap.Add((uint)openState.Key, (uint)openState.Value);
             }

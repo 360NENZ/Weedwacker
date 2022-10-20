@@ -42,8 +42,8 @@ namespace Weedwacker.GameServer.Systems.World
             Time = 8 * 60;
             PrevScene = 3;
 
-            // Always applied tags?
-            SceneTags = new HashSet<uint>(GameData.SceneTagDataMap.Where(w => w.Value.sceneId == GetId() && (w.Value.cond == null || w.Value.cond.Length == 0)).Select(s => (uint)s.Key));
+            //TODO
+            SceneTags = new HashSet<uint>(GameData.SceneTagDataMap.Where(w => w.Value.sceneId == GetId()).Select(s => (uint)s.Key));
 
             //ScriptManager = GameData.SceneScripts[GetId()];
         }

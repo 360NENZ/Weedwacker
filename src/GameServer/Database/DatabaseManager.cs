@@ -22,6 +22,7 @@ namespace Weedwacker.GameServer.Database
         static IMongoCollection<Player> Players;
         static IMongoCollection<AvatarManager> Avatars;
         static IMongoCollection<InventoryManager> Inventories;
+        static IMongoCollection<ProgressManager> Progress;
         static IMongoCollection<TeamManager> Teams;
         static IMongoCollection<ShopManager> Shops;
         static IMongoCollection<SocialManager> Social;
@@ -34,6 +35,7 @@ namespace Weedwacker.GameServer.Database
         static ConcurrentBag<WriteModel<Player>> PlayerWrites = new();
         static ConcurrentBag<WriteModel<AvatarManager>> AvatarWrites = new();
         static ConcurrentBag<WriteModel<InventoryManager>> InventoryWrites = new();
+        static ConcurrentBag<WriteModel<ProgressManager>> ProgressWrites = new();
         static ConcurrentBag<WriteModel<TeamManager>> TeamWrites = new();
         static ConcurrentBag<WriteModel<ShopManager>> ShopWrites = new();
         static ConcurrentBag<WriteModel<SocialManager>> SocialWrites = new();
@@ -71,6 +73,7 @@ namespace Weedwacker.GameServer.Database
             Players = Database.GetCollection<Player>("players");
             Avatars = Database.GetCollection<AvatarManager>("avatars");
             Inventories = Database.GetCollection<InventoryManager>("inventories");
+            Progress = Database.GetCollection<ProgressManager>("progress");
             Teams = Database.GetCollection<TeamManager>("teams");
             Shops = Database.GetCollection<ShopManager>("shops");
             Social = Database.GetCollection<SocialManager>("social");
@@ -100,6 +103,7 @@ namespace Weedwacker.GameServer.Database
             if (PlayerWrites.Any()) { await Players.BulkWriteAsync(PlayerWrites, BulkWrite); PlayerWrites.Clear(); }
             if (AvatarWrites.Any()) { await Avatars.BulkWriteAsync(AvatarWrites, BulkWrite); AvatarWrites.Clear(); }
             if (InventoryWrites.Any()) { await Inventories.BulkWriteAsync(InventoryWrites, BulkWrite); InventoryWrites.Clear(); }
+            if (ProgressWrites.Any()) { await Progress.BulkWriteAsync(ProgressWrites, BulkWrite); ProgressWrites.Clear(); }
             if (TeamWrites.Any()) { await Teams.BulkWriteAsync(TeamWrites, BulkWrite); TeamWrites.Clear(); }
             if (ShopWrites.Any()) { await Shops.BulkWriteAsync(ShopWrites, BulkWrite); ShopWrites.Clear(); }
             if (SocialWrites.Any()) { await Social.BulkWriteAsync(SocialWrites, BulkWrite); SocialWrites.Clear(); }
@@ -149,6 +153,7 @@ namespace Weedwacker.GameServer.Database
             player.Avatars = await GetAvatarsByPlayerAsync(player) ?? await SaveAvatarsAsync(new AvatarManager(player)); // Load avatars before inventory, so that we can attach weapons while loading them
             player.Inventory = await GetInventoryByPlayerAsync(player) ?? await SaveInventoryAsync(new InventoryManager(player));
             player.Inventory.ShopManager = await GetShopsByPlayerAsync(player) ?? await SaveShopsAsync(new ShopManager(player));
+            player.ProgressManager = await GetProgressByPlayerAsync(player) ?? await SaveProgressAsync(new ProgressManager(player));
             player.SocialManager = await GetSocialByPlayerAsync(player) ?? await SaveSocialAsync(new SocialManager(player));
             player.TeamManager = await GetTeamsByPlayerAsync(player) ?? await SaveTeamsAsync(new TeamManager(player));
             await player.OnLoadAsync();
@@ -166,6 +171,7 @@ namespace Weedwacker.GameServer.Database
             player.Avatars = await GetAvatarsByPlayerAsync(player) ?? await SaveAvatarsAsync(new AvatarManager(player)); // Load avatars before inventory, so that we can attach weapons while loading them
             player.Inventory = await GetInventoryByPlayerAsync(player) ?? await SaveInventoryAsync(new InventoryManager(player));
             player.Inventory.ShopManager = await GetShopsByPlayerAsync(player) ?? await SaveShopsAsync(new ShopManager(player));
+            player.ProgressManager = await GetProgressByPlayerAsync(player) ?? await SaveProgressAsync(new ProgressManager(player));
             player.SocialManager = await GetSocialByPlayerAsync(player) ?? await SaveSocialAsync(new SocialManager(player));
             player.TeamManager = await GetTeamsByPlayerAsync(player) ?? await SaveTeamsAsync(new TeamManager(player));
             await player.OnLoadAsync();
@@ -264,6 +270,25 @@ namespace Weedwacker.GameServer.Database
             SocialManager social = await Database.GetCollection<SocialManager>("social").Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
             if (social != null) await social.OnLoadAsync(owner);
             return social;
+        }
+
+        public static async Task<ProgressManager> SaveProgressAsync(ProgressManager progress)
+        {
+            await Progress.ReplaceOneAsync<ProgressManager>(w => w.OwnerId == progress.OwnerId, progress);
+            return progress;
+        }
+
+        public static Task UpdateProgressAsync(FilterDefinition<ProgressManager> filter, UpdateDefinition<ProgressManager> update)
+        {
+            ProgressWrites.Add(new UpdateOneModel<ProgressManager>(filter, update));
+            return Task.CompletedTask;
+        }
+
+        private static async Task<ProgressManager?> GetProgressByPlayerAsync(Player owner)
+        {
+            ProgressManager progress = await Database.GetCollection<ProgressManager>("progress").Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
+            if (progress != null) await progress.OnLoadAsync(owner);
+            return progress;
         }
     }
 }

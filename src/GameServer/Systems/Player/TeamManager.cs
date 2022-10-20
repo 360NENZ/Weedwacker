@@ -1,4 +1,5 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Driver;
 using Vim.Math3d;
 using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
@@ -18,17 +19,19 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonElement] public SortedList<int, TeamInfo> Teams { get; private set; } = new(); // <index, team>
         [BsonSerializer(typeof(IntSortedListSerializer<TeamInfo>))]
         [BsonElement] public SortedList<int, TeamInfo> TowerTeams { get; private set; } = new(); // Store Abyss teams separately
-        [BsonElement] public int CurrentTeamIndex { get; private set; } = 1; // count from  0
-        public int CurrentCharacterIndex = 0; // count from 0
-        [BsonIgnore] public SortedSet<AvatarEntity> ActiveTeam { get; private set; } = new();
         [BsonIgnore] public TeamInfo MpTeam = new();
+        [BsonElement] public int CurrentTeamIndex { get; private set; } = 1; // count from  1
+        public int CurrentCharacterIndex = 0; // count from 0
+        [BsonIgnore] public SortedList<int, AvatarEntity> ActiveTeam = new(); // index
+
         [BsonIgnore] public uint EntityId;
+        [BsonIgnore] public AbilitySyncStateInfo AbilitySyncState = new(); //TODO
 
         public TeamManager(Player player)
         {
             Owner = player;
             OwnerId = player.GameUid;
-            for (int i = 0; i < GameServer.Configuration.Server.GameOptions.Constants.DEFAULT_TEAMS; i++)
+            for (int i = 1; i <= GameServer.Configuration.Server.GameOptions.Constants.DEFAULT_TEAMS; i++)
             {
                 Teams.Add(i, new TeamInfo());
             }
@@ -37,16 +40,23 @@ namespace Weedwacker.GameServer.Systems.Player
         public async Task OnLoadAsync(Player owner)
         {
             Owner = owner;
+            ActiveTeam = new();
             // Point to the "real" avatars
-            Teams.Values.AsParallel().ForAll(async w => { foreach (var entry in w.AvatarInfo)
+            var reloadedTeams = new SortedList<int, TeamInfo>();
+            foreach (var team in Teams)
+            {
+                reloadedTeams.Add(team.Key, new(team.Value.TeamName));
+                foreach(var entry in team.Value.AvatarInfo)
                 {
-                    w.AvatarInfo.Add(entry.Key, owner.Avatars.GetAvatarById(entry.Value.AvatarId));
+                    reloadedTeams[team.Key].AvatarInfo.Add(entry.Key, owner.Avatars.GetAvatarById(entry.Value.AvatarId));
                 }
-            });
+            }
+            Teams = reloadedTeams;
+
             // You stay simple clones >:)
             TowerTeams.Values.AsParallel().ForAll(async w => await w.OnLoadAsync(owner));
-            foreach (ushort avatar in Teams[CurrentTeamIndex].AvatarInfo.Keys)
-                ActiveTeam.Add(new AvatarEntity(Teams[CurrentTeamIndex], avatar));
+            foreach (ushort characterIndex in Teams[CurrentTeamIndex].AvatarInfo.Keys)
+                ActiveTeam.Add(characterIndex, new AvatarEntity(Teams[CurrentTeamIndex], characterIndex));
         }
 
         /**
@@ -64,6 +74,21 @@ namespace Weedwacker.GameServer.Systems.Player
                 }
             }
             return -1;
+        }
+
+        public async Task AddToTeamAsync(Avatar.Avatar avatar, int teamIndex = -1, int cIndex = -1)
+        {
+            if(teamIndex == -1)
+            {
+                Teams[CurrentTeamIndex].AddAvatar(avatar);
+            }
+            else
+            {
+                Teams[teamIndex].AddAvatar(avatar, cIndex == -1 ? CurrentCharacterIndex : cIndex);
+            }
+
+            // Update Database
+            await DatabaseManager.SaveTeamsAsync(this);
         }
 
         private bool SetCurrentTeamId(int currentTeamIndex)
@@ -94,7 +119,7 @@ namespace Weedwacker.GameServer.Systems.Player
         }
 
         public TeamInfo GetCurrentSinglePlayerTeamInfo() { return Teams[CurrentTeamIndex]; }
-        public AvatarEntity GetCurrentAvatarEntity() { return ActiveTeam.ElementAt(CurrentCharacterIndex); }
+        public AvatarEntity GetCurrentAvatarEntity() { return ActiveTeam[CurrentCharacterIndex]; }
 
         public bool IsSpawned()
         {
@@ -116,65 +141,17 @@ namespace Weedwacker.GameServer.Systems.Player
                 return GameServer.Configuration.Server.GameOptions.AvatarLimits.SinglePlayerTeam;
         }
 
+        //TODO
         public async Task UpdateTeamEntities()
         {
-            // If current team has changed
-            AvatarEntity currentEntity = GetCurrentAvatarEntity();
-            Dictionary<int, AvatarEntity> existingAvatars = new();
-            int prevSelectedAvatarIndex = -1;
-
-            foreach (AvatarEntity entity in ActiveTeam)
+            if (Owner.IsInMultiplayer())
             {
-                existingAvatars.Add(entity.Avatar.AvatarId, entity);
             }
-
-
-            // Add back entities into team
-            for (int i = 0; i < GetCurrentTeamInfo().AvatarInfo.Count; i++)
+            else
             {
-                int avatarId = GetCurrentTeamInfo().AvatarInfo[i].AvatarId;
-                AvatarEntity entity;
-
-                if (existingAvatars.ContainsKey(avatarId))
-                {
-                    entity = existingAvatars[avatarId];
-                    existingAvatars.Remove(avatarId);
-                    if (entity == currentEntity)
-                    {
-                        prevSelectedAvatarIndex = i;
-                    }
-                }
-                else
-                {
-                    entity = new AvatarEntity(Owner.Scene, Owner.Avatars.GetAvatarById(avatarId));
-                }
-
-                ActiveTeam.Add(entity);
             }
-
-            // Unload removed entities
-            foreach (AvatarEntity entity in existingAvatars.Values)
-            {
-                Owner.Scene.RemoveEntityAsync(entity);
-            }
-
-            // Set new selected character index
-            if (prevSelectedAvatarIndex == -1)
-            {
-                // Previous selected avatar is not in the same spot, we will select the current one in the prev slot
-                prevSelectedAvatarIndex = Math.Min(CurrentCharacterIndex, ActiveTeam.Count - 1);
-            }
-            CurrentCharacterIndex = prevSelectedAvatarIndex;
-
             // Packets
             await Owner.World.BroadcastPacketAsync(new PacketSceneTeamUpdateNotify(Owner));
-
-            // Check if character changed
-            if (currentEntity != GetCurrentAvatarEntity())
-            {
-                // Remove and Add
-                await Owner.Scene.ReplaceEntityAsync(currentEntity, GetCurrentAvatarEntity());
-            }
         }
 
         public async Task SetupAvatarTeamAsync(int teamId, List<long> list)
@@ -256,10 +233,10 @@ namespace Weedwacker.GameServer.Systems.Player
             int index = -1;
             for (int i = 0; i < ActiveTeam.Count; i++)
             {
-                if (guid == ActiveTeam.ElementAt(i).Avatar.Guid)
+                if (guid == ActiveTeam[i].Avatar.Guid)
                 {
                     index = i;
-                    newEntity = ActiveTeam.ElementAt(i);
+                    newEntity = ActiveTeam[i];
                 }
             }
 
@@ -301,7 +278,7 @@ namespace Weedwacker.GameServer.Systems.Player
 
                 for (int i = 0; i < ActiveTeam.Count; i++)
                 {
-                    AvatarEntity entity = ActiveTeam.ElementAt(i);
+                    AvatarEntity entity = ActiveTeam[i];
                     if (entity.LiveState == LifeState.LIFE_ALIVE)
                     {
                         replaceIndex = i;
@@ -326,7 +303,7 @@ namespace Weedwacker.GameServer.Systems.Player
 
         public async Task<bool> ReviveAvatarAsync(Avatar.Avatar avatar)
         {
-            foreach (AvatarEntity entity in ActiveTeam)
+            foreach (AvatarEntity entity in ActiveTeam.Values)
             {
                 if (entity.Avatar == avatar)
                 {
@@ -349,7 +326,7 @@ namespace Weedwacker.GameServer.Systems.Player
 
         public async Task<bool> HealAvatar(Avatar.Avatar avatar, int healRate, int healAmount)
         {
-            foreach (AvatarEntity entity in ActiveTeam)
+            foreach (AvatarEntity entity in ActiveTeam.Values)
             {
                 if (entity.Avatar == avatar)
                 {

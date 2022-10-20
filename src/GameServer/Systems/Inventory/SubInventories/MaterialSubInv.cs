@@ -104,7 +104,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
             */
             return false;
         }
-        internal override async Task<GameItem?> AddItemAsync(int itemId, int count = 1)
+        public override async Task<GameItem?> AddItemAsync(int itemId, int count = 1)
         {
             MaterialData data = (MaterialData)GameData.ItemDataMap[itemId];
             List<BaseItemUse> ops = new();

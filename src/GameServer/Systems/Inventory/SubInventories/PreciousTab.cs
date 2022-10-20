@@ -15,7 +15,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
         private static string mongoPathToItems = $"{nameof(InventoryManager.SubInventories)}.{ItemType.ITEM_MATERIAL}.{nameof(PreciousTab)}.{nameof(Items)}";
         public PreciousTab(Player.Player owner, InventoryManager inventory) : base(owner, inventory) { }
 
-        internal override async Task<GameItem?> AddItemAsync(int itemId, int count = 1)
+        public override async Task<GameItem?> AddItemAsync(int itemId, int count = 1)
         {
             if (Items.TryGetValue(itemId, out GameItem? material))
             {

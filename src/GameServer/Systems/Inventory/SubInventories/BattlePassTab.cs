@@ -19,10 +19,11 @@ namespace Weedwacker.GameServer.Systems.Inventory
             foreach(MaterialItem item in Items.Values)
             {
                 item.Guid = Owner.GetNextGameGuid();
+                Inventory.GuidMap.Add(item.Guid, item);
             }
         }
 
-        internal override async Task<GameItem?> AddItemAsync(int itemId, int count = 1)
+        public override async Task<GameItem?> AddItemAsync(int itemId, int count = 1)
         {
             if (Items.TryGetValue(itemId, out GameItem? material))
             {

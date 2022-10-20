@@ -1,11 +1,13 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using NLua;
 using Weedwacker.GameServer.Data.BinOut.AbilityGroup;
 using Weedwacker.GameServer.Data.BinOut.Scene.Point;
 using Weedwacker.GameServer.Data.BinOut.Scene.SceneNpcBorn;
 using Weedwacker.GameServer.Data.BinOut.Talent;
 using Weedwacker.GameServer.Data.Excel;
+using Weedwacker.GameServer.Systems.Script.Scene;
 using Weedwacker.Shared.Utils;
 using static Weedwacker.GameServer.Data.SerializationSettings;
 
@@ -47,24 +49,27 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<int, MonsterCurveData> MonsterCurveDataMap = new(); // level
         public readonly static SortedList<int, MonsterData> MonsterDataMap = new(); // id
         public readonly static SortedList<int, MonsterDescribeData> MonsterDescribeDataMap = new(); // id
+        public readonly static SortedList<int, OpenStateData> OpenStateDataMap = new(); // id
         public readonly static SortedList<string, BaseConfigTalent[]> RelicAffixConfigDataMap = new(); // openConfig
         public readonly static SortedList<int, ShopData> ShopDataMap = new(); // shopId
         public readonly static SortedList<int, RewardData> RewardDataMap = new(); // RewardId
         public readonly static SortedList<int, ShopGoodsData> ShopGoodsDataMap = new(); // goodsId
         public readonly static ConcurrentDictionary<string, BaseConfigTalent[]> TeamResonanceConfigDataMap = new(); // openConfig
-        public readonly static ConcurrentDictionary<string, BaseConfigTalent[]> WeaponAffixConfigDataMap = new(); // openConfig
-        public readonly static SortedList<int, WeaponCurveData> WeaponCurveDataMap = new(); // level
-        public readonly static SortedList<Tuple<int, int>, WeaponPromoteData> WeaponPromoteDataMap = new(); // <weaponPromoteId, promoteLevel>
         public readonly static SortedList<int, ReliquaryAffixData> ReliquaryAffixDataMap = new(); // id
         public readonly static SortedList<int, ReliquaryMainPropData> ReliquaryMainPropDataMap = new(); // id
         public readonly static SortedList<Tuple<int, int>, ReliquaryLevelData> ReliquaryLevelDataMap = new(); // <rank, level>
         public readonly static SortedList<int, ReliquarySetData> ReliquarySetDataMap = new(); // setid
-        public readonly static SortedList<int, SceneData> SceneDataMap = new(); //id
+        public readonly static SortedList<int, SceneData> SceneDataMap = new(); // id
         public readonly static ConcurrentDictionary<string, ScenePointData> ScenePointDataMap = new(); // filename
         public readonly static ConcurrentDictionary<int, SceneNpcBornData> SceneNpcBornDataMap = new(); // sceneId
+        public readonly static SortedList<int, SceneTagData> SceneTagDataMap = new(); // id
         public readonly static SortedList<int, TeamResonanceData> TeamResonanceDataMap = new(); // teamResonanceId 
+        public readonly static ConcurrentDictionary<string, BaseConfigTalent[]> WeaponAffixConfigDataMap = new(); // openConfig
+        public readonly static SortedList<int, WeaponCurveData> WeaponCurveDataMap = new(); // level
+        public readonly static SortedList<Tuple<int, int>, WeaponPromoteData> WeaponPromoteDataMap = new(); // <weaponPromoteId, promoteLevel>
+        public readonly static SortedList<int, WeatherData> WeatherDataMap = new(); // areaId
 
-
+        public readonly static SortedList<int, SceneInfo> SceneScripts = new();
 
         static readonly JsonSerializer Serializer = new()
         {
@@ -83,7 +88,23 @@ namespace Weedwacker.GameServer.Data
             }
         };
 
-        
+        static async Task LoadScripts(string path)
+        {
+            var dirs = Directory.GetDirectories(Path.Combine(path, "Scene"));
+            foreach(var fileAndPath in dirs)
+            {
+                string fullPath = Path.GetFullPath(fileAndPath);             
+                int sceneId = int.Parse(fullPath.Split("\\").Last());
+                await LoadSceneScripts(sceneId, path);
+            }                    
+        }
+
+        static async Task LoadSceneScripts(int sceneId, string scriptPath)
+        {
+            Lua lua = new();
+            var SceneX = await SceneInfo.CreateAsync(lua, sceneId, scriptPath);
+            SceneScripts.Add(sceneId, SceneX);
+        }
 
 
         static async Task LoadBinOutFolder<Obj, Key>(string path, Func<Obj, Key> keySelector, IDictionary<Key, Obj> map) where Key : notnull
@@ -166,6 +187,7 @@ namespace Weedwacker.GameServer.Data
         {
             string excelPath = Path.Combine(resourcesPath, "ExcelBinOutput/");
             string binPath = Path.Combine(resourcesPath, "BinOutput/");
+            string scriptPath = Path.Combine(resourcesPath, "Scripts/");
             await Task.WhenAll(new Task[]
             {
                 LoadExcel(excelPath, o => o.sortId, AvatarCodexDataMap),
@@ -194,6 +216,7 @@ namespace Weedwacker.GameServer.Data
                 LoadExcel(excelPath, o => o.level, MonsterCurveDataMap),
                 LoadExcel(excelPath, o => o.id, MonsterDataMap),
                 LoadExcel(excelPath, o => o.id, MonsterDescribeDataMap),
+                LoadExcel(excelPath, o => o.id, OpenStateDataMap),
                 LoadExcel(excelPath, o => o.fetterId, PhotographExpressionDataMap),
                 LoadExcel(excelPath, o => o.fetterId, PhotographPosenameDataMap),
                 LoadExcel(excelPath, o => o.proudSkillId, ProudSkillDataMap),
@@ -204,12 +227,14 @@ namespace Weedwacker.GameServer.Data
                 LoadExcel(excelPath, o => o.setId, ReliquarySetDataMap),
                 LoadExcel(excelPath, o => o.rewardId, RewardDataMap),
                 LoadExcel(excelPath, o => o.id, SceneDataMap),
+                LoadExcel(excelPath, o => o.id, SceneTagDataMap),
                 LoadExcel(excelPath, o => o.shopId, ShopDataMap),
                 LoadExcel(excelPath, o=> o.goodsId, ShopGoodsDataMap),
                 LoadExcel(excelPath, o => o.teamResonanceId, TeamResonanceDataMap),
                 LoadExcel<ItemData, int, WeaponData>(excelPath, o => o.id, ItemDataMap),
                 LoadExcel(excelPath, o => o.level, WeaponCurveDataMap),
                 LoadExcel(excelPath, o => Tuple.Create(o.weaponPromoteId, o.promoteLevel), WeaponPromoteDataMap),
+                LoadExcel(excelPath, o => o.areaId, WeatherDataMap),
 
                 LoadBinOutFolder(Path.Combine(binPath, "Scene/SceneNpcBorn"), o => o.sceneId,  SceneNpcBornDataMap),
                 LoadBinOutFolder(Path.Combine(binPath, "AbilityGroup"), AbilityGroupDataMap),
@@ -219,6 +244,8 @@ namespace Weedwacker.GameServer.Data
                 LoadBinOutFolder(Path.Combine(binPath, "Talent/TeamTalents"), TeamResonanceConfigDataMap),
                 LoadBinOutFolder(Path.Combine(binPath, "Scene/Point"), ScenePointDataMap, false)
             });
+
+            await LoadScripts(scriptPath);
 
             Logger.DebugWriteLine("Loaded Resources");
         }

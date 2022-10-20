@@ -4,7 +4,7 @@ using Weedwacker.Shared.Network.Proto;
 
 namespace Weedwacker.GameServer.Packet.Recv
 {
-	[OpCode("PlayerSetPauseReq")]
+	[OpCode((ushort)OpCode.PlayerSetPauseReq)]
 	internal class HandlePlayerSetPauseReq : BaseHandler
     {
 		public override async Task HandleAsync(Connection session, byte[] header, byte[] payload)

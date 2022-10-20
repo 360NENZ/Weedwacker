@@ -1,12 +1,14 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.GameServer.Database;
+using Weedwacker.GameServer.Systems.Player;
 using Weedwacker.Shared.Network.Proto;
 
 namespace Weedwacker.GameServer.Systems.Avatar
 {
     internal class TeamInfo
     {
+        private TeamManager Manager;
         public string TeamName;
         [BsonSerializer(typeof(IntSortedListSerializer<Avatar>))]
         [BsonElement] public SortedList<int, Avatar> AvatarInfo { get; private set; } = new(); // <index, avatar>> clone avatars for abyss teams
@@ -39,7 +41,10 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 return false;
             }
 
-            AvatarInfo.Add(index, IsTowerTeam ? avatar.Clone() : avatar);
+            if (!AvatarInfo.ContainsKey(index))
+                AvatarInfo.Add(index, IsTowerTeam ? avatar.Clone() : avatar);
+            else
+                AvatarInfo[index] = IsTowerTeam ? avatar.Clone() : avatar;
 
             //TODO update team resonance and add team openConfigs
 

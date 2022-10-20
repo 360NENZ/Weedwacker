@@ -27,15 +27,17 @@ namespace Weedwacker.GameServer.Systems.Inventory
             foreach (WeaponItem item in Items.Values)
             {
                 item.Guid = Owner.GetNextGameGuid();
+                Inventory.GuidMap.Add(item.Guid, item);
                 if (item.EquippedAvatar != 0) await inventory.EquipWeapon(owner.Avatars.Avatars[item.EquippedAvatar].Guid, item.Guid);
             }
             foreach (MaterialItem item in UpgradeMaterials.Values)
             {
                 item.Guid = Owner.GetNextGameGuid();
+                Inventory.GuidMap.Add(item.Guid, item);
             }
         }
 
-        internal override async Task<GameItem> AddItemAsync(int itemId, int count = 1)
+        public override async Task<GameItem> AddItemAsync(int itemId, int count = 1)
         {
 
             if (GameData.ItemDataMap[itemId].itemType == ItemType.ITEM_MATERIAL)

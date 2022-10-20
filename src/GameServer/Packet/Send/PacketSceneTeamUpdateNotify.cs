@@ -14,9 +14,9 @@ namespace Weedwacker.GameServer.Packet.Send
 				IsInMp = player.IsInMultiplayer()
 			};
 
-			foreach (Player p in player.World.Players)
+			foreach (Player p in player.Scene.Players)
 			{
-				foreach (AvatarEntity avatar in p.TeamManager.ActiveTeam)
+				foreach (AvatarEntity avatar in p.TeamManager.ActiveTeam.Values)
                 {
                     //TODO
                     AbilitySyncStateInfo avatarAbilityInfo = new();

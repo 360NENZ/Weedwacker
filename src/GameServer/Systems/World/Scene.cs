@@ -1,7 +1,9 @@
-﻿using Vim.Math3d;
+﻿using MongoDB.Driver;
+using Vim.Math3d;
 using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Data.BinOut.Scene.Point;
 using Weedwacker.GameServer.Data.Excel;
+using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet;
 using Weedwacker.GameServer.Packet.Send;
@@ -21,23 +23,29 @@ namespace Weedwacker.GameServer.Systems.World
         public readonly HashSet<SpawnInfo> SpawnedEntities;
         public readonly HashSet<SpawnInfo> DeadSpawnedEntities;
         public int AutoCloseTime;
-        public int Time { get; private set; }
+        public uint Time { get; private set; }
         public SceneScriptManager ScriptManager { get; private set; }
         public readonly ScenePointData PointData;
         public readonly DungeonData? DungeonData;
         public int PrevScene; // Id of the previous scene
         public int PrevScenePoint;
+        public Dictionary<Tuple<int, int>, int> ActiveAreaWeathers; // <areaID1, areaID2> weatherId>
+        public HashSet<uint> SceneTags; // TODO apply based on host's data
         public Scene(World world, SceneData sceneData)
         {
             World = world;
             SceneData = sceneData;
-            PointData = GameData.ScenePointDataMap["scene" + sceneData.id + "_point.json"];
+            PointData = GameData.ScenePointDataMap["scene" + sceneData.id + "_point"];
             if (sceneData.type == SceneType.SCENE_DUNGEON)
                 DungeonData = GameData.DungeonDataMap.Where(w => w.Value.sceneId == sceneData.id).First().Value;
 
             Time = 8 * 60;
             PrevScene = 3;
-            ScriptManager = new SceneScriptManager(this);
+
+            // Always applied tags?
+            SceneTags = new HashSet<uint>(GameData.SceneTagDataMap.Where(w => w.Value.sceneId == GetId() && (w.Value.cond == null || w.Value.cond.Length == 0)).Select(s => (uint)s.Key));
+
+            //ScriptManager = GameData.SceneScripts[GetId()];
         }
 
         public int GetId()
@@ -51,7 +59,7 @@ namespace Weedwacker.GameServer.Systems.World
 
         public void ChangeTime(int time)
         {
-            Time = time % 1440;
+            Time = (uint)time % 1440;
         }
 
         public bool IsInScene(GameEntity entity)
@@ -59,7 +67,13 @@ namespace Weedwacker.GameServer.Systems.World
             return Entities.ContainsKey(entity.Id);
         }
 
-        public async Task AddPlayerAsync(Player.Player player, EnterReason reason, Vector3 newPosition, EnterType type = EnterType.Self,  int oldSceneId = default, Vector3 oldPos = default)
+        public async Task UpdateActiveAreaWeathersAsync(Tuple<int, int> areaIDs)
+        {
+            //TODO update based on host's weather and quest progression
+            await BroadcastPacketAsync(new PacketSceneAreaWeatherNotify(ClimateType.CLIMATE_SUNNY, 1));
+        }
+
+        public async Task AddPlayerAsync(Player.Player player, EnterReason reason, Vector3 newPosition, EnterType type = EnterType.Self, int oldSceneId = default, Vector3 oldPos = default)
         {
             // Check if player already in
             if (Players.Contains(player))
@@ -70,7 +84,14 @@ namespace Weedwacker.GameServer.Systems.World
             // Add
             Players.Add(player);
             await player.SetSceneAsync(this);
-            await player.SendPacketAsync(new PacketPlayerEnterSceneNotify(player, EnterType.Self, EnterReason.TeamKick, this, player.Position, oldSceneId, oldPos));
+            player.Position = newPosition;
+
+            // Update Database
+            var filter = Builders<Player.Player>.Filter.Where(w => w.AccountUid == player.AccountUid);
+            var update = Builders<Player.Player>.Update.Set(w => w.PositionArray, player.PositionArray).Set(w => w.RotationArray, player.RotationArray);
+            await DatabaseManager.UpdatePlayerAsync(filter, update);
+
+            await player.SendPacketAsync(new PacketPlayerEnterSceneNotify(player, type, reason, this, newPosition, oldSceneId, oldPos));
 
             await SetupPlayerAvatarsAsync(player);
         }
@@ -82,8 +103,8 @@ namespace Weedwacker.GameServer.Systems.World
             await player.SetSceneAsync(null);
 
             // Remove player avatars
-            SortedSet<AvatarEntity> team = player.TeamManager.ActiveTeam;
-            await RemoveEntitiesAsync(team, VisionType.Remove);
+            SortedList<int, AvatarEntity> team = player.TeamManager.ActiveTeam;
+            await RemoveEntitiesAsync(team.Values, VisionType.Remove);
             team.Clear();
 
             // Remove player gadgets
@@ -105,18 +126,14 @@ namespace Weedwacker.GameServer.Systems.World
             TeamInfo teamInfo = player.TeamManager.GetCurrentTeamInfo();
             foreach (int avatarId in teamInfo.AvatarInfo.Keys)
             {
+                if (avatarId == 0) continue;
                 AvatarEntity entity = new AvatarEntity(player.Scene, player.Avatars.GetAvatarById(avatarId));
-                player.TeamManager.ActiveTeam.Add(entity);
-            }
-
-            // Limit character index in case its out of bounds
-            if (player.TeamManager.CurrentCharacterIndex >= player.TeamManager.ActiveTeam.Count || player.TeamManager.CurrentCharacterIndex < 0)
-            {
-                player.TeamManager.CurrentCharacterIndex = player.TeamManager.CurrentCharacterIndex - 1;
+                player.TeamManager.ActiveTeam = new SortedList<int, AvatarEntity>(teamInfo.AvatarInfo.Select(
+                    w => new KeyValuePair<int, AvatarEntity>(w.Key, new AvatarEntity(player.Scene, w.Value))).ToDictionary(w => w.Key, w => w.Value));
             }
         }
 
-        public async Task SpawnPlayer(Player.Player player)
+        public async Task SpawnPlayerAsync(Player.Player player)
         {
             var teamManager = player.TeamManager;
             if (IsInScene(teamManager.GetCurrentAvatarEntity()))
@@ -132,7 +149,7 @@ namespace Weedwacker.GameServer.Systems.World
             await AddEntityAsync(teamManager.GetCurrentAvatarEntity());
 
             // Notify the client of any extra skill charges
-            teamManager.ActiveTeam.AsParallel().ForAll(async x => await x.Avatar.GetCurSkillDepot().SendAvatarSkillInfoNotify());
+            teamManager.ActiveTeam.AsParallel().ForAll(async x => await x.Value.Avatar.GetCurSkillDepot().SendAvatarSkillInfoNotify());
         }
 
         public async Task RespawnPlayerAsync(Player.Player player)
@@ -140,7 +157,7 @@ namespace Weedwacker.GameServer.Systems.World
             //player.StaminaManager.stopSustainedStaminaHandler(); // prevent drowning immediately after respawn
 
             // Revive all team members
-            foreach (AvatarEntity entity in player.TeamManager.ActiveTeam)
+            foreach (AvatarEntity entity in player.TeamManager.ActiveTeam.Values)
             {
                 entity.FightProps[
                         FightProperty.FIGHT_PROP_CUR_HP] =
@@ -265,12 +282,16 @@ namespace Weedwacker.GameServer.Systems.World
             if (attacker != null)
             {
                 // Check codex
-                if (attacker is ClientGadgetEntity gadgetAttacker) {
+                if (attacker is ClientGadgetEntity gadgetAttacker)
+                {
                     var clientGadgetOwner = Entities[gadgetAttacker.OwnerEntityId];
-                    if (clientGadgetOwner is AvatarEntity) {
+                    if (clientGadgetOwner is AvatarEntity)
+                    {
                         //((ClientGadgetEntity)attacker).Owner.Codex.CheckAnimal(target, CodexAnimalData.CodexAnimalUnlockCondition.CODEX_COUNT_TYPE_KILL);
                     }
-                } else if (attacker is AvatarEntity avatarAttacker) {
+                }
+                else if (attacker is AvatarEntity avatarAttacker)
+                {
                     //avatarAttacker.Avatar.Owner.Codex.CheckAnimal(target, CodexAnimalData.CodexAnimalUnlockCondition.CODEX_COUNT_TYPE_KILL);
                 }
             }
@@ -316,7 +337,8 @@ namespace Weedwacker.GameServer.Systems.World
         {
             GameEntity entity = Entities[entityId];
 
-            if (entity == null || !(entity is ClientGadgetEntity)) {
+            if (entity == null || !(entity is ClientGadgetEntity))
+            {
                 return;
             }
 

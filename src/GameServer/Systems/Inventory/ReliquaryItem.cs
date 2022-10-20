@@ -10,8 +10,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
     {
 		[BsonElement] public int MainPropId { get; protected set; }
 		[BsonElement] public HashSet<int>? AppendPropIdList { get; private set; } = new();
-		[BsonIgnore] public new ReliquaryData ItemData { get; protected set; }
-
+		[BsonIgnore] public new ReliquaryData ItemData => (ReliquaryData)GameData.ItemDataMap[ItemId];
 		public ReliquaryItem(ulong guid, int itemId, int uniqueId) : base(guid, itemId)
 		{
 			Id = uniqueId;
@@ -28,7 +27,6 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
 		public async Task OnLoadAsync(ulong guid)
 		{
-			ItemData = (ReliquaryData)GameData.ItemDataMap[ItemId];
 			Guid = guid;
 		}
 		public EquipType GetEquipSlot()

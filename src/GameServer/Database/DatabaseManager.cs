@@ -156,6 +156,23 @@ namespace Weedwacker.GameServer.Database
             return player;
         }
 
+        // Don't create a player when requested by gameUid
+        public static async Task<Player?> GetPlayerByGameUidAsync(int gameUid)
+        {
+            var player = await Players.Find(w => w.GameUid == gameUid).FirstOrDefaultAsync();
+            if (player == null) return null;
+
+            //Attach player systems to the player
+            player.Avatars = await GetAvatarsByPlayerAsync(player) ?? await SaveAvatarsAsync(new AvatarManager(player)); // Load avatars before inventory, so that we can attach weapons while loading them
+            player.Inventory = await GetInventoryByPlayerAsync(player) ?? await SaveInventoryAsync(new InventoryManager(player));
+            player.Inventory.ShopManager = await GetShopsByPlayerAsync(player) ?? await SaveShopsAsync(new ShopManager(player));
+            player.SocialManager = await GetSocialByPlayerAsync(player) ?? await SaveSocialAsync(new SocialManager(player));
+            player.TeamManager = await GetTeamsByPlayerAsync(player) ?? await SaveTeamsAsync(new TeamManager(player));
+            await player.OnLoadAsync();
+
+            return player;
+        }
+
         public static async Task<AvatarManager> SaveAvatarsAsync(AvatarManager avatars)
         {
             await Avatars.ReplaceOneAsync<AvatarManager>(w => w.OwnerId == avatars.OwnerId, avatars, Replace);

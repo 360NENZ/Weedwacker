@@ -12,7 +12,7 @@ using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Packet.Recv
 {
-    [OpCode("GetPlayerTokenReq")]
+    [OpCode((ushort)OpCode.GetPlayerTokenReq)]
     internal class HandleGetPlayerTokenReq : BaseHandler
     {
         public override async Task HandleAsync(Connection session, byte[] header, byte[] payload)
@@ -39,6 +39,8 @@ namespace Weedwacker.GameServer.Packet.Recv
                 session.Stop();
                 return;
             }
+            else
+                GameServer.OnlinePlayers.Add(session.Player.GameUid, session);
 
             // Update the player's session pointer
             session.Player.Session = session;

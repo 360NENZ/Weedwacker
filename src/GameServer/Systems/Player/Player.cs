@@ -25,7 +25,8 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonIgnore] public World.World? World;
         [BsonIgnore] public Scene? Scene { get; private set; }
         [BsonElement] public int SceneId { get; private set; }
-        [BsonElement] public int RegionId { get; private set; }
+        [BsonElement] public Tuple<int, int> WorldAreaIds { get; private set; } // <areaID1, areaID2>
+        [BsonElement] public int RegionId { get; private set; } = 1;
         [BsonIgnore] public uint PeerId;
         [BsonIgnore] public Vector3 Position;
         [BsonIgnore] public Vector3 Rotation;
@@ -35,11 +36,14 @@ namespace Weedwacker.GameServer.Systems.Player
         public int NextResinRefresh;
         public int LastDailyReset;
         public Dictionary<PlayerProperty, int> PlayerProperties { get; set; } = new(); // SET ONLY THROUGH THE PROPMANAGER
+        public Dictionary<OpenStateType, int> OpenStates = new(); // SET ONLY THROUGH THE OPENSTATEMANAGER
         [BsonIgnore] public PlayerPropertyManager PropManager;
+        [BsonIgnore] public OpenStateManager OpenStateManager;
         [BsonIgnore] public ResinManager ResinManager;
         [BsonIgnore] public Connection? Session; // Set by HandleGetPlayerTokenReq
         [BsonIgnore] public string Token { get; set; } // Obtained and used When Logging in
         [BsonIgnore] public uint EnterSceneToken;
+        private long NextSendPlayerLocTime = 0;
         [BsonIgnore] private bool Paused;
         [BsonIgnore] public bool HasSentLoginPackets { get; private set; } = false;
         [BsonIgnore] private ulong NextGuid = 0;
@@ -52,6 +56,7 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonIgnore] public Inventory.InventoryManager Inventory; // Loaded by DatabaseManager
         [BsonIgnore] public Social.SocialManager SocialManager; // Loaded by DatabaseManager
         [BsonIgnore] public TeamManager TeamManager; // Loaded by DatabaseManager
+
 
 
         public Player(string heroName, string accountUid, int gameUid)
@@ -67,19 +72,19 @@ namespace Weedwacker.GameServer.Systems.Player
             PropManager = new(this);
             ResinManager = new(this);
             SocialManager = new(this);
+            OpenStateManager = new(this);
         }
 
         private async Task OnCreate()
         {
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_PLAYER_LEVEL, 1, false);
+            await PropManager.SetPropertyAsync(PlayerProperty.PROP_PLAYER_WORLD_LEVEL, 1, false);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_IS_SPRING_AUTO_USE, 1, false);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_SPRING_AUTO_USE_PERCENT, 50, false);
             await ResinManager.AddResinAsync(160);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_IS_FLYABLE, 0, false);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_MAX_STAMINA, 10000, false);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_CUR_PERSIST_STAMINA, 10000, false);
-            SceneId = 3;
-            RegionId = 1;
 
             // Pick character
             Session.State = SessionState.PICKING_CHARACTER;
@@ -91,6 +96,11 @@ namespace Weedwacker.GameServer.Systems.Player
             return ((ulong)GameUid << 32) + nextId;
         }
 
+        public void ResetSendPlayerLocTime()
+        {
+            NextSendPlayerLocTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() + 5000;
+        }
+
         public async Task<bool> SetMainCharacter(int avatarId, string heroName)
         {
             if (GameData.AvatarHeroEntityDataMap.ContainsKey(avatarId) && MainCharacterId == 0)
@@ -98,10 +108,11 @@ namespace Weedwacker.GameServer.Systems.Player
                 MainCharacterId = avatarId;
                 Profile.HeroName = heroName;
                 Profile.Nickname = heroName;
+                Profile.HeadImage = new() { AvatarId = (uint)avatarId, CostumeId = 0 };
 
                 // Update Database
                 var filter = Builders<Player>.Filter.Where(w => w.AccountUid == AccountUid);
-                var update = Builders<Player>.Update.Set(w => w.Profile.HeroName, heroName).Set(w => w.Profile.Nickname, heroName).Set(w => w.MainCharacterId, avatarId);
+                var update = Builders<Player>.Update.Set(w => w.Profile, Profile).Set(w => w.MainCharacterId, avatarId);
                 await DatabaseManager.UpdatePlayerAsync(filter, update);
                 return true;
             }
@@ -119,14 +130,31 @@ namespace Weedwacker.GameServer.Systems.Player
             Scene = scene;
             if (scene == null) SceneId = 0;
             else SceneId = scene.SceneData.id;
+
+            // Update Database
+            var filter = Builders<Player>.Filter.Where(w => w.AccountUid == AccountUid);
+            var update = Builders<Player>.Update.Set(w => w.SceneId, SceneId);
+            await DatabaseManager.UpdatePlayerAsync(filter, update);
+        }
+
+        public async Task EnterWorldAreaAsync(uint areaType, uint areaID, bool isInit = false)
+        {
+            if (areaType == 2)
+            {
+                if (!isInit) await Scene.UpdateActiveAreaWeathersAsync(WorldAreaIds);
+                WorldAreaIds = Tuple.Create(WorldAreaIds.Item1, (int)areaID);
+            }
+            else
+                WorldAreaIds = Tuple.Create((int)areaID, WorldAreaIds.Item2);
+
+            // Update Database
+            var filter = Builders<Player>.Filter.Where(w => w.AccountUid == AccountUid);
+            var update = Builders<Player>.Update.Set(w => w.WorldAreaIds, WorldAreaIds);
+            await DatabaseManager.UpdatePlayerAsync(filter, update);
         }
 
         public async Task OnLoginAsync()
         {
-            // Create world
-            World.World world = new(this);
-
-
             // Show opening cutscene if player has no avatars
             if (Avatars.GetAvatarCount() == 0)
             {
@@ -134,16 +162,24 @@ namespace Weedwacker.GameServer.Systems.Player
                 return;
 
             }
-            else if (SceneId == 0)
+
+            await SendPacketAsync(new PacketPlayerDataNotify(this));
+            await OpenStateManager.OnLoginAsync();
+            await SendPacketAsync(new PacketStoreWeightLimitNotify());
+            await SendPacketAsync(new PacketPlayerStoreNotify(this));
+            await SendPacketAsync(new PacketAvatarDataNotify(this));
+
+            // Create world
+            World.World world = new(this);
+            if (SceneId == 0 || Position == new Vector3(0,0,0)) // new player?
             {
                 SceneId = 3;
+                WorldAreaIds = Tuple.Create(1, 109); // beach
+                await EnterWorldAreaAsync(1, 1, true); 
                 await world.AddPlayerAsync(this, EnterReason.Login, EnterType.Self, true);
             }
             else
                 await world.AddPlayerAsync(this, EnterReason.Login);
-
-            await SendPacketAsync(new PacketPlayerDataNotify(this));
-            await SendPacketAsync(new PacketAvatarDataNotify(this));
 
             // Multiplayer setting
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_PLAYER_MP_SETTING_TYPE, (int)MpSettingType.EnterAfterApply, false);
@@ -161,6 +197,7 @@ namespace Weedwacker.GameServer.Systems.Player
             BattlePassManager = new(this);
             GadgetManager = new(this);
             EnergyManager = new(this);
+            OpenStateManager = new(this);
         }
         public bool IsInMultiplayer() { return World != null && World.IsMultiplayer; }
 
@@ -205,6 +242,16 @@ namespace Weedwacker.GameServer.Systems.Player
                 onlineInfo.BlacklistUidList.AddRange(Profile.BlacklistUidList);
 
             return onlineInfo;
+        }
+
+        public PlayerLocationInfo GetPlayerLocationInfo()
+        {
+            return new PlayerLocationInfo()
+            {
+                Uid = (uint)GameUid,
+                Pos = new() { X = Position.X, Y = Position.Y, Z = Position.Z },
+                Rot = new() { X = Rotation.X, Y = Rotation.Y, Z = Rotation.Z }
+            };
         }
 
         public async Task SendPacketAsync(BasePacket packet)

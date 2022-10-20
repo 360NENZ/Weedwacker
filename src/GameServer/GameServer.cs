@@ -9,6 +9,7 @@ using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Systems.Avatar;
 using Weedwacker.GameServer.Systems.World;
 using Weedwacker.Shared.Authentication;
+using Weedwacker.Shared.Network.Proto;
 using Weedwacker.Shared.Utils.Configuration;
 
 namespace Weedwacker.GameServer
@@ -16,6 +17,7 @@ namespace Weedwacker.GameServer
     internal static class GameServer
     {
         private static readonly HttpClient client = new HttpClient();
+
         public static GameConfig Configuration;
         public static SortedList<int,Connection> OnlinePlayers = new(); // <gameUid,connection>
         private static HashSet<World> Worlds = new();
@@ -68,5 +70,23 @@ namespace Weedwacker.GameServer
             //TODO
             return int.MaxValue;
         }
+
+        internal static async Task<SocialDetail?> GetSocialDetailByUid(int askerUid, uint reqUid)
+        {
+            SocialDetail socialDetail;
+            if (OnlinePlayers.TryGetValue((int)reqUid, out Connection session))
+            {
+                return session.Player.SocialManager.GetSocialDetail(askerUid);            
+            }
+            else
+            {
+                var player = await Database.DatabaseManager.GetPlayerByGameUidAsync((int)reqUid);
+                if (player != null)
+                    return player.SocialManager.GetSocialDetail(askerUid);
+                else
+                    return null;
+            }
+        }
+
     }
 }

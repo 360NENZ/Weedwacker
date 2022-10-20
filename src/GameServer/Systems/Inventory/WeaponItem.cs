@@ -10,13 +10,11 @@ namespace Weedwacker.GameServer.Systems.Inventory
 		[BsonElement] public List<int>? Affixes { get; protected set; } = new();
         [BsonElement] public int Refinement { get; protected set; } = 0;
 		[BsonIgnore] public uint WeaponEntityId;
-		[BsonIgnore] public new WeaponData ItemData;
+		[BsonIgnore] public new WeaponData ItemData => (WeaponData)GameData.ItemDataMap[ItemId];
 
 		public WeaponItem(ulong guid, int itemId, int uniqueId) : base(guid, itemId)
 		{
 			Id = uniqueId;
-
-			ItemData = (WeaponData)GameData.ItemDataMap[ItemId];
 			Level = 1;
 
 			if (ItemData.skillAffix != null)
@@ -33,7 +31,6 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
 		public async Task OnLoadAsync(ulong guid)
         {
-			ItemData = (WeaponData)GameData.ItemDataMap[ItemId];
 			Guid = guid;
 			Count = 1;
         }

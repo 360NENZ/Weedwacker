@@ -23,7 +23,6 @@ namespace Weedwacker.GameServer.Systems.World
         public World(Player.Player owner)
         {
             Host = owner;
-            Players.Add(owner);
             LevelEntityId = GetNextEntityId(EntityIdType.MPLEVEL);
             WorldLevel = owner.Profile.WorldLevel;
             GameServer.RegisterWorld(this);
@@ -109,6 +108,7 @@ namespace Weedwacker.GameServer.Systems.World
 
         public async Task RemovePlayerAsync(Player.Player player)
         {
+            if (!Players.Contains(player)) return;
             // Remove team entities
             await player.SendPacketAsync(new PacketDelTeamEntityNotify(player.SceneId, player.TeamManager.EntityId));
 
@@ -152,6 +152,7 @@ namespace Weedwacker.GameServer.Systems.World
             }
 
             Scene? oldScene = player.Scene;
+            int oldSceneId = oldScene == null ? 0 : oldScene.GetId();
             Scene newScene = GetSceneById(sceneId);
 
             if (oldScene != null)
@@ -163,12 +164,12 @@ namespace Weedwacker.GameServer.Systems.World
 
             if (useDefaultBornPosition)
             {
-                SceneInfo sceneInfo = newScene.ScriptManager.Info;
+                SceneInfo sceneInfo = GameData.SceneScripts[sceneId];
                 teleportTo = sceneInfo.scene_config.born_pos;
                 player.Rotation = sceneInfo.scene_config.born_rot;
             }
 
-            await newScene.AddPlayerAsync(player, enterReason, teleportTo, enterType, oldScene.GetId(), player.Position);
+            await newScene.AddPlayerAsync(player, enterReason, teleportTo, enterType, oldSceneId, player.Position);
 
             return true;
         }
@@ -177,18 +178,18 @@ namespace Weedwacker.GameServer.Systems.World
         {
             Players.AsParallel().ForAll(async player =>
             {
-                // Dont send packets if player is logging in and filter out joining player
+                    // Dont send packets if player is logging in and filter out joining player
                 if (!player.HasSentLoginPackets || player == paramPlayer) return;
 
 
-                // Update team of all players since max players has been changed - Probably not the best way to do it
+                    // Update team of all players since max players has been changed - Probably not the best way to do it
                 if (IsMultiplayer)
                 {
                     player.TeamManager.MpTeam.CopyFrom(player.TeamManager.MpTeam, player.TeamManager.GetMaxTeamSize());
                     await player.TeamManager.UpdateTeamEntities();
                 }
 
-                // Dont send packets if player is loading into the scene
+                    // Dont send packets if player is loading into the scene
                 if (player.SceneLoadState < SceneLoadState.INIT)
                 {
                     await Task.WhenAll(new Task[]
@@ -204,12 +205,14 @@ namespace Weedwacker.GameServer.Systems.World
                     });
                 }
             });
+
+
         }
 
         public async Task BroadcastPacketAsync(BasePacket packet)
         {
             // Send to all players - might have to check if player has been sent data packets
-            Players.AsParallel().ForAll(async p => await p.SendPacketAsync(packet));           
+            Players.AsParallel().ForAll(async p => await p.SendPacketAsync(packet));
         }
 
         // Returns false if there are no players in this world

@@ -77,7 +77,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             if(Owner.TeamManager.GetCurrentTeamInfo().AvatarInfo.Count < (Owner.IsInMultiplayer() ? GameServer.Configuration.Server.GameOptions.AvatarLimits.SinglePlayerTeam : GameServer.Configuration.Server.GameOptions.AvatarLimits.SinglePlayerTeam))
             {
                 addToTeam = true;
-                Owner.TeamManager.GetCurrentTeamInfo().AddAvatar(avatar);
+                await Owner.TeamManager.AddToTeamAsync(avatar);
             }
             if (notify) await Owner.SendPacketAsync(new PacketAvatarAddNotify(avatar, addToTeam));
 

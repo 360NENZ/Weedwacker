@@ -13,7 +13,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
     internal class MaterialsTab : InventoryTab
     {
         private string mongoPathToItems = $"{nameof(InventoryManager.SubInventories)}.{ItemType.ITEM_MATERIAL}.{nameof(MaterialsTab)}.{nameof(Items)}";
-        [BsonIgnore] public new const int InventoryLimit = 9999;
+        [BsonIgnore] public new const int InventoryLimit = 2000;
 
         public MaterialsTab(Player.Player owner, InventoryManager inventory) : base(owner, inventory) { }
 
@@ -24,10 +24,11 @@ namespace Weedwacker.GameServer.Systems.Inventory
             foreach (MaterialItem item in Items.Values)
             {
                 item.Guid = Owner.GetNextGameGuid();
+                inventory.GuidMap.Add(item.Guid, item);
             }
         }
 
-        internal override async Task<GameItem?> AddItemAsync(int itemId, int count = 1)
+        public override async Task<GameItem?> AddItemAsync(int itemId, int count = 1)
         {
             if (Items.TryGetValue(itemId, out GameItem? material))
             {

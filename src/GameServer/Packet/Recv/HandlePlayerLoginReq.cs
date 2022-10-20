@@ -4,7 +4,7 @@ using Weedwacker.Shared.Network.Proto;
 
 namespace Weedwacker.GameServer.Packet.Recv
 {
-    [OpCode("PlayerLoginReq")]
+    [OpCode((ushort)OpCode.PlayerLoginReq)]
     internal class HandlePlayerLoginReq : BaseHandler
     {
         public override async Task HandleAsync(Connection session, byte[] header, byte[] payload)

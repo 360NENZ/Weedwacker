@@ -134,7 +134,7 @@ namespace Weedwacker.GameServer.Systems.World
 
             foreach (EquipItem item in Avatar.Equips.Values)
             {
-                if ((item.ItemData as MaterialData).itemType == ItemType.ITEM_WEAPON)
+                if (item.ItemData.itemType == ItemType.ITEM_WEAPON)
                 {
                     avatarInfo.Weapon = (item as WeaponItem).CreateSceneWeaponInfo();
                 }

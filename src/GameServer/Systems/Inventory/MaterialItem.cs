@@ -1,4 +1,5 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
+using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.Shared.Network.Proto;
 
@@ -6,7 +7,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 {
     internal class MaterialItem : GameItem
     {
-        [BsonIgnore] public new MaterialData ItemData { get; private set; }
+        [BsonIgnore] public new MaterialData ItemData => (MaterialData)GameData.ItemDataMap[ItemId];
 
         public MaterialItem(ulong guid, int itemId, int count) : base(guid, itemId, count)
         {

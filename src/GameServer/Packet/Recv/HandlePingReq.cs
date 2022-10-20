@@ -4,7 +4,7 @@ using Weedwacker.Shared.Network.Proto;
 
 namespace Weedwacker.GameServer.Packet.Recv
 {
-	[OpCode("PingReq")]
+	[OpCode((ushort)OpCode.PingReq)]
 	internal class HandlePingReq : BaseHandler
 	{
 		public override async Task HandleAsync(Connection session, byte[] header, byte[] payload)

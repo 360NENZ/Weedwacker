@@ -24,15 +24,17 @@ namespace Weedwacker.GameServer.Systems.Inventory
             foreach (FurnitureItem item in Items.Values)
             {
                 item.Guid = Owner.GetNextGameGuid();
+                Inventory.GuidMap.Add(item.Guid, item);
             }
             foreach (MaterialItem item in Materials.Values)
             {
                 item.Guid = Owner.GetNextGameGuid();
+                Inventory.GuidMap.Add(item.Guid, item);
             }
         }
 
         //TODO FurnitureItem
-        internal override async Task<GameItem?> AddItemAsync(int itemId, int count = 1)
+        public override async Task<GameItem?> AddItemAsync(int itemId, int count = 1)
         {
 
             if (GameData.ItemDataMap[itemId].itemType == ItemType.ITEM_MATERIAL)

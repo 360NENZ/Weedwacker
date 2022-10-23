@@ -21,7 +21,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         [BsonElement] public int BornTime { get; private set; }
         [BsonElement] public int AvatarId { get; private set; }           // Id of avatar
         [BsonIgnore] private Player.Player Owner { get; set; } // Loaded by DatabaseManager
-        [BsonIgnore] public AvatarCompiledData Data { get; private set; } // Loaded by DatabaseManager
+        [BsonIgnore] public AvatarCompiledData Data => GameServer.AvatarInfo[AvatarId];
         [BsonIgnore] public ulong Guid { get; private set; }           // Player unique Avatar id. Generated each session
         [BsonIgnore] public int EntityId { get; private set; }
 
@@ -52,7 +52,6 @@ namespace Weedwacker.GameServer.Systems.Avatar
         private async Task<Avatar> InitializeAsync(int avatarId, Player.Player owner)
         {
             AvatarId = avatarId;
-            Data = GameServer.GetAvatarInfo(avatarId);
 
             if (Data.GeneralData.candSkillDepotIds.Length > 0)
             {
@@ -97,7 +96,6 @@ namespace Weedwacker.GameServer.Systems.Avatar
         {
             Owner = owner;
             Guid = owner.GetNextGameGuid();
-            Data = GameServer.GetAvatarInfo(AvatarId);
             var tasks = new List<Task>
             {
                 Fetters.OnLoadAsync(owner, this)

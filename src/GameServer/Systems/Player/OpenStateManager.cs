@@ -113,15 +113,15 @@ namespace Weedwacker.GameServer.Systems.Player
 
             // Make sure that this is an open state that the client is allowed to set,
             // and that it doesn't have any further conditions attached.
-            if (data == null || !data.allowClientOpen || !AreConditionsMet(data))
-            {
-                return false;
-            }
-            else
+            if (data != null && data.allowClientOpen && AreConditionsMet(data))
             {
                 // Set.
                 await SetOpenStateAsync((int)openState, (int)value);
                 return true;
+            }
+            else
+            {
+                return false;
             }
         }
 

@@ -77,7 +77,7 @@ namespace Weedwacker.GameServer.Systems.Social
                 Signature = Owner.Profile.Signature,
                 Level = (uint)Owner.PlayerProperties[Enums.PlayerProperty.PROP_PLAYER_LEVEL],
                 Birthday = Owner.Profile.Birthday,
-                WorldLevel = (uint)Owner.PlayerProperties[Enums.PlayerProperty.PROP_PLAYER_WORLD_LEVEL],
+                WorldLevel = (uint)Owner.PlayerProperties.GetValueOrDefault(Enums.PlayerProperty.PROP_PLAYER_WORLD_LEVEL, 0),
                 NameCardId = (uint)Owner.Profile.NameCardId,
                 IsShowAvatar = IsShowAvatar,
                 /* TODO

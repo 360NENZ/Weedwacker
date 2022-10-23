@@ -124,12 +124,11 @@ namespace Weedwacker.GameServer.Systems.World
         {
             // Add new entities for player
             TeamInfo teamInfo = player.TeamManager.GetCurrentTeamInfo();
-            foreach (int avatarId in teamInfo.AvatarInfo.Keys)
+            player.TeamManager.ActiveTeam = new();
+            foreach (var entry in teamInfo.AvatarInfo)
             {
-                if (avatarId == 0) continue;
-                AvatarEntity entity = new AvatarEntity(player.Scene, player.Avatars.GetAvatarById(avatarId));
-                player.TeamManager.ActiveTeam = new SortedList<int, AvatarEntity>(teamInfo.AvatarInfo.Select(
-                    w => new KeyValuePair<int, AvatarEntity>(w.Key, new AvatarEntity(player.Scene, w.Value))).ToDictionary(w => w.Key, w => w.Value));
+                AvatarEntity entity = new AvatarEntity(teamInfo, player.Scene, player.Avatars.GetAvatarById(entry.Value.AvatarId));
+                player.TeamManager.ActiveTeam.Add(entry.Key, entity);
             }
         }
 

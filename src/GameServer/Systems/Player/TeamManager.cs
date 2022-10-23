@@ -141,17 +141,69 @@ namespace Weedwacker.GameServer.Systems.Player
                 return GameServer.Configuration.Server.GameOptions.AvatarLimits.SinglePlayerTeam;
         }
 
-        //TODO
         public async Task UpdateTeamEntities()
         {
-            if (Owner.IsInMultiplayer())
+            AvatarEntity currentEntity = GetCurrentAvatarEntity();
+            int prevSelectedAvatarIndex = -1;
+
+            // Create a copy of the active team
+            Dictionary<int, AvatarEntity> previousTeam = new(); // <avatarId, entity>
+            foreach (var entity in ActiveTeam)
             {
+                previousTeam.Add(entity.Value.Avatar.AvatarId, entity.Value);
             }
-            else
+
+            // Clear active team entity list
+            ActiveTeam.Clear();
+
+            // update ActiveTeam using the entries of the current TeamInfo
+            for (int i = 0; i < GetCurrentTeamInfo().AvatarInfo.Count;  i++)
             {
+                int avatarId = GetCurrentTeamInfo().AvatarInfo[i].AvatarId;
+
+                if (previousTeam.TryGetValue(avatarId, out AvatarEntity? entity))
+                {
+                    previousTeam.Remove(avatarId);
+                    if (entity == currentEntity)
+                    {
+                        prevSelectedAvatarIndex = i;
+                    }
+                }
+                else
+                {
+                    entity = new AvatarEntity(GetCurrentTeamInfo(), Owner.Scene, Owner.Avatars.GetAvatarById(avatarId));
+                }
+
+                ActiveTeam.Add(i, entity);
             }
+
+            // Remove the remaining entities that didn't get added back to the active team
+            foreach (AvatarEntity entity in previousTeam.Values)
+            {
+                //TODO apply correct visionType
+                await Owner.Scene.RemoveEntityAsync(entity);
+            }
+
+            // Set new selected character index
+            if (prevSelectedAvatarIndex == -1)
+            {
+                // Previous selected avatar is not in the same spot, we will select the current one in the prev slot
+                prevSelectedAvatarIndex = Math.Min(CurrentCharacterIndex, ActiveTeam.Count - 1);
+            }
+            CurrentCharacterIndex = prevSelectedAvatarIndex;
+
             // Packets
             await Owner.World.BroadcastPacketAsync(new PacketSceneTeamUpdateNotify(Owner));
+
+            // Skill charges packet - Yes, this is official server behavior as of 2.6.0
+            ActiveTeam.AsParallel().ForAll(async w => await w.Value.Avatar.GetCurSkillDepot().SendAvatarSkillInfoNotify());
+
+            // Check if character changed
+            if (currentEntity != GetCurrentAvatarEntity())
+            {
+                // Remove and Add
+                await Owner.Scene.ReplaceEntityAsync(currentEntity, GetCurrentAvatarEntity());
+            }
         }
 
         public async Task SetupAvatarTeamAsync(int teamId, List<long> list)

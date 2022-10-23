@@ -14,8 +14,9 @@ namespace Weedwacker.GameServer.Systems.World
         public TeamInfo TeamInfo { get; private set; }
         public uint KilledBy { get; protected set; }
 
-        public AvatarEntity(Scene scene, Avatar.Avatar avatar) : base(scene)
+        public AvatarEntity(TeamInfo team, Scene scene, Avatar.Avatar avatar) : base(scene)
         {
+            TeamInfo = team;
             Avatar = avatar;
             Id = scene.World.GetNextEntityId(EntityIdType.AVATAR);
             FightProps = avatar.FightProp;
@@ -168,7 +169,7 @@ namespace Weedwacker.GameServer.Systems.World
                 EntityAuthorityInfo = authority,
                 LastMoveSceneTimeMs = LastMoveSceneTimeMs,
                 LastMoveReliableSeq = LastMoveReliableSeq,
-                LifeState = (uint)LiveState
+                LifeState = (uint)LiveState,            
             };
             entityInfo.AnimatorParaList.Add(new AnimatorParameterValueInfoPair());
 
@@ -259,11 +260,6 @@ namespace Weedwacker.GameServer.Systems.World
         }
 
         public override bool SetMotionState(MotionState state)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Task OnCreateAsync()
         {
             throw new NotImplementedException();
         }

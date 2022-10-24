@@ -1,22 +1,17 @@
 ﻿using NLua;
 using Weedwacker.GameServer.Enums;
-using Weedwacker.GameServer.Systems.Script;
-using Weedwacker.GameServer.Systems.Script.Scene;
 
-namespace Weedwacker.GameServer.Systems.World
+namespace Weedwacker.GameServer.Systems.Script.Scene
 {
     internal class SceneScriptManager
     {
-        private Lua LuaState;
         public SceneInfo Info;
-        public Dictionary<int, SceneBlock> Blocks;
-        public Dictionary<int, SceneGroup> Groups;
+        public World.Scene Scene;
         public ScriptMonsterSpawnService ScriptMonsterSpawnService;
 
         public static Task<SceneScriptManager> CreateAsync(int sceneId, string scriptPath)
         {          
             var scene = new SceneScriptManager();
-            scene.LuaState = new();
             return scene.InitializeAsync(sceneId, scriptPath);
         }
 

@@ -8,6 +8,7 @@ using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet;
 using Weedwacker.GameServer.Packet.Send;
 using Weedwacker.GameServer.Systems.Avatar;
+using Weedwacker.GameServer.Systems.Script.Scene;
 using Weedwacker.Shared.Network.Proto;
 using Weedwacker.Shared.Utils;
 using static Weedwacker.GameServer.Systems.Script.Scene.SceneGroup;
@@ -20,6 +21,7 @@ namespace Weedwacker.GameServer.Systems.World
         public readonly SceneData SceneData;
         public readonly List<Player.Player> Players = new();
         public readonly Dictionary<uint, GameEntity> Entities = new(); // entityId
+        public readonly Dictionary<uint, ScriptEntity> ScriptEntities = new(); // entityId
         public readonly HashSet<SpawnInfo> SpawnedEntities;
         public readonly HashSet<SpawnInfo> DeadSpawnedEntities;
         public int AutoCloseTime;

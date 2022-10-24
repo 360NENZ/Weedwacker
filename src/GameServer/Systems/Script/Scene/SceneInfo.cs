@@ -1,6 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using NLua;
 using Vim.Math3d;
+using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.Script.Scene
 {
@@ -10,6 +11,7 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
         public SceneConfig? scene_config;
 
         public SortedList<int, int>? blocks; // <index ,blockIds>
+        public SortedList<int, SceneBlock>? BlocksInfo; // blockId
         public SortedList<int, Rectangle>? block_rects = new(); // <index, rectangle>
         public LuaTable dummy_points;// => LuaState.GetTable("dummy_points"); // load dummy points from Scene<sceneId>_<string>.lua
         public LuaTable routes_config;// => LuaState.GetTable("routes_config"); // load routes from ???
@@ -23,14 +25,35 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
         private async Task<SceneInfo> InitializeAsync(Lua lua, int sceneId, string scriptPath)
         {
             LuaState = lua;
-
-            FileInfo sceneInfo = new(Path.Combine(scriptPath, "Scene", $"{sceneId}", $"scene{sceneId}.lua"));
-            string script = await File.ReadAllTextAsync(sceneInfo.FullName);
-            //script = Regex.Unescape(script);
-            script = Regex.Replace(script, @"\r\n", "; "); // replace new lines with ';'
-            script = Regex.Replace(script, "\"", "'"); // replace " with '
+            FileInfo commonInfo = new(Path.Combine(scriptPath, "Config", "Excel", "CommonScriptConfig.lua"));
+            string common = commonInfo.FullName;
+            common = Regex.Replace(common, @"(?<!\\)[\\](?!\\)", @"\\"); // replace \\ with \\\\
             lua.DoString($"_SCENE{sceneId} = {{}}");
-            lua.DoString("loadScene = load (\"" + @script +"\""+ $", \";_;\", \"bt\" , _SCENE{sceneId})");
+            lua.DoString("loadCommon = loadfile (\"" + common + "\"" + $", \"bt\")");
+            lua.DoString("loadCommon()");
+            FileInfo configEntityInfo = new(Path.Combine(scriptPath, "Config", "Json", "ConfigEntity.lua"));
+            string configEntity = configEntityInfo.FullName;
+            configEntity = Regex.Replace(configEntity, @"(?<!\\)[\\](?!\\)", @"\\"); // replace \\ with \\\\
+            lua.DoString($"_SCENE{sceneId} = {{}}");
+            lua.DoString("loadConfigEntity = loadfile (\"" + configEntity + "\"" + $", \"bt\")");
+            lua.DoString("loadConfigEntity()");
+            FileInfo configEntityTypeInfo = new(Path.Combine(scriptPath, "Config", "Json", "ConfigEntityType.lua"));
+            string configEntityType = configEntityTypeInfo.FullName;
+            configEntityType = Regex.Replace(configEntityType, @"(?<!\\)[\\](?!\\)", @"\\"); // replace \\ with \\\\
+            lua.DoString($"_SCENE{sceneId} = {{}}");
+            lua.DoString("loadConfigEntityType = loadfile (\"" + configEntityType + "\"" + $", \"bt\")");
+            lua.DoString("loadConfigEntityType()");
+            FileInfo configQuestTypeInfo = new(Path.Combine(scriptPath, "Config", "Json", "ConfigQuestType.lua"));
+            string configQuestType = configQuestTypeInfo.FullName;
+            configQuestType = Regex.Replace(configQuestType, @"(?<!\\)[\\](?!\\)", @"\\"); // replace \\ with \\\\
+            lua.DoString($"_SCENE{sceneId} = {{}}");
+            lua.DoString("loadQuestType = loadfile (\"" + configQuestType + "\"" + $", \"bt\")");
+            lua.DoString("loadQuestType()");
+            FileInfo sceneInfo = new(Path.Combine(scriptPath, "Scene", $"{sceneId}", $"scene{sceneId}.lua"));
+            string sceneScript = sceneInfo.FullName;
+            sceneScript = Regex.Replace(sceneScript, @"(?<!\\)[\\](?!\\)", @"\\"); // replace \\ with \\\\
+            lua.DoString($"_SCENE{sceneId} = {{}}");
+            lua.DoString("loadScene = loadfile (\"" + sceneScript + "\""+ $", \"bt\" , _SCENE{sceneId})");
             lua.DoString("loadScene()");
             if(lua[$"_SCENE{sceneId}.{nameof(scene_config)}"] != null)
                 scene_config = new(lua.GetTable($"_SCENE{sceneId}.{nameof(scene_config)}"));
@@ -38,6 +61,11 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
             {
                 var bloks = lua.GetTable($"_SCENE{sceneId}.{nameof(blocks)}");
                 blocks = new SortedList<int, int>(lua.GetTableDict(bloks).ToDictionary(w => (int)(long)w.Key, w => (int)(long)w.Value));
+                BlocksInfo = new();
+                foreach (int blockId in blocks.Values)
+                {
+                    //BlocksInfo.Add(blockId, await SceneBlock.CreateAsync(lua, sceneId, blockId, Path.Combine(scriptPath, "Scene", $"{sceneId}")));
+                }
             }
             if (lua[$"_SCENE{sceneId}.{nameof(block_rects)}"] != null)
             {

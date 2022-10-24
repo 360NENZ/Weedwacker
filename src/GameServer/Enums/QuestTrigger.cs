@@ -5,24 +5,57 @@ namespace Weedwacker.GameServer.Enums
 {
 
     [AttributeUsage(AttributeTargets.Class)]
-    public class QuestTriggerAttribute : Attribute
+    public class QuestCondAttribute : Attribute
     {
-        public readonly int QuestTriggerNum;
-        public readonly string QuestTriggerName;
+        public readonly int QuestCondNum;
+        public readonly string QuestCondName;
 
-        public QuestTriggerAttribute(int value)
+        public QuestCondAttribute(int value)
         {
-            QuestTriggerNum = value;
-            QuestTriggerName = Enum.GetName(typeof(QuestTrigger), value);
+            QuestCondNum = value;
+            QuestCondName = Enum.GetName(typeof(QuestCond), value);
         }
-        public QuestTriggerAttribute(string name)
+        public QuestCondAttribute(string name)
         {
-            QuestTriggerNum = (int)Enum.Parse(typeof(QuestTrigger),name);
-            QuestTriggerName = name;
+            QuestCondNum = (int)Enum.Parse(typeof(QuestCond),name);
+            QuestCondName = name;
+        }
+    }
+
+    public class QuestContentAttribute : Attribute
+    {
+        public readonly int QuestContentNum;
+        public readonly string QuestContentName;
+
+        public QuestContentAttribute(int value)
+        {
+            QuestContentNum = value;
+            QuestContentName = Enum.GetName(typeof(QuestContent), value);
+        }
+        public QuestContentAttribute(string name)
+        {
+            QuestContentNum = (int)Enum.Parse(typeof(QuestContent), name);
+            QuestContentName = name;
+        }
+    }
+    public class QuestExecAttribute : Attribute
+    {
+        public readonly int QuestExecNum;
+        public readonly string QuestExecName;
+
+        public QuestExecAttribute(int value)
+        {
+            QuestExecNum = value;
+            QuestExecName = Enum.GetName(typeof(QuestExec), value);
+        }
+        public QuestExecAttribute(string name)
+        {
+            QuestExecNum = (int)Enum.Parse(typeof(QuestExec), name);
+            QuestExecName = name;
         }
     }
     [JsonConverter(typeof(StringEnumConverter))]
-    internal enum QuestTrigger
+    internal enum QuestCond
     {
         QUEST_COND_NONE = 0,
         QUEST_COND_STATE_EQUAL = 1,
@@ -102,7 +135,10 @@ namespace Weedwacker.GameServer.Enums
         QUEST_COND_NEW_HOMEWORLD_SHOP_ITEM = 75,
         QUEST_COND_SCENE_POINT_UNLOCK = 76,
         QUEST_COND_SCENE_LEVEL_TAG_EQ = 77,
+    }
 
+    internal enum QuestContent
+    {
         QUEST_CONTENT_NONE = 0,
         QUEST_CONTENT_KILL_MONSTER = 1,
         QUEST_CONTENT_COMPLETE_TALK = 2,
@@ -176,7 +212,10 @@ namespace Weedwacker.GameServer.Enums
         QUEST_CONTENT_IRODORI_FINISH_FLOWER_COMBINATION = 151,
         QUEST_CONTENT_IRODORI_POETRY_REACH_MIN_PROGRESS = 152,
         QUEST_CONTENT_IRODORI_POETRY_FINISH_FILL_POETRY = 153,
+    }
 
+    internal enum QuestExec
+    { 
         QUEST_EXEC_NONE = 0,
         QUEST_EXEC_DEL_PACK_ITEM = 1,
         QUEST_EXEC_UNLOCK_POINT = 2,

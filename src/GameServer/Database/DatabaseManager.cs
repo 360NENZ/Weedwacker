@@ -46,6 +46,7 @@ namespace Weedwacker.GameServer.Database
             BsonSerializer.RegisterSerializer(new EnumSerializer<FightProperty>(BsonType.String));
             BsonSerializer.RegisterSerializer(new EnumSerializer<ItemType>(BsonType.String));
             BsonSerializer.RegisterSerializer(new EnumSerializer<LifeState>(BsonType.String));
+            BsonSerializer.RegisterSerializer(new EnumSerializer<OpenStateType>(BsonType.String));
 
             /* Why is this not default behaviour??? */
             var LongToLongDictionarySerializer = new DictionaryInterfaceImplementerSerializer<Dictionary<long, long>>(

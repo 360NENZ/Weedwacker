@@ -68,6 +68,8 @@ namespace Weedwacker.GameServer.Systems.Player
             {
                 switch (condition.condType)
                 {
+                    case OpenStateCondType.NONE:
+                        continue;
                     // For level conditions, check if the player has reached the necessary level.
                     case OpenStateCondType.OPEN_STATE_COND_PLAYER_LEVEL:
                         {

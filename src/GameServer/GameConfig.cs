@@ -16,9 +16,9 @@ namespace Weedwacker.GameServer
         }
         public new class StructureJson
         {
-            public string Resources = "../../../resources/";
-            public string Scripts = "../../../resources/Scripts/";
-            public string keys = "../../../keys/";
+            public string Resources = "..\\..\\..\\resources\\";
+            public string Scripts = "..\\..\\..\\resources\\Scripts\\";
+            public string keys = "..\\..\\..\\keys\\";
 
 
             // UNUSED (potentially added later?)
@@ -28,7 +28,7 @@ namespace Weedwacker.GameServer
         {
 #if DEBUG
             public HashSet<OpCode> DebugWhitelist = new();
-            public HashSet<OpCode> DebugBlacklist = new() { OpCode.PingReq, OpCode.PingRsp};
+            public HashSet<OpCode> DebugBlacklist = new() { OpCode.PingReq, OpCode.PingRsp, OpCode.PlayerSetPauseReq, OpCode.PlayerSetPauseRsp};
 #endif
             /* This is the address used in the default region. */
             public string AccessAddress = "127.0.0.1";

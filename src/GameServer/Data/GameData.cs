@@ -69,7 +69,7 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<Tuple<int, int>, WeaponPromoteData> WeaponPromoteDataMap = new(); // <weaponPromoteId, promoteLevel>
         public readonly static SortedList<int, WeatherData> WeatherDataMap = new(); // areaId
 
-        public readonly static SortedList<int, SceneInfo> SceneScripts = new();
+        public readonly static ConcurrentDictionary<int, SceneInfo> SceneScripts = new();
 
         static readonly JsonSerializer Serializer = new()
         {
@@ -91,19 +91,21 @@ namespace Weedwacker.GameServer.Data
         static async Task LoadScripts(string path)
         {
             var dirs = Directory.GetDirectories(Path.Combine(path, "Scene"));
+            var tasks = new List<Task>();
             foreach(var fileAndPath in dirs)
             {
                 string fullPath = Path.GetFullPath(fileAndPath);             
                 int sceneId = int.Parse(fullPath.Split("\\").Last());
-                await LoadSceneScripts(sceneId, path);
-            }                    
+                tasks.Add(LoadSceneScripts(sceneId, path));
+            }
+            await Task.WhenAll(tasks);
         }
 
         static async Task LoadSceneScripts(int sceneId, string scriptPath)
         {
             Lua lua = new();
             var SceneX = await SceneInfo.CreateAsync(lua, sceneId, scriptPath);
-            SceneScripts.Add(sceneId, SceneX);
+            SceneScripts.Append(new(sceneId, SceneX));
         }
 
 
@@ -242,10 +244,10 @@ namespace Weedwacker.GameServer.Data
                 LoadBinOutFolder(Path.Combine(binPath, "Talent/EquipTalents"), WeaponAffixConfigDataMap),
                 LoadBinOutFolder(Path.Combine(binPath, "Talent/RelicTalents"), RelicAffixConfigDataMap),
                 LoadBinOutFolder(Path.Combine(binPath, "Talent/TeamTalents"), TeamResonanceConfigDataMap),
-                LoadBinOutFolder(Path.Combine(binPath, "Scene/Point"), ScenePointDataMap, false)
-            });
+                LoadBinOutFolder(Path.Combine(binPath, "Scene/Point"), ScenePointDataMap, false),
 
-            await LoadScripts(scriptPath);
+                LoadScripts(scriptPath)
+            });
 
             Logger.DebugWriteLine("Loaded Resources");
         }

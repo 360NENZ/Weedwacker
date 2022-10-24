@@ -1,11 +1,18 @@
-﻿using Vim.Math3d;
+﻿using System.Text.RegularExpressions;
+using NLua;
+using Vim.Math3d;
 using Weedwacker.GameServer.Enums;
+using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.Script.Scene
 {
     internal class SceneGroup
     {
-        public uint group_id;
+        private Lua LuaState;
+        private int SceneId;
+        public readonly uint BlockId;
+
+        public readonly uint group_id;
         public List<Monster>? monsters;
         public List<Npc>? npcs;
         public List<Gadget>? gadgets;
@@ -50,6 +57,7 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
         {
             public uint npc_id;
             public uint area_id;
+            public uint room;
         }
 
         public class Gadget : SpawnInfo
@@ -90,6 +98,7 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
             public string condition;
             public string action;
             public uint trigger_count;
+            public bool forbid_guest;
         }
 
         // for reference
@@ -99,6 +108,44 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
             public uint route_2;
             public uint gadget_seelie;
             public uint final_point;
+        }
+
+        internal static Task<SceneGroup> CreateAsync(Lua luaState, int sceneId, uint blockId, uint id, FileInfo fileInfo)
+        {
+            SceneGroup group = new(luaState, sceneId, blockId, id);
+            return group.InitializeAsync(fileInfo);
+        }
+
+        private SceneGroup(Lua luaState, int sceneId, uint blockId, uint groupId)
+        {
+            LuaState = luaState;
+            SceneId = sceneId;
+            BlockId = blockId;
+            group_id = groupId;
+        }
+
+        private async Task<SceneGroup> InitializeAsync(FileInfo groupInfo)
+        {
+            string script = groupInfo.FullName;
+
+            script = Regex.Replace(script, @"(?<!\\)[\\](?!\\)", @"\\"); // replace \\ with \\\\
+            LuaState.DoString($"_SCENE_GROUP{group_id} = {{EventType = _G.EventType; GadgetState = _G.GadgetState; RegionShape = _G.RegionShape; QuestState = _G.QuestState; EntityType = _G.EntityType; ScriptLib = _G.ScriptLib}}");
+            LuaState.DoString(@$"_SCENE_GROUP{group_id}.require = function(...)
+                                end");
+            LuaState.DoString($"success, loadGroup{group_id} = pcall(loadfile ,\"" + script + "\"" + $", \"bt\" , _SCENE_GROUP{group_id})");
+            try
+            {
+                
+                LuaState.DoString($"loadGroup{group_id}()");
+
+            }
+            catch
+            {
+                LuaState.DoString($"print (QuestState.QUEST_STATE_FAILED)");
+                Logger.DebugWriteLine($"{group_id}");
+            }
+
+            return this;
         }
     }
 }

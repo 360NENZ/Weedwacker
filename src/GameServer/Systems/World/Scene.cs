@@ -184,7 +184,10 @@ namespace Weedwacker.GameServer.Systems.World
 
         private async Task AddEntityDirectly(GameEntity entity)
         {
-            Entities.Add(entity.Id, entity);
+            if (entity is ScriptEntity scriptEntity && scriptEntity.GroupId != 0) // need an extra check against client gadgets. Oh if only I could do multiple inheritance
+                ScriptEntities.Add(scriptEntity.Id, scriptEntity);
+            else
+                Entities.Add(entity.Id, entity);
             await entity.OnCreateAsync(); // Call entity create event
         }
 
@@ -217,7 +220,7 @@ namespace Weedwacker.GameServer.Systems.World
 
         public async Task<bool> RemoveEntityAsync(GameEntity entity, VisionType visionType = VisionType.Die)
         {
-            if (Entities.Remove(entity.Id))
+            if (ScriptEntities.Remove(entity.Id) || Entities.Remove(entity.Id) )
             {
                 await BroadcastPacketAsync(new PacketSceneEntityDisappearNotify(entity, visionType));
                 return true;
@@ -226,13 +229,13 @@ namespace Weedwacker.GameServer.Systems.World
         }
         public async Task RemoveEntitiesAsync(IEnumerable<GameEntity> entity, VisionType visionType)
         {
-            var toRemove = entity.Where(w => Entities.Remove(w.Id));
+            var toRemove = entity.Where(w => ScriptEntities.Remove(w.Id) || Entities.Remove(w.Id) );
             if (toRemove.Any())
             {
                 await BroadcastPacketAsync(new PacketSceneEntityDisappearNotify(toRemove, visionType));
             }
         }
-        public async Task ReplaceEntityAsync(AvatarEntity oldEntity, AvatarEntity newEntity)
+        public async Task ReplaceAvatarAsync(AvatarEntity oldEntity, AvatarEntity newEntity)
         {
             Entities.Remove(oldEntity.Id);
             await AddEntityDirectly(newEntity);
@@ -245,7 +248,7 @@ namespace Weedwacker.GameServer.Systems.World
             List<GameEntity> entities = new();
             GameEntity currentEntity = player.TeamManager.GetCurrentAvatarEntity();
 
-            foreach (GameEntity entity in Entities.Values)
+            foreach (GameEntity entity in Entities.Values.Concat(ScriptEntities.Values))
             {
                 if (entity == currentEntity)
                 {
@@ -326,7 +329,7 @@ namespace Weedwacker.GameServer.Systems.World
         public async Task OnPlayerCreateGadget(ClientGadgetEntity gadget)
         {
             // Directly add
-            AddEntityDirectly(gadget);
+            await AddEntityDirectly(gadget);
 
             // Add to owner's gadget list
             gadget.Owner.GadgetManager.Gadgets.Add(gadget);

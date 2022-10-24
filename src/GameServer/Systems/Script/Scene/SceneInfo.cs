@@ -10,8 +10,8 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
         Lua LuaState;
         public SceneConfig? scene_config;
 
-        public SortedList<int, int>? blocks; // <index ,blockIds>
-        public SortedList<int, SceneBlock>? BlocksInfo; // blockId
+        public SortedList<int, uint>? blocks; // <index ,blockIds>
+        public SortedList<uint, SceneBlock>? BlocksInfo; // blockId
         public SortedList<int, Rectangle>? block_rects = new(); // <index, rectangle>
         public LuaTable dummy_points;// => LuaState.GetTable("dummy_points"); // load dummy points from Scene<sceneId>_<string>.lua
         public LuaTable routes_config;// => LuaState.GetTable("routes_config"); // load routes from ???
@@ -25,6 +25,8 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
         private async Task<SceneInfo> InitializeAsync(Lua lua, int sceneId, string scriptPath)
         {
             LuaState = lua;
+            LuaState.LoadCLRPackage();
+            LuaState.DoString(@" import ('GameServer', 'Weedwacker.GameServer.Systems.Script')");
             FileInfo commonInfo = new(Path.Combine(scriptPath, "Config", "Excel", "CommonScriptConfig.lua"));
             string common = commonInfo.FullName;
             common = Regex.Replace(common, @"(?<!\\)[\\](?!\\)", @"\\"); // replace \\ with \\\\
@@ -60,11 +62,11 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
             if (lua[$"_SCENE{sceneId}.{nameof(blocks)}"] != null)
             {
                 var bloks = lua.GetTable($"_SCENE{sceneId}.{nameof(blocks)}");
-                blocks = new SortedList<int, int>(lua.GetTableDict(bloks).ToDictionary(w => (int)(long)w.Key, w => (int)(long)w.Value));
+                blocks = new SortedList<int, uint>(lua.GetTableDict(bloks).ToDictionary(w => (int)(long)w.Key, w => (uint)(long)w.Value));
                 BlocksInfo = new();
-                foreach (int blockId in blocks.Values)
+                foreach (uint blockId in blocks.Values)
                 {
-                    //BlocksInfo.Add(blockId, await SceneBlock.CreateAsync(lua, sceneId, blockId, Path.Combine(scriptPath, "Scene", $"{sceneId}")));
+                    BlocksInfo.Add(blockId, await SceneBlock.CreateAsync(lua, sceneId, blockId, Path.Combine(scriptPath, "Scene", $"{sceneId}")));
                 }
             }
             if (lua[$"_SCENE{sceneId}.{nameof(block_rects)}"] != null)

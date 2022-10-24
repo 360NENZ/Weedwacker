@@ -202,7 +202,7 @@ namespace Weedwacker.GameServer.Systems.Player
             if (currentEntity != GetCurrentAvatarEntity())
             {
                 // Remove and Add
-                await Owner.Scene.ReplaceEntityAsync(currentEntity, GetCurrentAvatarEntity());
+                await Owner.Scene.ReplaceAvatarAsync(currentEntity, GetCurrentAvatarEntity());
             }
         }
 
@@ -304,7 +304,7 @@ namespace Weedwacker.GameServer.Systems.Player
             oldEntity.SetMotionState(MotionState.Standby);
 
             // Remove and Add
-            await Owner.Scene.ReplaceEntityAsync(oldEntity, newEntity);
+            await Owner.Scene.ReplaceAvatarAsync(oldEntity, newEntity);
         }
 
         public async Task OnAvatarDie(ulong dieGuid, PlayerDieType dieType)

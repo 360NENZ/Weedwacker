@@ -91,8 +91,8 @@ namespace Weedwacker.GameServer.Database
 
             Logger.WriteLine("Connected to GameServer database");
 
-            // Create a timer with a five second interval.
-            UpdateTimer = new System.Timers.Timer(5000);
+            // Create a timer with a two second interval.
+            UpdateTimer = new System.Timers.Timer(2000);
             // Hook up the Elapsed event for the timer. 
             UpdateTimer.Elapsed += BulkUpdate;
             UpdateTimer.AutoReset = true;
@@ -157,7 +157,7 @@ namespace Weedwacker.GameServer.Database
             //Attach player systems to the player
             player.Avatars = await GetAvatarsByPlayerAsync(player) ?? await SaveAvatarsAsync(new AvatarManager(player)); // Load avatars before inventory, so that we can attach weapons while loading them
             player.Inventory = await GetInventoryByPlayerAsync(player) ?? await SaveInventoryAsync(new InventoryManager(player));
-            player.Inventory.ShopManager = await GetShopsByPlayerAsync(player) ?? await SaveShopsAsync(new ShopManager(player));
+            player.ShopManager = await GetShopsByPlayerAsync(player) ?? await SaveShopsAsync(new ShopManager(player));
             player.ProgressManager = await GetProgressByPlayerAsync(player) ?? await SaveProgressAsync(new ProgressManager(player));
             player.SocialManager = await GetSocialByPlayerAsync(player) ?? await SaveSocialAsync(new SocialManager(player));
             player.TeamManager = await GetTeamsByPlayerAsync(player) ?? await SaveTeamsAsync(new TeamManager(player));
@@ -175,7 +175,7 @@ namespace Weedwacker.GameServer.Database
             //Attach player systems to the player
             player.Avatars = await GetAvatarsByPlayerAsync(player) ?? await SaveAvatarsAsync(new AvatarManager(player)); // Load avatars before inventory, so that we can attach weapons while loading them
             player.Inventory = await GetInventoryByPlayerAsync(player) ?? await SaveInventoryAsync(new InventoryManager(player));
-            player.Inventory.ShopManager = await GetShopsByPlayerAsync(player) ?? await SaveShopsAsync(new ShopManager(player));
+            player.ShopManager = await GetShopsByPlayerAsync(player) ?? await SaveShopsAsync(new ShopManager(player));
             player.ProgressManager = await GetProgressByPlayerAsync(player) ?? await SaveProgressAsync(new ProgressManager(player));
             player.SocialManager = await GetSocialByPlayerAsync(player) ?? await SaveSocialAsync(new SocialManager(player));
             player.TeamManager = await GetTeamsByPlayerAsync(player) ?? await SaveTeamsAsync(new TeamManager(player));
@@ -198,7 +198,7 @@ namespace Weedwacker.GameServer.Database
 
         private static async Task<AvatarManager?> GetAvatarsByPlayerAsync(Player owner)
         {
-            AvatarManager avatars = await Database.GetCollection<AvatarManager>("avatars").Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
+            AvatarManager avatars = await Avatars.Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
             if (avatars != null) await avatars.OnLoadAsync(owner);
             return avatars;
         }
@@ -209,7 +209,7 @@ namespace Weedwacker.GameServer.Database
         }
         private static async Task<InventoryManager?> GetInventoryByPlayerAsync(Player owner)
         {
-            InventoryManager inventory = await Database.GetCollection<InventoryManager>("inventories").Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
+            InventoryManager inventory = await Inventories.Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
             if (inventory != null) await inventory.OnLoadAsync(owner);
             return inventory;
         }
@@ -234,7 +234,7 @@ namespace Weedwacker.GameServer.Database
 
         private static async Task<TeamManager?> GetTeamsByPlayerAsync(Player owner)
         {
-            TeamManager teams = await Database.GetCollection<TeamManager>("teams").Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
+            TeamManager teams = await Teams.Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
             if (teams != null) await teams.OnLoadAsync(owner);
             return teams;
         }
@@ -253,7 +253,7 @@ namespace Weedwacker.GameServer.Database
 
         private static async Task<ShopManager?> GetShopsByPlayerAsync(Player owner)
         {
-            ShopManager shops = await Database.GetCollection<ShopManager>("shops").Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
+            ShopManager shops = await Shops.Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
             if (shops != null) await shops.OnLoadAsync(owner);
             return shops;
         }
@@ -266,32 +266,32 @@ namespace Weedwacker.GameServer.Database
 
         public static Task UpdateSocialAsync(FilterDefinition<SocialManager> filter, UpdateDefinition<SocialManager> update)
         {
-            SocialWrites.Add(new UpdateOneModel<SocialManager>(filter, update));
+            SocialWrites.Add(new UpdateOneModel<SocialManager>(filter, update) { IsUpsert = true });
             return Task.CompletedTask;
         }
 
         private static async Task<SocialManager?> GetSocialByPlayerAsync(Player owner)
         {
-            SocialManager social = await Database.GetCollection<SocialManager>("social").Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
+            SocialManager social = await Social.Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
             if (social != null) await social.OnLoadAsync(owner);
             return social;
         }
 
         public static async Task<ProgressManager> SaveProgressAsync(ProgressManager progress)
         {
-            await Progress.ReplaceOneAsync<ProgressManager>(w => w.OwnerId == progress.OwnerId, progress);
+            await Progress.ReplaceOneAsync<ProgressManager>(w => w.OwnerId == progress.OwnerId, progress, new ReplaceOptions() { IsUpsert = true});
             return progress;
         }
 
         public static Task UpdateProgressAsync(FilterDefinition<ProgressManager> filter, UpdateDefinition<ProgressManager> update)
         {
-            ProgressWrites.Add(new UpdateOneModel<ProgressManager>(filter, update));
+            ProgressWrites.Add(new UpdateOneModel<ProgressManager>(filter, update) { IsUpsert = true });
             return Task.CompletedTask;
         }
 
         private static async Task<ProgressManager?> GetProgressByPlayerAsync(Player owner)
         {
-            ProgressManager progress = await Database.GetCollection<ProgressManager>("progress").Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
+            ProgressManager progress = await Progress.Find(w => w.OwnerId == owner.GameUid).FirstOrDefaultAsync();
             if (progress != null) await progress.OnLoadAsync(owner);
             return progress;
         }

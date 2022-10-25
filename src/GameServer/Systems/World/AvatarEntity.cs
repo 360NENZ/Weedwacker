@@ -18,6 +18,7 @@ namespace Weedwacker.GameServer.Systems.World
         {
             TeamInfo = team;
             Avatar = avatar;
+            LiveState = LifeState.LIFE_ALIVE;
             Id = scene.World.GetNextEntityId(EntityIdType.AVATAR);
             FightProps = avatar.FightProp;
             WeaponItem weapon = avatar.GetWeapon();
@@ -27,6 +28,7 @@ namespace Weedwacker.GameServer.Systems.World
         public AvatarEntity(TeamInfo info, ushort index) : base(null)
         {
             TeamInfo = info;
+            LiveState = LifeState.LIFE_ALIVE;
             Avatar = info.AvatarInfo[index];
             FightProps = Avatar.FightProp;
         }
@@ -173,8 +175,10 @@ namespace Weedwacker.GameServer.Systems.World
             };
             entityInfo.AnimatorParaList.Add(new AnimatorParameterValueInfoPair());
 
-            if (Scene != null)
+            if (Scene != null && Avatar.GetOwner().TeamManager.GetCurrentAvatarEntity() == this)
             {
+                Position = Avatar.GetOwner().Position;
+                Rotation = Avatar.GetOwner().Rotation;
                 entityInfo.MotionInfo = GetMotionInfo();
             }
 

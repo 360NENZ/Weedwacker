@@ -10,6 +10,7 @@ using static Weedwacker.GameServer.Extensions;
 using Weedwacker.Shared.Utils;
 using Weedwacker.GameServer.Systems.Player;
 using System.Text;
+using Weedwacker.GameServer.Database;
 
 namespace Weedwacker.GameServer
 {
@@ -41,12 +42,21 @@ namespace Weedwacker.GameServer
             State = SessionState.WAITING_FOR_TOKEN;
             await ReceiveLoop();
         }
-        public void Stop()
+        public async void Stop()
         {
+            if (Player != null)
+            {
+                await Player.OnLogoutAsync();
+            }
             Listener.UnregisterConnection(this);
             Conversation.Dispose();
-            CancelToken.Cancel();
-            CancelToken.Dispose();
+            try
+            {
+                CancelToken.Cancel();
+                CancelToken.Dispose();
+            }
+            catch { }
+            
         }
 
         public void UpdateLastPingTime(uint clientTime)

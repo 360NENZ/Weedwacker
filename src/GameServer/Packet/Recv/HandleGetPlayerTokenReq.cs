@@ -33,6 +33,7 @@ namespace Weedwacker.GameServer.Packet.Recv
                 // Kill the previous session, and replace it with the new one. Similar to Official behaviour
                 GameServer.OnlinePlayers[session.Player.GameUid].Stop();
                 GameServer.OnlinePlayers[session.Player.GameUid] = session;
+                session.Player = await DatabaseManager.GetPlayerByAccountUidAsync(req.AccountUid);
             }
             else if (GameServer.OnlinePlayers.Count >= GameServer.Configuration.Server.MaxOnlinePlayers)
             {

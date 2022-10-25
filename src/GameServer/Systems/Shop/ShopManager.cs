@@ -14,6 +14,7 @@ namespace Weedwacker.GameServer.Systems.Shop
         public ShopManager(Player.Player owner)
         {
             Owner = owner;
+            OwnerId = owner.GameUid;
         }
 
         public bool HasShop(int shopType, out Shop? shop)

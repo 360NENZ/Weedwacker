@@ -52,6 +52,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         private async Task<Avatar> InitializeAsync(int avatarId, Player.Player owner)
         {
             AvatarId = avatarId;
+            Guid = owner.GetNextGameGuid();
 
             if (Data.GeneralData.candSkillDepotIds.Length > 0)
             {
@@ -108,7 +109,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         }
         public async Task<bool> SetCurrentHp(float value, bool notifyClient = true)
         {
-            if (FightProp[FightProperty.FIGHT_PROP_MAX_HP] <= value) return false;
+            if (FightProp.GetValueOrDefault(FightProperty.FIGHT_PROP_MAX_HP) <= value) return false;
             FightProp[FightProperty.FIGHT_PROP_CUR_HP] = value;
             // Update
             var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
@@ -208,7 +209,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
         public async Task<bool> AddToFightProperty(FightProperty prop, float value, bool update = true)
         {
-            FightProp[prop] += value;
+            FightProp[prop] = FightProp.GetValueOrDefault(prop) + value;
 
             // false = used in RecalcStatsAsync
             if (update)
@@ -343,16 +344,15 @@ namespace Weedwacker.GameServer.Systems.Avatar
             AvatarPromoteData promoteData = Data.PromoteData[PromoteLevel];
 
             // Get hp percent, set to 100% if none
-            float hpPercent = FightProp[FightProperty.FIGHT_PROP_MAX_HP] == 0 ? 1f : FightProp[FightProperty.FIGHT_PROP_CUR_HP] / FightProp[FightProperty.FIGHT_PROP_MAX_HP];
+            float hpPercent = FightProp[FightProperty.FIGHT_PROP_MAX_HP] == 0 ? 1f : FightProp.GetValueOrDefault(FightProperty.FIGHT_PROP_CUR_HP) / FightProp.GetValueOrDefault(FightProperty.FIGHT_PROP_MAX_HP);
 
             // Store current energy value for later
             float currentEnergy = GetCurrentEnergy();
 
             // Clear properties
-            foreach (FightProperty prop in FightProp.Keys)
-            {
-                FightProp[prop] = 0f;
-            }
+            FightProp.Clear();
+            if(GetCurSkillDepot().Element != null)
+                GetCurSkillDepot().Element.CurEnergy = 0;
 
             // Base stats
             FightProp[FightProperty.FIGHT_PROP_BASE_HP] = Data.GetBaseHp(Level);
@@ -365,7 +365,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
             foreach (FightPropData fightPropData in promoteData.addProps)
             {
-                FightProp[fightPropData.propType] += fightPropData.value;
+                FightProp[fightPropData.propType] = FightProp.GetValueOrDefault(fightPropData.propType) + fightPropData.value;
             }
 
             // Set energy usage
@@ -391,7 +391,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                     ReliquaryLevelData levelData = GameData.ReliquaryLevelDataMap[Tuple.Create(equip.ItemData.rankLevel, equip.Level)];
                     if (levelData != null)
                     {
-                        FightProp[mainPropData.propType] += levelData.addProps.Where(w => w.propType == mainPropData.propType).First().value;
+                        FightProp[mainPropData.propType] = FightProp.GetValueOrDefault(mainPropData.propType) + levelData.addProps.Where(w => w.propType == mainPropData.propType).First().value;
                     }
                 }
                 // Artifact sub stats
@@ -402,7 +402,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                         ReliquaryAffixData affixData = GameData.ReliquaryAffixDataMap[appendPropId];
                         if (affixData != null)
                         {
-                            FightProp[affixData.propType] += affixData.propValue;
+                            FightProp[affixData.propType] = FightProp.GetValueOrDefault(affixData.propType) + affixData.propValue;
                         }
                     }
                 }
@@ -442,7 +442,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                         foreach (FightPropData prop in affix.addProps)
                         {
                             if (prop.propType == FightProperty.FIGHT_PROP_NONE) continue;
-                            FightProp[prop.propType] += prop.value;
+                            FightProp[prop.propType] = FightProp.GetValueOrDefault(prop.propType) + prop.value;
                         }
                     }
                     else
@@ -465,7 +465,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                         foreach (WeaponProperty weaponProperty in weapon.ItemData.weaponProp)
                         {
                             if (weaponProperty.propType == FightProperty.FIGHT_PROP_NONE) continue;
-                            FightProp[weaponProperty.propType] += WeaponCurveData.CalcValue(weaponProperty.initValue, curveData.GetArith(weaponProperty.type));
+                            FightProp[weaponProperty.propType] = FightProp.GetValueOrDefault(weaponProperty.propType) + WeaponCurveData.CalcValue(weaponProperty.initValue, curveData.GetArith(weaponProperty.type));
                         }
                     }
                 }
@@ -479,7 +479,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                         {
                             continue;
                         }
-                        FightProp[prop.propType] += prop.value;
+                        FightProp[prop.propType] = FightProp.GetValueOrDefault(prop.propType) + prop.value;
                     }
                 }
                 // Add weapon skill from affixes
@@ -503,7 +503,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                         // Add properties from this affix to our avatar
                         foreach (FightPropData prop in affix.addProps)
                         {
-                            FightProp[prop.propType] += prop.value;
+                            FightProp[prop.propType] = FightProp.GetValueOrDefault(prop.propType) + prop.value;
                         }
                     }
                 }
@@ -515,17 +515,17 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 // Add properties from this proud skill to our avatar
                 foreach (FightPropData prop in proudSkill.addProps)
                 {
-                    FightProp[prop.propType] += prop.value;
+                    FightProp[prop.propType] = FightProp.GetValueOrDefault(prop.propType) + prop.value;
                 }
             }
 
             // Set % stats
             FightProp[FightProperty.FIGHT_PROP_MAX_HP] =
-                (FightProp[FightProperty.FIGHT_PROP_BASE_HP] * (1f + FightProp[FightProperty.FIGHT_PROP_HP_PERCENT])) + FightProp[FightProperty.FIGHT_PROP_HP];
+                (FightProp[FightProperty.FIGHT_PROP_BASE_HP] * (1f + FightProp.GetValueOrDefault(FightProperty.FIGHT_PROP_HP_PERCENT))) + FightProp.GetValueOrDefault(FightProperty.FIGHT_PROP_HP);
             FightProp[FightProperty.FIGHT_PROP_CUR_ATTACK] =
-                FightProp[FightProperty.FIGHT_PROP_BASE_ATTACK] * (1f + FightProp[FightProperty.FIGHT_PROP_ATTACK_PERCENT]) + FightProp[FightProperty.FIGHT_PROP_ATTACK];
+                FightProp[FightProperty.FIGHT_PROP_BASE_ATTACK] * (1f + FightProp.GetValueOrDefault(FightProperty.FIGHT_PROP_ATTACK_PERCENT)) + FightProp.GetValueOrDefault(FightProperty.FIGHT_PROP_ATTACK);
             FightProp[FightProperty.FIGHT_PROP_CUR_DEFENSE] =
-                FightProp[FightProperty.FIGHT_PROP_BASE_DEFENSE] * (1f + FightProp[FightProperty.FIGHT_PROP_DEFENSE_PERCENT]) + FightProp[FightProperty.FIGHT_PROP_DEFENSE];
+                FightProp[FightProperty.FIGHT_PROP_BASE_DEFENSE] * (1f + FightProp.GetValueOrDefault(FightProperty.FIGHT_PROP_DEFENSE_PERCENT)) + FightProp.GetValueOrDefault(FightProperty.FIGHT_PROP_DEFENSE);
 
             // Set current hp
             FightProp[FightProperty.FIGHT_PROP_CUR_HP] = FightProp[FightProperty.FIGHT_PROP_MAX_HP] * hpPercent;
@@ -564,7 +564,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             AvatarInfo avatarInfo = new()
             {
                 AvatarId = (uint)AvatarId,
-                Guid = (uint)Guid,
+                Guid = Guid,
                 CostumeId = (uint)Costume,
                 WearingFlycloakId = (uint)FlyCloak,
                 FetterInfo = avatarFetter,

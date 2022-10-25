@@ -83,11 +83,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 TeamName = TeamName
             };
 
-            foreach (int id in AvatarInfo.Keys)
-            {
-                if (id == 0) continue;
-                Avatar avatar = player.Avatars.GetAvatarById(id);
-                avatarTeam.AvatarGuidList.Add(avatar.Guid);
+            foreach (var entry in AvatarInfo)
+            {               
+                avatarTeam.AvatarGuidList.Add(entry.Value.Guid);
             }
 
             return avatarTeam;

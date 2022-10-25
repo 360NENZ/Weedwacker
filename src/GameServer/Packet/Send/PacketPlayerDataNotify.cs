@@ -1,4 +1,5 @@
 ﻿using Google.Protobuf;
+using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Systems.Player;
 using Weedwacker.Shared.Network.Proto;
 
@@ -6,7 +7,7 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketPlayerDataNotify : BasePacket
     {
-		public PacketPlayerDataNotify(Player player) : base(Enums.OpCode.PlayerDataNotify, 2)
+		public PacketPlayerDataNotify(Player player) : base(OpCode.PlayerDataNotify, 2)
 		{
 			PlayerDataNotify p = new PlayerDataNotify()
 			{
@@ -16,9 +17,10 @@ namespace Weedwacker.GameServer.Packet.Send
 				RegionId = (uint)player.RegionId
 			};
 
-			foreach (var prop in player.PlayerProperties)
+			foreach (PlayerProperty prop in Enum.GetValues(typeof(PlayerProperty)))
 			{
-				p.PropMap.Add((uint)prop.Key, new PropValue() { Type = (uint)prop.Key, Ival = prop.Value, Val = (uint)prop.Value});
+				if((int)prop >= 10000)
+					p.PropMap.Add((uint)prop, new PropValue() { Type = (uint)prop, Ival = player.PlayerProperties.GetValueOrDefault(prop), Val = (uint)player.PlayerProperties.GetValueOrDefault(prop) });
 			}
 
 			Data = p.ToByteArray();

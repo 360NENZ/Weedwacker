@@ -8,6 +8,7 @@ using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet;
 using Weedwacker.GameServer.Packet.Recv;
 using Weedwacker.GameServer.Packet.Send;
+using Weedwacker.GameServer.Systems.Shop;
 using Weedwacker.GameServer.Systems.World;
 using Weedwacker.Shared.Network.Proto;
 
@@ -27,6 +28,7 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonElement] public int SceneId { get; private set; }
         [BsonElement] public Tuple<int, int> WorldAreaIds { get; private set; } // <areaID1, areaID2>
         [BsonElement] public int RegionId { get; private set; } = 1;
+        [BsonElement] public int WidgetId;
         [BsonIgnore] public uint PeerId;
         [BsonIgnore] public Vector3 Position;
         [BsonIgnore] public Vector3 Rotation;
@@ -54,6 +56,7 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonIgnore] public ClientGadgetEntityManager GadgetManager; // Loaded by DatabaseManager
         [BsonIgnore] public Inventory.InventoryManager Inventory; // Loaded by DatabaseManager
         [BsonIgnore] public ProgressManager ProgressManager; // Loaded by DatabaseManager
+        [BsonIgnore] public ShopManager ShopManager; // Loaded by DatabaseManager
         [BsonIgnore] public Social.SocialManager SocialManager; // Loaded by DatabaseManager
         [BsonIgnore] public TeamManager TeamManager; // Loaded by DatabaseManager
 
@@ -72,6 +75,7 @@ namespace Weedwacker.GameServer.Systems.Player
             ProgressManager = new(this);
             PropManager = new(this);
             ResinManager = new(this);
+            ShopManager = new(this);
             SocialManager = new(this);
             OpenStateManager = new(this);
         }
@@ -86,6 +90,7 @@ namespace Weedwacker.GameServer.Systems.Player
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_IS_FLYABLE, 0, false);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_MAX_STAMINA, 10000, false);
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_CUR_PERSIST_STAMINA, 10000, false);
+            await PropManager.SetPropertyAsync(PlayerProperty.PROP_IS_TRANSFERABLE, 1, false);
             ProgressManager.OnPlayerCreate();
 
             // Pick character
@@ -155,6 +160,33 @@ namespace Weedwacker.GameServer.Systems.Player
             await DatabaseManager.UpdatePlayerAsync(filter, update);
         }
 
+        public async Task OnTickAsync()
+        {
+            // Check ping
+            if (Session.LastPingTime > DateTimeOffset.Now.ToUnixTimeMilliseconds() + 60000)
+            {
+                Session.Stop();
+                return;
+            }
+            // Ping
+            if (World != null)
+            {
+                // RTT notify - very important to send this often
+                await SendPacketAsync(new PacketWorldPlayerRTTNotify(World));
+
+                // Update player locations if in multiplayer every 5 seconds
+                long time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                if (World.IsMultiplayer && Scene != null && time > NextSendPlayerLocTime)
+                {
+                    await SendPacketAsync(new PacketWorldPlayerLocationNotify(World));
+                    await SendPacketAsync(new PacketScenePlayerLocationNotify(Scene));
+                    ResetSendPlayerLocTime();
+                }
+            }
+            // Recharge resin.
+            await ResinManager.RechargeResin();
+        }
+
         public async Task OnLoginAsync()
         {
             // Show opening cutscene if player has no avatars
@@ -170,6 +202,8 @@ namespace Weedwacker.GameServer.Systems.Player
             await SendPacketAsync(new PacketStoreWeightLimitNotify());
             await SendPacketAsync(new PacketPlayerStoreNotify(this));
             await SendPacketAsync(new PacketAvatarDataNotify(this));
+            await SendPacketAsync(new PacketAllWidgetDataNotify(this)); //TODO
+            await SendPacketAsync(new PacketWidgetGadgetAllDataNotify()); //TODO
 
             // Create world
             World.World world = new(this);
@@ -188,6 +222,30 @@ namespace Weedwacker.GameServer.Systems.Player
             await PropManager.SetPropertyAsync(PlayerProperty.PROP_IS_MP_MODE_AVAILABLE, 1, false);
 
             await ResinManager.OnLoginAsync();
+
+            // First notify packets sent
+            HasSentLoginPackets = true;
+            Session.State = SessionState.ACTIVE;
+        }
+
+        public async Task OnLogoutAsync()
+        {
+            // Leave world
+            if (World != null)
+            {
+                await World.RemovePlayerAsync(this);
+            }
+
+            await Task.WhenAll(new Task[] {
+                    DatabaseManager.SavePlayerAsync(this),
+                    DatabaseManager.SaveAvatarsAsync(Avatars),
+                    DatabaseManager.SaveInventoryAsync(Inventory),
+                    DatabaseManager.SaveProgressAsync(ProgressManager),
+                    DatabaseManager.SaveShopsAsync(ShopManager),
+                    DatabaseManager.SaveSocialAsync(SocialManager),
+                    DatabaseManager.SaveTeamsAsync(TeamManager),
+                });
+            GameServer.OnlinePlayers.Remove(GameUid);
         }
 
         // Called by DatabaseManager

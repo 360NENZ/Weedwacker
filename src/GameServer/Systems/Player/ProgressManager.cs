@@ -6,16 +6,17 @@ namespace Weedwacker.GameServer.Systems.Player
 {
     internal class ProgressManager
     {
-        [BsonIgnore] public Player Owner;
-        [BsonId]
-        [BsonElement("_id")] public int OwnerId { get; private set; }
+
+        [BsonElement("_id")]
+        [BsonId] public int OwnerId { get; private set; }
+        private Player Owner;
         public Dictionary<OpenStateType, int> OpenStates = new(); // SET ONLY THROUGH THE OPENSTATEMANAGER
         public HashSet<int> UnlockedForgingBlueprints = new();
         public HashSet<int> UnlockedCombines = new();
         //public Dictionary<long, ExpeditionInfo> ExpeditionInfo;
         public Dictionary<int, int> UnlockedRecipies = new();
         //public List<ActiveForgeData> activeForges;
-        public Dictionary<int, int> QuestGlobalVariables = new();
+        [BsonElement] public Dictionary<int, int> QuestGlobalVariables = new();
         [BsonSerializer(typeof(IntDictionarySerializer<HashSet<int>>))]
         public Dictionary<int, HashSet<int>> UnlockedSceneAreas = new();
         [BsonSerializer(typeof(IntDictionarySerializer<HashSet<int>>))]

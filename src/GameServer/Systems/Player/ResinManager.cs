@@ -80,7 +80,7 @@ namespace Weedwacker.GameServer.Systems.Player
                 return;
             }
 
-            int currentResin = Owner.PlayerProperties[PlayerProperty.PROP_PLAYER_RESIN];
+            int currentResin = Owner.PlayerProperties.GetValueOrDefault(PlayerProperty.PROP_PLAYER_RESIN);
             int currentTime = (int)(DateTimeOffset.Now.ToUnixTimeMilliseconds() / 1000);
 
             // Make sure we are currently in "recharging mode".

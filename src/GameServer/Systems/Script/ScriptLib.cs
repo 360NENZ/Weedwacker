@@ -134,7 +134,7 @@ namespace Weedwacker.GameServer.Systems.Script
         public static int GetGroupVariableValue(ScriptLibContext context, string var)
         {
             Logger.DebugWriteLine($"[LUA] Call GetGroupVariableValue with {var}");
-            return context.SceneScriptManager.GetGroupVariable(context.CurrentGroup.group_id, var);
+            return context.SceneScriptManager.GetGroupVariable(context.CurrentGroup.BlockId, context.CurrentGroup.group_id, var);
         }
 
         public static int SetGroupVariableValue(ScriptLibContext context, string var, int value)
@@ -147,7 +147,7 @@ namespace Weedwacker.GameServer.Systems.Script
         public static int ChangeGroupVariableValue(ScriptLibContext context, string var, int value)
         {
             Logger.DebugWriteLine($"[LUA] Call ChangeGroupVariableValue with {var},{value}");
-            int oldVal = context.SceneScriptManager.GetGroupVariable(context.CurrentGroup.group_id, var);
+            int oldVal = context.SceneScriptManager.GetGroupVariable(context.CurrentGroup.BlockId, context.CurrentGroup.group_id, var);
             context.SceneScriptManager.SetGroupVariable(context.CurrentGroup.group_id, var, oldVal + value);
             return 0;
         }
@@ -213,7 +213,7 @@ namespace Weedwacker.GameServer.Systems.Script
         {
             Logger.DebugWriteLine($"[LUA] Call GetGroupVariableValueByGroup with {name},{groupId}");
 
-            return context.SceneScriptManager.GetGroupVariable((uint)groupId, name);
+            return context.SceneScriptManager.GetGroupVariable(context.CurrentGroup.BlockId, (uint)groupId, name);
         }
 
         public static int SetIsAllowUseSkill(ScriptLibContext context, int canUse)

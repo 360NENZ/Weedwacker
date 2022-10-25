@@ -108,11 +108,19 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
                 var gloupDict = LuaState.GetTableDict(gloups);
                 groups = new SortedList<uint, SceneGroupInfo>(gloupDict.ToDictionary(w => (uint)(long)w.Key, w => new SceneGroupInfo(LuaState, w.Value as LuaTable)));
             }
+            var tasks = new List<Task>();
             foreach (var entry in groups)
             {
-                GroupsInfo.Add(entry.Value.id, await SceneGroup.CreateAsync(LuaState, SceneId, (uint)BlockId, entry.Value.id, new FileInfo(Path.Combine(scenePath, $"scene{SceneId}_group{entry.Value.id}.lua"))));
+                tasks.Add(AddGroup(entry.Value.id, new FileInfo(Path.Combine(scenePath, $"scene{SceneId}_group{entry.Value.id}.lua"))));              
             }
+            await Task.WhenAll(tasks);
             return this;
+        }
+
+        private async Task AddGroup(uint groupId, FileInfo path)
+        {
+            var group = await SceneGroup.CreateAsync(LuaState, SceneId, BlockId, groupId, path);
+            GroupsInfo.Add(groupId, group);
         }
 
         private SceneBlock(Lua lua, int sceneId, uint blockId)

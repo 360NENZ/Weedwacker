@@ -164,7 +164,7 @@ namespace Weedwacker.GameServer.Systems.World
 
             if (useDefaultBornPosition)
             {
-                SceneInfo sceneInfo = GameData.SceneScripts[sceneId];
+                SceneInfo sceneInfo = await GameData.GetSceneScriptsAsync(sceneId);
                 teleportTo = sceneInfo.scene_config.born_pos;
                 player.Rotation = sceneInfo.scene_config.born_rot;
             }

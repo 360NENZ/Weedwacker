@@ -40,8 +40,8 @@ namespace Weedwacker.GameServer
             public int LoadEntitiesForPlayerRange = 100;
             public bool EnableConsole = true;
 
-            /* Kcp internal work interval (milliseconds) */
-            public int KcpInterval = 20;
+            /* Determines whether each scene's scripts will be loaded on startup, or when needed. Scene3 scripts are always loaded*/
+            public bool DynamicLoadScenes = true;
             /* Controls whether packets should be logged in console or not */
             public Shared.Enums.ServerDebugMode LogPackets = Shared.Enums.ServerDebugMode.BLACKLIST;
 

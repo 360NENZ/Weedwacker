@@ -29,32 +29,28 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
             LuaState.DoString(@" import ('GameServer', 'Weedwacker.GameServer.Systems.Script')");
             FileInfo commonInfo = new(Path.Combine(scriptPath, "Config", "Excel", "CommonScriptConfig.lua"));
             string common = commonInfo.FullName;
-            common = Regex.Replace(common, @"(?<!\\)[\\](?!\\)", @"\\"); // replace \\ with \\\\
-            lua.DoString($"_SCENE{sceneId} = {{}}");
+            common = Regex.Replace(common, @"(?<!\\)[\\](?!\\)", @"\\"); // replace \\ with \\\\            
             lua.DoString("loadCommon = loadfile (\"" + common + "\"" + $", \"bt\")");
             lua.DoString("loadCommon()");
             FileInfo configEntityInfo = new(Path.Combine(scriptPath, "Config", "Json", "ConfigEntity.lua"));
             string configEntity = configEntityInfo.FullName;
             configEntity = Regex.Replace(configEntity, @"(?<!\\)[\\](?!\\)", @"\\"); // replace \\ with \\\\
-            lua.DoString($"_SCENE{sceneId} = {{}}");
             lua.DoString("loadConfigEntity = loadfile (\"" + configEntity + "\"" + $", \"bt\")");
             lua.DoString("loadConfigEntity()");
             FileInfo configEntityTypeInfo = new(Path.Combine(scriptPath, "Config", "Json", "ConfigEntityType.lua"));
             string configEntityType = configEntityTypeInfo.FullName;
             configEntityType = Regex.Replace(configEntityType, @"(?<!\\)[\\](?!\\)", @"\\"); // replace \\ with \\\\
-            lua.DoString($"_SCENE{sceneId} = {{}}");
             lua.DoString("loadConfigEntityType = loadfile (\"" + configEntityType + "\"" + $", \"bt\")");
             lua.DoString("loadConfigEntityType()");
             FileInfo configQuestTypeInfo = new(Path.Combine(scriptPath, "Config", "Json", "ConfigQuestType.lua"));
             string configQuestType = configQuestTypeInfo.FullName;
             configQuestType = Regex.Replace(configQuestType, @"(?<!\\)[\\](?!\\)", @"\\"); // replace \\ with \\\\
-            lua.DoString($"_SCENE{sceneId} = {{}}");
             lua.DoString("loadQuestType = loadfile (\"" + configQuestType + "\"" + $", \"bt\")");
             lua.DoString("loadQuestType()");
+            lua.DoString($"_SCENE{sceneId} = {{}}");
             FileInfo sceneInfo = new(Path.Combine(scriptPath, "Scene", $"{sceneId}", $"scene{sceneId}.lua"));
             string sceneScript = sceneInfo.FullName;
             sceneScript = Regex.Replace(sceneScript, @"(?<!\\)[\\](?!\\)", @"\\"); // replace \\ with \\\\
-            lua.DoString($"_SCENE{sceneId} = {{}}");
             lua.DoString("loadScene = loadfile (\"" + sceneScript + "\""+ $", \"bt\" , _SCENE{sceneId})");
             lua.DoString("loadScene()");
             if(lua[$"_SCENE{sceneId}.{nameof(scene_config)}"] != null)
@@ -64,10 +60,12 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
                 var bloks = lua.GetTable($"_SCENE{sceneId}.{nameof(blocks)}");
                 blocks = new SortedList<int, uint>(lua.GetTableDict(bloks).ToDictionary(w => (int)(long)w.Key, w => (uint)(long)w.Value));
                 BlocksInfo = new();
+                var tasks = new List<Task>();
                 foreach (uint blockId in blocks.Values)
                 {
-                    BlocksInfo.Add(blockId, await SceneBlock.CreateAsync(lua, sceneId, blockId, Path.Combine(scriptPath, "Scene", $"{sceneId}")));
+                    tasks.Add(AddBlock(sceneId, blockId, Path.Combine(scriptPath, "Scene", $"{sceneId}")));
                 }
+                await Task.WhenAll(tasks);
             }
             if (lua[$"_SCENE{sceneId}.{nameof(block_rects)}"] != null)
             {
@@ -77,6 +75,12 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
             }
 
             return this;
+        }
+
+        private async Task AddBlock(int sceneId, uint blockId, string path)
+        {
+            var block = await SceneBlock.CreateAsync(LuaState, sceneId, blockId, path);
+            BlocksInfo.Add(blockId, block);
         }
 
         public class SceneConfig

@@ -69,8 +69,8 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<Tuple<int, int>, WeaponPromoteData> WeaponPromoteDataMap = new(); // <weaponPromoteId, promoteLevel>
         public readonly static SortedList<int, WeatherData> WeatherDataMap = new(); // areaId
 
-        public readonly static ConcurrentDictionary<int, SceneInfo> SceneScripts = new();
-
+        private readonly static SortedList<int, SceneInfo> SceneScripts = new();
+        private static string ScriptPath;
         static readonly JsonSerializer Serializer = new()
         {
             // To handle $type
@@ -87,17 +87,31 @@ namespace Weedwacker.GameServer.Data
                     typeof(VehicleSummonPoint), typeof(VirtualTransPoint)}
             }
         };
-
+        public static async Task<SceneInfo?> GetSceneScriptsAsync(int sceneId)
+        {
+            if (SceneScripts.TryGetValue(sceneId, out SceneInfo? value))
+            {
+                return value;
+            }
+            else
+            {
+                await LoadSceneScripts(sceneId, ScriptPath);
+                return SceneScripts[sceneId];
+            }
+        }
         static async Task LoadScripts(string path)
         {
             var dirs = Directory.GetDirectories(Path.Combine(path, "Scene"));
             var tasks = new List<Task>();
-            foreach(var fileAndPath in dirs)
+
+            foreach (var fileAndPath in dirs)
             {
-                string fullPath = Path.GetFullPath(fileAndPath);             
+                string fullPath = Path.GetFullPath(fileAndPath);
                 int sceneId = int.Parse(fullPath.Split("\\").Last());
+                if (GameServer.Configuration.Server.DynamicLoadScenes && sceneId != 3) continue;
                 tasks.Add(LoadSceneScripts(sceneId, path));
             }
+
             await Task.WhenAll(tasks);
         }
 
@@ -105,7 +119,7 @@ namespace Weedwacker.GameServer.Data
         {
             Lua lua = new();
             var SceneX = await SceneInfo.CreateAsync(lua, sceneId, scriptPath);
-            SceneScripts.Append(new(sceneId, SceneX));
+            SceneScripts.Add(sceneId, SceneX);
         }
 
 
@@ -114,7 +128,8 @@ namespace Weedwacker.GameServer.Data
             map.Clear();
             string[] filePaths = Directory.GetFiles(path, "*.json", SearchOption.TopDirectoryOnly);
             var tasks = new List<Task>();
-            filePaths.AsParallel().ForAll(async file => { 
+            filePaths.AsParallel().ForAll(async file =>
+            {
                 var filePath = new FileInfo(file);
                 using var sr = new StringReader(await File.ReadAllTextAsync(filePath.FullName));
                 string fileName = filePath.Name;
@@ -123,7 +138,7 @@ namespace Weedwacker.GameServer.Data
 
                 Key key = keySelector(fileData);
                 map.Add(key, fileData);
-            });                         
+            });
         }
 
         static async Task LoadBinOutFolder<Obj>(string path, IDictionary<string, Obj> map, bool isDictionaryJson = true)
@@ -138,7 +153,7 @@ namespace Weedwacker.GameServer.Data
                 if (isDictionaryJson)
                 {
                     var fileData = Serializer.Deserialize<Dictionary<string, Obj>>(jr);
-                    foreach(var data in fileData)
+                    foreach (var data in fileData)
                     {
                         map.Add(data.Key, data.Value);
                     }
@@ -187,9 +202,10 @@ namespace Weedwacker.GameServer.Data
         static ResourceAttribute? GetResourceData(this Type res) => Attribute.GetCustomAttribute(res, typeof(ResourceAttribute)) as ResourceAttribute;
         public static async Task LoadAllResourcesAsync(string resourcesPath)
         {
+            Logger.WriteLine("Loading Resources...");
             string excelPath = Path.Combine(resourcesPath, "ExcelBinOutput/");
             string binPath = Path.Combine(resourcesPath, "BinOutput/");
-            string scriptPath = Path.Combine(resourcesPath, "Scripts/");
+            ScriptPath = Path.Combine(resourcesPath, "Scripts/");
             await Task.WhenAll(new Task[]
             {
                 LoadExcel(excelPath, o => o.sortId, AvatarCodexDataMap),
@@ -246,10 +262,10 @@ namespace Weedwacker.GameServer.Data
                 LoadBinOutFolder(Path.Combine(binPath, "Talent/TeamTalents"), TeamResonanceConfigDataMap),
                 LoadBinOutFolder(Path.Combine(binPath, "Scene/Point"), ScenePointDataMap, false),
 
-                LoadScripts(scriptPath)
+                LoadScripts(ScriptPath)
             });
 
-            Logger.DebugWriteLine("Loaded Resources");
+            Logger.WriteLine("Finished Loading Resources");
         }
     }
 }

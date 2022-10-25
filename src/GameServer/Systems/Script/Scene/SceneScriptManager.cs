@@ -25,7 +25,7 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
             throw new NotImplementedException();
         }
 
-        internal int GetGroupVariable(uint group, string key, int defaultVal = 0)
+        internal int GetGroupVariable(uint block, uint group, string key, int defaultVal = default)
         {
             if (GroupVariables.TryGetValue(group, out Dictionary<string, int> variables))
             {
@@ -37,10 +37,16 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
                     return defaultVal;
                 }
             }
-            else
+            else if(defaultVal != default)
             {
                 GroupVariables.Add(group, new() { { key, defaultVal } });
                 return defaultVal;
+            }
+            else
+            {
+                var value = Info.BlocksInfo[block].GroupsInfo[group].variables.Find(w => w.name == key).value;
+                GroupVariables.Add(group, new() { { key, value } });
+                return value;
             }
         }
 

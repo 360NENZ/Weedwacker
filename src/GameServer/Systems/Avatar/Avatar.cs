@@ -650,13 +650,13 @@ namespace Weedwacker.GameServer.Systems.Avatar
             }
 
 
-            showAvatarInfo.PropMap.Add((uint)PlayerProperty.PROP_LEVEL, new PropValue() { Type = (uint)PlayerProperty.PROP_LEVEL, Val = (uint)Level });
-            showAvatarInfo.PropMap.Add((uint)PlayerProperty.PROP_EXP, new PropValue() { Type = (uint)PlayerProperty.PROP_EXP, Val = (uint)Exp });
-            showAvatarInfo.PropMap.Add((uint)PlayerProperty.PROP_BREAK_LEVEL, new PropValue() { Type = (uint)PlayerProperty.PROP_BREAK_LEVEL, Val = (uint)PromoteLevel });
-            showAvatarInfo.PropMap.Add((uint)PlayerProperty.PROP_SATIATION_VAL, new PropValue() { Type = (uint)PlayerProperty.PROP_SATIATION_VAL, Val = (uint)Satiation });
-            showAvatarInfo.PropMap.Add((uint)PlayerProperty.PROP_SATIATION_PENALTY_TIME, new PropValue() { Type = (uint)PlayerProperty.PROP_SATIATION_VAL, Val = (uint)SatiationPenalty });
+            showAvatarInfo.PropMap.Add((uint)PlayerProperty.PROP_LEVEL, new PropValue() { Type = (uint)PlayerProperty.PROP_LEVEL, Ival = (uint)Level, Val = (uint)Level });
+            showAvatarInfo.PropMap.Add((uint)PlayerProperty.PROP_EXP, new PropValue() { Type = (uint)PlayerProperty.PROP_EXP, Ival = (uint)Exp, Val = (uint)Exp });
+            showAvatarInfo.PropMap.Add((uint)PlayerProperty.PROP_BREAK_LEVEL, new PropValue() { Type = (uint)PlayerProperty.PROP_BREAK_LEVEL, Ival = (uint)PromoteLevel, Val = (uint)PromoteLevel });
+            showAvatarInfo.PropMap.Add((uint)PlayerProperty.PROP_SATIATION_VAL, new PropValue() { Type = (uint)PlayerProperty.PROP_SATIATION_VAL, Ival = (uint)Satiation, Val = (uint)Satiation });
+            showAvatarInfo.PropMap.Add((uint)PlayerProperty.PROP_SATIATION_PENALTY_TIME, new PropValue() { Type = (uint)PlayerProperty.PROP_SATIATION_VAL, Ival = (uint)SatiationPenalty, Val = (uint)SatiationPenalty });
             int maxStamina = Owner.PlayerProperties[PlayerProperty.PROP_MAX_STAMINA];
-            showAvatarInfo.PropMap.Add((uint)PlayerProperty.PROP_MAX_STAMINA, new PropValue() { Type = (uint)PlayerProperty.PROP_MAX_STAMINA, Val = (uint)maxStamina });
+            showAvatarInfo.PropMap.Add((uint)PlayerProperty.PROP_MAX_STAMINA, new PropValue() { Type = (uint)PlayerProperty.PROP_MAX_STAMINA, Ival = (uint)maxStamina, Val = (uint)maxStamina });
 
             foreach (ReliquaryItem item in Equips.Values)
             {

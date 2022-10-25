@@ -17,8 +17,4 @@
 	<ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Data\BinOut\Avatar\" />
-  </ItemGroup>
-
 </Project>

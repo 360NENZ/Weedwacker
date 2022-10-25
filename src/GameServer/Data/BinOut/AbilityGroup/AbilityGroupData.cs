@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Weedwacker.GameServer.Data.Common;
 using Weedwacker.GameServer.Enums;
 
 namespace Weedwacker.GameServer.Data.BinOut.AbilityGroup
@@ -10,16 +11,6 @@ namespace Weedwacker.GameServer.Data.BinOut.AbilityGroup
         [JsonProperty]
         public readonly AbilityGroupTargetType abilityGroupTargetType;
         [JsonProperty]
-        public readonly List<TargetAbility> targetAbilities;
-            
-        public class TargetAbility
-        {
-            [JsonProperty]
-            public readonly string abilityID;
-            [JsonProperty]
-            public readonly string abilityName;
-            [JsonProperty]
-            public readonly string abilityOverride;
-        }
+        public readonly List<TargetAbility> targetAbilities;          
     }
 }

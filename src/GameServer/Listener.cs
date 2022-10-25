@@ -37,6 +37,7 @@ namespace Weedwacker.GameServer
             if (UDPListener == null) return;
             KCPTransport = KcpSocketTransport.CreateMultiplexConnection(UDPClient, 1400);
             KCPTransport.Start();
+            Logger.WriteLine($"Game Server started. Listening on port: {PORT}");
         }
         static void RegisterConnection(Connection con)
         {

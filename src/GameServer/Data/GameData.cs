@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using NLua;
 using Weedwacker.GameServer.Data.BinOut.AbilityGroup;
+using Weedwacker.GameServer.Data.BinOut.Avatar;
 using Weedwacker.GameServer.Data.BinOut.Scene.Point;
 using Weedwacker.GameServer.Data.BinOut.Scene.SceneNpcBorn;
 using Weedwacker.GameServer.Data.BinOut.Talent;
@@ -39,6 +40,7 @@ namespace Weedwacker.GameServer.Data
         //---------------------------------------------------------------------------------------------------------------------------------//
         public readonly static ConcurrentDictionary<string, AbilityGroupData> AbilityGroupDataMap = new(); // openConfig name
         public readonly static SortedList<int, AvatarHeroEntityData> AvatarHeroEntityDataMap = new();
+        public readonly static ConcurrentDictionary<string, ConfigAvatar> ConfigAvatarMap = new();
         public readonly static SortedList<int, DungeonData> DungeonDataMap = new(); // id
         public readonly static SortedList<int, EnvAnimalGatherData> EnvAnimalGatherDataMap = new(); // animalId
         public readonly static SortedList<int, EquipAffixData> EquipAffixDataMap = new(); // affixId
@@ -71,6 +73,7 @@ namespace Weedwacker.GameServer.Data
 
         private readonly static SortedList<int, SceneInfo> SceneScripts = new();
         private static string ScriptPath;
+
         static readonly JsonSerializer Serializer = new()
         {
             // To handle $type
@@ -257,6 +260,7 @@ namespace Weedwacker.GameServer.Data
                 LoadBinOutFolder(Path.Combine(binPath, "Scene/SceneNpcBorn"), o => o.sceneId,  SceneNpcBornDataMap),
                 LoadBinOutFolder(Path.Combine(binPath, "AbilityGroup"), AbilityGroupDataMap),
                 LoadBinOutFolder(Path.Combine(binPath, "Talent/AvatarTalents"), AvatarTalentConfigDataMap),
+                LoadBinOutFolder(Path.Combine(binPath, "Avatar"), ConfigAvatarMap, false),
                 LoadBinOutFolder(Path.Combine(binPath, "Talent/EquipTalents"), WeaponAffixConfigDataMap),
                 LoadBinOutFolder(Path.Combine(binPath, "Talent/RelicTalents"), RelicAffixConfigDataMap),
                 LoadBinOutFolder(Path.Combine(binPath, "Talent/TeamTalents"), TeamResonanceConfigDataMap),

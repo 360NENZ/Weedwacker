@@ -36,7 +36,7 @@ namespace Weedwacker.GameServer.Systems.Player
         }
 
         // Set of open states that are set per default for all accounts.
-        public static HashSet<int> DEFAULT_OPEN_STATES = (HashSet<int>)GameData.OpenStateDataMap.Where(w => w.Value.defaultState == true).Select(s => s.Key);
+        public static HashSet<int> DEFAULT_OPEN_STATES = new HashSet<int>(GameData.OpenStateDataMap.Where(w => w.Value.defaultState == true).Select(s => s.Key));
 
         private async Task SetOpenStateAsync(int openState, int value, bool sendNotify = true)
         {

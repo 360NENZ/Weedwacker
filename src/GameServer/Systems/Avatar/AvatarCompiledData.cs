@@ -1,5 +1,6 @@
 ﻿using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Data.BinOut.AbilityGroup;
+using Weedwacker.GameServer.Data.BinOut.Avatar;
 using Weedwacker.GameServer.Data.Common;
 using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.GameServer.Enums;
@@ -10,27 +11,30 @@ namespace Weedwacker.GameServer.Systems.Avatar
     // ONLY ONE INSTANCE PER AVATAR ID
     internal class AvatarCompiledData
     {
-        public readonly AvatarData GeneralData;
+        public readonly int AvatarId;
+        public string AvatarName => GeneralData.iconName.Split("_").Last();
+        public AvatarData GeneralData => GameData.AvatarDataMap[AvatarId];
+        public ConfigAvatar ConfigAvatar => GameData.ConfigAvatarMap[$"ConfigAvatar_{AvatarName}"];
         public readonly SortedList<int, AvatarSkillDepotData> SkillDepotData; // <depotId,depot> Skill, SubSkill, Talent, and ProudSkill ids. So far only the twins have multiple. Assume first is default
         public readonly SortedList<int,SortedList<int,AvatarSkillData>> SkillData; // <depotId,<skillId,data>>
-        public readonly SortedList<int, AvatarPromoteData> PromoteData; // <promoteLevel,data> AKA Ascension
+        public SortedList<int, AvatarPromoteData> PromoteData => new(GameData.AvatarPromoteDataMap.Where(w => w.Key.Item1 == GeneralData.avatarPromoteId).ToDictionary(x => x.Key.Item2, x => x.Value)); // <promoteLevel,data> AKA Ascension
         public readonly SortedList<int, SortedList<int, AvatarTalentData>> TalentData; // <depotId,<talentId,data>> AKA Constellations
         public readonly SortedList<int, SortedList<int, ProudSkillData>> ProudSkillData; // <depotId,<proudSkillId,data>> Passives
         public readonly SortedList<int, ulong[]>? AbilityNameHashes; //<depotId,List<Hashes>>
-        public readonly SortedList<int, AvatarCostumeData> CostumeData; // costumeId
-        public readonly SortedList<int, AvatarCodexData> CodexData; // sortId Codex entry
-        public static readonly SortedList<int, AvatarLevelData> LevelData = GameData.AvatarLevelDataMap; // <level,exp> Level exp breakpoints
-        public static readonly SortedList<int, AvatarCurveData> CurveData = GameData.AvatarCurveDataMap; // <level,curveInfo> Base Stat multipliers
-        public static readonly SortedList<int, AvatarFlycloakData> FlycloakData = GameData.AvatarFlycloakDataMap; // flycloakId
+        public SortedList<int, AvatarCostumeData> CostumeData => new(GameData.AvatarCostumeDataMap.Where(w => w.Value.avatarId == AvatarId).ToDictionary(x => x.Key, x => x.Value)); // costumeId
+        public SortedList<int, AvatarCodexData> CodexData => new(GameData.AvatarCodexDataMap.Where(w => w.Value.avatarId == AvatarId).ToDictionary(x => x.Key, x => x.Value)); // sortId Codex entry
+        public static SortedList<int, AvatarLevelData> LevelData => GameData.AvatarLevelDataMap; // <level,exp> Level exp breakpoints
+        public static SortedList<int, AvatarCurveData> CurveData => GameData.AvatarCurveDataMap; // <level,curveInfo> Base Stat multipliers
+        public static SortedList<int, AvatarFlycloakData> FlycloakData => GameData.AvatarFlycloakDataMap; // flycloakId
 
         // Fetters
-        public readonly FetterCharacterCardData CardData;
-        public readonly FetterInfoData FetterInfoData; // General info
-        public readonly SortedList<int, FetterStoryData> FetterStoryData; // fetterId
-        public readonly SortedList<int, FettersData> FettersData; // fetterId
-        public readonly SortedList<int, PhotographPosenameData> PhotographPosenameData; // fetterId
-        public readonly SortedList<int, PhotographExpressionData> PhotographExpressionData; // fetterId
-        public static readonly SortedList<int, AvatarFetterLevelData> FetterLevelData = GameData.AvatarFetterLevelDataMap; // level Friendship exp breakpoints
+        public FetterCharacterCardData CardData => GameData.FetterCharacterCardDataMap.GetValueOrDefault(AvatarId);
+        public FetterInfoData FetterInfoData => GameData.FetterInfoDataMap.Where(w => w.Value.avatarId == AvatarId).FirstOrDefault().Value; // General info
+        public SortedList<int, FetterStoryData> FetterStoryData => new(GameData.FetterStoryDataMap.Where(w => w.Value.avatarId == AvatarId).ToDictionary(w => w.Key, w => w.Value)); // fetterId
+        public SortedList<int, FettersData> FettersData => new(GameData.FettersDataMap.Where(w => w.Value.avatarId == AvatarId).ToDictionary(w => w.Key, w => w.Value)); // fetterId
+        public SortedList<int, PhotographPosenameData> PhotographPosenameData => new(GameData.PhotographPosenameDataMap.Where(w => w.Value.avatarId == AvatarId).ToDictionary(w => w.Key, w => w.Value)); // fetterId
+        public SortedList<int, PhotographExpressionData> PhotographExpressionData => new(GameData.PhotographExpressionDataMap.Where(w => w.Value.avatarId == AvatarId).ToDictionary(w => w.Key, w => w.Value)); // fetterId
+        public static SortedList<int, AvatarFetterLevelData> FetterLevelData => GameData.AvatarFetterLevelDataMap; // level Friendship exp breakpoints
 
         public readonly Tuple<ArithType, float>[] HpGrowthCurve;
         public readonly Tuple<ArithType, float>[] AttackGrowthCurve;
@@ -43,7 +47,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         public readonly int NameCardId;
         public AvatarCompiledData(int avatarId)
         {
-            GeneralData = GameData.AvatarDataMap[avatarId];
+            AvatarId = avatarId;
             if (GeneralData.candSkillDepotIds.Count() != 0)
             {
                 SkillDepotData = new();
@@ -57,7 +61,6 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 SkillDepotData = new() { { GeneralData.skillDepotId, GameData.AvatarSkillDepotDataMap[GeneralData.skillDepotId] } };
             }
             SkillData = new();
-            PromoteData = new();
             TalentData = new();
             ProudSkillData = new();
             AbilityNameHashes = new();
@@ -65,8 +68,6 @@ namespace Weedwacker.GameServer.Systems.Avatar
             {
                 var dictionary = GameData.AvatarSkillDataMap.Where(w => depot.skills.Contains(w.Key) || depot.subSkills.Contains(w.Key) || depot.energySkill == w.Key).ToDictionary(x => x.Key, x => x.Value);
                 SkillData.Add(depot.id, new SortedList<int, AvatarSkillData>(dictionary));
-                var dictionary9 = GameData.AvatarPromoteDataMap.Where(w => w.Key.Item1 == GeneralData.avatarPromoteId).ToDictionary(x => x.Key.Item2, x => x.Value);
-                PromoteData = new SortedList<int, AvatarPromoteData>(dictionary9);
                 var dictionary7 = GameData.AvatarTalentDataMap.Where(w => depot.talents.Contains(w.Value.talentId)).ToDictionary(x => x.Key, x => x.Value);
                 TalentData.Add(depot.id, new SortedList<int, AvatarTalentData>(dictionary7));
                 var dictionary8 = GameData.ProudSkillDataMap.Where(w => depot.inherentProudSkillOpens.Exists(y => y.proudSkillGroupId == w.Value.proudSkillGroupId)).ToDictionary(x => x.Key, x => x.Value);
@@ -80,7 +81,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                     if (abilityData != null)
                     {
                         List<ulong> hashes = new();
-                        foreach (AbilityGroupData.TargetAbility ability in abilityData.targetAbilities)
+                        foreach (TargetAbility ability in abilityData.targetAbilities.Concat(ConfigAvatar.abilities))
                         {
                             hashes.Add(Utils.AbilityHash(ability.abilityName));
                         }
@@ -88,22 +89,6 @@ namespace Weedwacker.GameServer.Systems.Avatar
                     }
                 }
             }
-            var dictionary1 = GameData.AvatarCostumeDataMap.Where(w => w.Value.avatarId == GeneralData.id).ToDictionary(x => x.Key, x => x.Value);
-            CostumeData = new SortedList<int, AvatarCostumeData>(dictionary1);
-            var dictionary2 = GameData.AvatarCodexDataMap.Where(w => w.Value.avatarId == GeneralData.id).ToDictionary(x => x.Key, x => x.Value);
-            CodexData = new SortedList<int, AvatarCodexData>(dictionary2);
-
-            // Fetters
-            CardData = GameData.FetterCharacterCardDataMap.GetValueOrDefault(avatarId);
-            FetterInfoData = GameData.FetterInfoDataMap.Where(w => w.Value.avatarId == avatarId).FirstOrDefault().Value;
-            var dictionary3 = GameData.FettersDataMap.Where(w => w.Value.avatarId == avatarId).ToDictionary(w => w.Key, w => w.Value);
-            FettersData = new SortedList<int, FettersData>(dictionary3);
-            var dictionary4 = GameData.FetterStoryDataMap.Where(w => w.Value.avatarId == avatarId).ToDictionary(w => w.Key, w => w.Value);
-            FetterStoryData = new SortedList<int, FetterStoryData>(dictionary4);
-            var dictionary5 = GameData.PhotographPosenameDataMap.Where(w => w.Value.avatarId == avatarId).ToDictionary(w => w.Key, w => w.Value);
-            PhotographPosenameData = new SortedList<int, PhotographPosenameData>(dictionary5);
-            var dictionary6 = GameData.PhotographExpressionDataMap.Where(w => w.Value.avatarId == avatarId).ToDictionary(w => w.Key, w => w.Value);
-            PhotographExpressionData = new SortedList<int, PhotographExpressionData>(dictionary6);
 
             HpGrowthCurve = new Tuple<ArithType,float>[CurveData.Count];
             AttackGrowthCurve = new Tuple<ArithType, float>[CurveData.Count];
@@ -141,7 +126,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 case ArithType.ARITH_ADD:
                     return value + curve.Item2;
                 default:
-                    Logger.WriteErrorLine("Unknown Avatar curve operation");
+                    Logger.WriteErrorLine($"Unhandled Avatar curve operation {curve.Item1}");
                     goto case ArithType.ARITH_MULTI;            
             }
         }

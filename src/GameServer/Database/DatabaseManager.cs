@@ -100,14 +100,18 @@ namespace Weedwacker.GameServer.Database
         }
 
         private static async void BulkUpdate(object? source, ElapsedEventArgs e)
-        {
-            if (PlayerWrites.Any()) { await Players.BulkWriteAsync(PlayerWrites, BulkWrite); PlayerWrites.Clear(); }
-            if (AvatarWrites.Any()) { await Avatars.BulkWriteAsync(AvatarWrites, BulkWrite); AvatarWrites.Clear(); }
-            if (InventoryWrites.Any()) { await Inventories.BulkWriteAsync(InventoryWrites, BulkWrite); InventoryWrites.Clear(); }
-            if (ProgressWrites.Any()) { await Progress.BulkWriteAsync(ProgressWrites, BulkWrite); ProgressWrites.Clear(); }
-            if (TeamWrites.Any()) { await Teams.BulkWriteAsync(TeamWrites, BulkWrite); TeamWrites.Clear(); }
-            if (ShopWrites.Any()) { await Shops.BulkWriteAsync(ShopWrites, BulkWrite); ShopWrites.Clear(); }
-            if (SocialWrites.Any()) { await Social.BulkWriteAsync(SocialWrites, BulkWrite); SocialWrites.Clear(); }
+        {           
+            Task[]? tasks = new Task[] {
+                new Task(async () => {if (PlayerWrites.Any()) { await Players.BulkWriteAsync(PlayerWrites, BulkWrite); PlayerWrites.Clear(); } }),
+                new Task(async () => {if (AvatarWrites.Any()) { await Avatars.BulkWriteAsync(AvatarWrites, BulkWrite); AvatarWrites.Clear(); }}),
+                new Task(async () => {if (InventoryWrites.Any()) { await Inventories.BulkWriteAsync(InventoryWrites, BulkWrite); InventoryWrites.Clear(); }}),
+                new Task(async () => {if (ProgressWrites.Any()) { await Progress.BulkWriteAsync(ProgressWrites, BulkWrite); ProgressWrites.Clear(); }}),
+                new Task(async () => {if (TeamWrites.Any()) { await Teams.BulkWriteAsync(TeamWrites, BulkWrite); TeamWrites.Clear(); }}),
+                new Task(async () => {if (ShopWrites.Any()) { await Shops.BulkWriteAsync(ShopWrites, BulkWrite); ShopWrites.Clear(); }}),
+                new Task(async () => {if (SocialWrites.Any()) { await Social.BulkWriteAsync(SocialWrites, BulkWrite); SocialWrites.Clear(); }}),
+            };
+            tasks.AsParallel().ForAll(w => w.Start());
+            await Task.WhenAll(tasks);
         }
 
         public static async Task<Player?> CreatePlayerFromAccountUidAsync(string accountUid, string heroName = "", int gameUid = 0)

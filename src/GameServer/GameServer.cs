@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 using Newtonsoft.Json;
 using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Systems.Avatar;
@@ -17,7 +18,7 @@ namespace Weedwacker.GameServer
     internal static class GameServer
     {
         private static readonly HttpClient client = new HttpClient();
-
+        private static System.Timers.Timer? TickTimer;
         public static GameConfig Configuration;
         public static SortedList<int,Connection> OnlinePlayers = new(); // <gameUid,connection>
         private static HashSet<World> Worlds = new();
@@ -61,8 +62,24 @@ namespace Weedwacker.GameServer
             {
                 AvatarInfo.Add(id, new AvatarCompiledData(id));
             }
+            // Create a timer with a one second interval.
+            TickTimer = new System.Timers.Timer(1000);
+            // Hook up the Elapsed event for the timer. 
+            TickTimer.Elapsed += OnTick;
+            TickTimer.AutoReset = true;
+            TickTimer.Enabled = true;
 
             Listener.StartListener();
+        }
+
+        private static async void OnTick(object? source, ElapsedEventArgs e)
+        {
+            HashSet<World> toRemove = new();
+            // Tick worlds.
+            Worlds.AsParallel().ForAll(async w => { if (await w.OnTickAsync()) toRemove.Add(w); });
+
+            // Tick players.
+            OnlinePlayers.Values.AsParallel().ForAll(async p => await p.Player.OnTickAsync());
         }
 
         public static int GetShopNextRefreshTime(int shopType)

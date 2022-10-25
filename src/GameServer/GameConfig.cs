@@ -28,7 +28,7 @@ namespace Weedwacker.GameServer
         {
 #if DEBUG
             public HashSet<OpCode> DebugWhitelist = new();
-            public HashSet<OpCode> DebugBlacklist = new() { OpCode.PingReq, OpCode.PingRsp, OpCode.PlayerSetPauseReq, OpCode.PlayerSetPauseRsp};
+            public HashSet<OpCode> DebugBlacklist = new() { OpCode.PingReq, OpCode.PingRsp, OpCode.PlayerSetPauseReq, OpCode.PlayerSetPauseRsp, OpCode.WorldPlayerRTTNotify};
 #endif
             /* This is the address used in the default region. */
             public string AccessAddress = "127.0.0.1";

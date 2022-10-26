@@ -52,6 +52,7 @@ namespace Weedwacker.GameServer.Systems.World
             {
                 Pos = new Vector() { X = Position.X, Y = Position.Y, Z = Position.Z },
                 Rot = new Vector() { X = Rotation.X, Y = Rotation.Y, Z = Rotation.Z },
+                Speed = new(), //TODO
                 State = MotionState
             };
 

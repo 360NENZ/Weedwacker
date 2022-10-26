@@ -11,6 +11,9 @@ using Weedwacker.Shared.Utils;
 using Weedwacker.GameServer.Systems.Player;
 using System.Text;
 using Weedwacker.GameServer.Database;
+using Google.Protobuf.Reflection;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Weedwacker.GameServer
 {
@@ -28,7 +31,9 @@ namespace Weedwacker.GameServer
         public long LastPingTime { get; private set; }
         private uint LastClientSeq = 10;
         public static readonly List<OpCode> BANNED_PACKETS  = new List<OpCode>(){ OpCode.WindSeedClientNotify, OpCode.PlayerLuaShellNotify };
-
+#if DEBUG
+        private static uint LogIndex = 0;
+#endif
         public Connection(KcpConversation conversation, IPEndPoint remote)
         {
             Conversation = conversation;
@@ -68,7 +73,18 @@ namespace Weedwacker.GameServer
 #if DEBUG
         static void LogPacket(string sendOrRecv, ushort opcode, byte[] payload)
         {
-            Logger.DebugWriteLine(sendOrRecv + ": " + Enum.GetName(typeof(OpCode), opcode) + " (" + opcode + ")\r\n" + Convert.ToHexString(payload));
+            //Logger.DebugWriteLine($"{sendOrRecv}: {Enum.GetName(typeof(OpCode), opcode)}({opcode})\r\n{Convert.ToHexString(payload)}");
+            var typ = AppDomain.CurrentDomain.GetAssemblies().
+           SingleOrDefault(assembly => assembly.GetName().Name == "Shared").GetTypes().First(t => t.Name == $"{Enum.GetName(typeof(OpCode), opcode)}"); //get the type using the packet name
+            var descriptor = (MessageDescriptor)typ.GetProperty("Descriptor", BindingFlags.Public | BindingFlags.Static).GetValue(null, null); // get the static property Descriptor
+            var packet = descriptor.Parser.ParseFrom(payload); // parse the byte array to Person
+            var formatter = Google.Protobuf.JsonFormatter.Default;
+            var asJson = formatter.Format(packet);
+            Logger.DebugWriteLine($"{sendOrRecv}: {Enum.GetName(typeof(OpCode), opcode)}({opcode})\r\n{asJson}");
+            if (GameServer.Configuration.Server.KeepLog)
+            {
+                File.WriteAllText($"{GameServer.Configuration.Server.LogLocation}\\{LogIndex++}.json", JValue.Parse(asJson).ToString(Formatting.Indented));
+            }
         }
 #endif
         async Task ReceiveLoop()

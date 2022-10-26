@@ -55,6 +55,18 @@ namespace Weedwacker.GameServer
         public static async Task Start()
         {
             Configuration = await Config.Load<GameConfig>("GameConfig.json");
+#if DEBUG
+            if (!Directory.Exists(Configuration.Server.LogLocation))
+                Directory.CreateDirectory(Configuration.Server.LogLocation);
+            else
+            {
+                DirectoryInfo di = new DirectoryInfo(Configuration.Server.LogLocation);
+                foreach(FileInfo file in di.GetFiles())
+                {
+                    file.Delete();
+                }
+            }
+#endif
             await GameData.LoadAllResourcesAsync(Configuration.structure.Resources);
             Crypto.LoadKeys(Configuration.structure.keys);
             await Database.DatabaseManager.Initialize();

@@ -185,7 +185,7 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
             public uint final_point;
         }
 
-        internal static Task<SceneGroup> CreateAsync(Lua luaState, int sceneId, uint blockId, uint id, FileInfo fileInfo)
+        internal static Task<SceneGroup?> CreateAsync(Lua luaState, int sceneId, uint blockId, uint id, FileInfo fileInfo)
         {
             SceneGroup group = new(luaState, sceneId, blockId, id);
             return group.InitializeAsync(fileInfo);
@@ -199,7 +199,7 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
             group_id = groupId;
         }
 
-        private async Task<SceneGroup> InitializeAsync(FileInfo groupInfo)
+        private async Task<SceneGroup?> InitializeAsync(FileInfo groupInfo)
         {
             string script = groupInfo.FullName;
 
@@ -215,6 +215,7 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
             catch
             {
                 Logger.DebugWriteLine($"Failed to load scene group: {group_id}");
+                return null;
             }
             
             if (LuaState[$"_SCENE_GROUP{group_id}.{nameof(init_config)}"] != null)

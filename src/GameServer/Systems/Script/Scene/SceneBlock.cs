@@ -12,7 +12,7 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
         private uint BlockId;
 
         public SortedList<uint, SceneGroupInfo> groups; // index
-        public SortedList<uint, SceneGroup> GroupsInfo = new(); // SceneGroupInfo::id
+        public SortedList<uint, SceneGroup?> GroupsInfo = new(); // SceneGroupInfo::id
 
         public class SceneGroupInfo
         {

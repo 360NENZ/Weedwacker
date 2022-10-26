@@ -83,7 +83,7 @@ namespace Weedwacker.GameServer
             Logger.DebugWriteLine($"{sendOrRecv}: {Enum.GetName(typeof(OpCode), opcode)}({opcode})\r\n{asJson}");
             if (GameServer.Configuration.Server.KeepLog)
             {
-                File.WriteAllText($"{GameServer.Configuration.Server.LogLocation}\\{LogIndex++}.json", JValue.Parse(asJson).ToString(Formatting.Indented));
+                File.WriteAllText($"{GameServer.Configuration.Server.LogLocation}\\{LogIndex++}{packet.GetType().Name}.json", JValue.Parse(asJson).ToString(Formatting.Indented));
             }
         }
 #endif

@@ -1,19 +1,19 @@
 ﻿using System.Text.RegularExpressions;
 using NLua;
 using Vim.Math3d;
-using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.Script.Scene
 {
     internal class SceneInfo
     {
         Lua LuaState;
+        private int SceneId;
         public SceneConfig? scene_config;
 
         public SortedList<int, uint>? blocks; // <index ,blockIds>
         public SortedList<uint, SceneBlock>? BlocksInfo; // blockId
         public SortedList<int, Rectangle>? block_rects = new(); // <index, rectangle>
-        public LuaTable dummy_points;// => LuaState.GetTable("dummy_points"); // load dummy points from Scene<sceneId>_<string>.lua
+        public DummyPoints? dummy_points; // load dummy points from Scene<sceneId>_dummy_points.lua
         public LuaTable routes_config;// => LuaState.GetTable("routes_config"); // load routes from ???
         
         public static Task<SceneInfo> CreateAsync(Lua lua, int sceneId, string scriptPath)
@@ -25,6 +25,7 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
         private async Task<SceneInfo> InitializeAsync(Lua lua, int sceneId, string scriptPath)
         {
             LuaState = lua;
+            SceneId = SceneId;
             LuaState.LoadCLRPackage();
             LuaState.DoString(@" import ('GameServer', 'Weedwacker.GameServer.Systems.Script')");
             FileInfo commonInfo = new(Path.Combine(scriptPath, "Config", "Excel", "CommonScriptConfig.lua"));
@@ -72,6 +73,10 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
                 var rects = lua.GetTable($"_SCENE{sceneId}.{nameof(block_rects)}");
                 var rectDict = lua.GetTableDict(rects);
                 block_rects = new SortedList<int, Rectangle>(rectDict.ToDictionary(w => (int)(long)w.Key, w => new Rectangle(w.Value as LuaTable)));
+            }
+            if (lua[$"_SCENE{sceneId}.{nameof(dummy_points)}"] != null)
+            {
+                dummy_points = DummyPoints.Create(lua, sceneId, Path.Combine(scriptPath, "Scene", $"{sceneId}", $"scene{sceneId}_{nameof(dummy_points)}.lua"));
             }
 
             return this;

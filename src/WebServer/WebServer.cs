@@ -2,7 +2,6 @@
 using Weedwacker.WebServer.Authentication;
 using Weedwacker.Shared.Utils;
 using Weedwacker.Shared.Utils.Configuration;
-using Weedwacker.WebServer.Commands;
 using Weedwacker.WebServer.Database;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Weedwacker.WebServer.Commands
+namespace Weedwacker.Shared.Commands
 {
-    internal static class ConsoleCommands
+    public static class ConsoleCommands
     {
         public static async Task<string> OnHelp(params string[] args)
         {

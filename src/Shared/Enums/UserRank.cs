@@ -1,4 +1,4 @@
-﻿namespace Weedwacker.WebServer.Enums
+﻿namespace Weedwacker.Shared.Enums
 {
     public enum UserRank : byte
     {

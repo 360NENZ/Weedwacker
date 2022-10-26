@@ -1,5 +1,5 @@
 ﻿using Weedwacker.WebServer;
-using Weedwacker.WebServer.Commands;
+using Weedwacker.Shared.Commands;
 
 WebServer.Start();
 await ConsoleHandler.Start();

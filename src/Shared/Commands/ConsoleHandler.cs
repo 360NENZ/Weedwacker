@@ -4,17 +4,21 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using Weedwacker.Shared.Enums;
 using Weedwacker.Shared.Utils;
-using Weedwacker.WebServer.Enums;
 
-namespace Weedwacker.WebServer.Commands
+namespace Weedwacker.Shared.Commands
 {
-    internal static class ConsoleHandler
+    public static class ConsoleHandler
     {
         static readonly Dictionary<string, (byte, UserRank, Func<string[], Task<string>>)> RegisteredCommands = new()
         {
             { "help", (0, UserRank.Mod, ConsoleCommands.OnHelp) }
         };
+        public static void AddCommand(string cmd, byte argCount, UserRank rank, Func<string[], Task<string>> action)
+        {
+            RegisteredCommands[cmd] = (argCount, rank, action);
+        }
         public static async Task Start()
         {
         Start:

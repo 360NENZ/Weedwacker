@@ -11,6 +11,7 @@ using Weedwacker.GameServer.Systems.Avatar;
 using Weedwacker.GameServer.Systems.World;
 using Weedwacker.Shared.Authentication;
 using Weedwacker.Shared.Network.Proto;
+using Weedwacker.Shared.Utils;
 using Weedwacker.Shared.Utils.Configuration;
 
 namespace Weedwacker.GameServer
@@ -19,7 +20,7 @@ namespace Weedwacker.GameServer
     {
         private static readonly HttpClient client = new HttpClient();
         private static System.Timers.Timer? TickTimer;
-        public static GameConfig Configuration;
+        public static GameConfig? Configuration;
         public static SortedList<int,Connection> OnlinePlayers = new(); // <gameUid,connection>
         private static HashSet<World> Worlds = new();
         public static SortedList<int, AvatarCompiledData> AvatarInfo = new(); // <avatarId,data>
@@ -55,7 +56,7 @@ namespace Weedwacker.GameServer
         {
             Configuration = await Config.Load<GameConfig>("GameConfig.json");
             await GameData.LoadAllResourcesAsync(Configuration.structure.Resources);
-            Shared.Utils.Crypto.LoadKeys(Configuration.structure.keys);
+            Crypto.LoadKeys(Configuration.structure.keys);
             await Database.DatabaseManager.Initialize();
 
             foreach (int id in GameData.AvatarDataMap.Keys)
@@ -75,11 +76,25 @@ namespace Weedwacker.GameServer
         private static async void OnTick(object? source, ElapsedEventArgs e)
         {
             HashSet<World> toRemove = new();
-            // Tick worlds.
-            Worlds.AsParallel().ForAll(async w => { if (await w.OnTickAsync()) toRemove.Add(w); });
+            try
+            {
+                // Tick worlds.
+                foreach(var world in Worlds)
+                {
+                    if (await world.OnTickAsync())
+                        toRemove.Add(world);
+                }
 
-            // Tick players.
-            OnlinePlayers.Values.AsParallel().ForAll(async p => await p.Player.OnTickAsync());
+                // Tick players.
+                foreach(var player in OnlinePlayers.Values)
+                {
+                    await player.Player.OnTickAsync();
+                }
+            }
+            catch
+            {
+                Logger.WriteErrorLine("Tick event error");
+            }
         }
 
         public static int GetShopNextRefreshTime(int shopType)

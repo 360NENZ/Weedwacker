@@ -24,9 +24,6 @@ namespace Weedwacker.GameServer.Packet.Recv
             await session.SendPacketAsync(new PacketScenePlayerLocationNotify(session.Player.Scene));
             await session.SendPacketAsync(new PacketWorldPlayerRTTNotify(session.Player.World));
 
-
-            // Reset timer for sending player locations
-            session.Player.ResetSendPlayerLocTime();
             //Rsp
             await session.SendPacketAsync(new PacketEnterSceneDoneRsp(session.Player));
         }

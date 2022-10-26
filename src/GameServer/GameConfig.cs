@@ -27,8 +27,8 @@ namespace Weedwacker.GameServer
         public class ServerJson
         {
 #if DEBUG
-            public HashSet<OpCode> DebugWhitelist = new();
-            public HashSet<OpCode> DebugBlacklist = new() { OpCode.PingReq, OpCode.PingRsp, OpCode.PlayerSetPauseReq, OpCode.PlayerSetPauseRsp, OpCode.WorldPlayerRTTNotify};
+            public OpCode[] DebugWhitelist = Array.Empty<OpCode>();
+            public OpCode[] DebugBlacklist = new[] { OpCode.PingReq, OpCode.PingRsp, OpCode.PlayerSetPauseReq, OpCode.PlayerSetPauseRsp, OpCode.WorldPlayerRTTNotify};
 #endif
             /* This is the address used in the default region. */
             public string AccessAddress = "127.0.0.1";
@@ -52,9 +52,6 @@ namespace Weedwacker.GameServer
             public JoinOptions JoinOptions = new JoinOptions();
             public ConsoleAccount ServerAccount = new ConsoleAccount();
         }
-
-
-
 
         /* Data containers. */
 
@@ -80,9 +77,6 @@ namespace Weedwacker.GameServer
 
                 public int DEFAULT_TEAMS = 4;
                 public int MAX_TEAMS = 10;
-                public int MAIN_CHARACTER_MALE = 10000005;
-                public int MAIN_CHARACTER_FEMALE = 10000007;
-                public float[] START_POSITION = { 2747, 194, -1719 };
 
                 public int MAX_FRIENDS = 45;
                 public int MAX_FRIEND_REQUESTS = 50;

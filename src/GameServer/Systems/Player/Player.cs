@@ -11,6 +11,7 @@ using Weedwacker.GameServer.Packet.Send;
 using Weedwacker.GameServer.Systems.Shop;
 using Weedwacker.GameServer.Systems.World;
 using Weedwacker.Shared.Network.Proto;
+using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.Player
 {
@@ -45,7 +46,8 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonIgnore] public string Token { get; set; } // Obtained and used When Logging in
         [BsonIgnore] public uint EnterSceneToken;
         private long NextSendPlayerLocTime = 0;
-        [BsonIgnore] private bool Paused;
+        private long NextSendPlayerTimeNotify = 0;
+        [BsonIgnore] public bool Paused { get; private set; }
         [BsonIgnore] public bool HasSentLoginPackets { get; private set; } = false;
         [BsonIgnore] private ulong NextGuid = 0;
         [BsonIgnore] public SceneLoadState SceneLoadState = SceneLoadState.NONE;
@@ -101,11 +103,6 @@ namespace Weedwacker.GameServer.Systems.Player
         {
             ulong nextId = ++NextGuid;
             return ((ulong)GameUid << 32) + nextId;
-        }
-
-        public void ResetSendPlayerLocTime()
-        {
-            NextSendPlayerLocTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() + 5000;
         }
 
         public async Task<bool> SetMainCharacter(int avatarId, string heroName)
@@ -180,7 +177,13 @@ namespace Weedwacker.GameServer.Systems.Player
                 {
                     await SendPacketAsync(new PacketWorldPlayerLocationNotify(World));
                     await SendPacketAsync(new PacketScenePlayerLocationNotify(Scene));
-                    ResetSendPlayerLocTime();
+                    NextSendPlayerLocTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() + 5000;
+                }
+                if(Scene != null && time > NextSendPlayerTimeNotify)
+                {
+                    // Send every 10 seconds
+                    await SendPacketAsync(new PacketPlayerTimeNotify(this));
+                    NextSendPlayerTimeNotify = DateTimeOffset.Now.ToUnixTimeMilliseconds() + 10000;
                 }
             }
             // Recharge resin.

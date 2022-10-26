@@ -12,7 +12,6 @@ namespace Weedwacker.GameServer.Packet.Recv
             GetPlayerSocialDetailReq req = GetPlayerSocialDetailReq.Parser.ParseFrom(payload);
 
             SocialDetail? detail = await GameServer.GetSocialDetailByUid(session.Player.GameUid, req.Uid);
-
             await session.SendPacketAsync(new PacketGetPlayerSocialDetailRsp(detail));
         }
     }

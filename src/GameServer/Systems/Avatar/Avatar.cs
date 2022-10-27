@@ -513,9 +513,12 @@ namespace Weedwacker.GameServer.Systems.Avatar
             foreach (ProudSkillData proudSkill in GetCurSkillDepot().InherentProudSkillOpens)
             {
                 // Add properties from this proud skill to our avatar
-                foreach (FightPropData prop in proudSkill.addProps)
+                if (proudSkill.addProps != null)
                 {
-                    FightProp[prop.propType] = FightProp.GetValueOrDefault(prop.propType) + prop.value;
+                    foreach (FightPropData prop in proudSkill.addProps)
+                    {
+                        FightProp[prop.propType] = FightProp.GetValueOrDefault(prop.propType) + prop.value;
+                    }
                 }
             }
 

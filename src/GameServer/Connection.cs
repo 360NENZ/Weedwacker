@@ -77,13 +77,13 @@ namespace Weedwacker.GameServer
             var typ = AppDomain.CurrentDomain.GetAssemblies().
            SingleOrDefault(assembly => assembly.GetName().Name == "Shared").GetTypes().First(t => t.Name == $"{Enum.GetName(typeof(OpCode), opcode)}"); //get the type using the packet name
             var descriptor = (MessageDescriptor)typ.GetProperty("Descriptor", BindingFlags.Public | BindingFlags.Static).GetValue(null, null); // get the static property Descriptor
-            var packet = descriptor.Parser.ParseFrom(payload); // parse the byte array to Person
+            var packet = descriptor.Parser.ParseFrom(payload);
             var formatter = Google.Protobuf.JsonFormatter.Default;
             var asJson = formatter.Format(packet);
             Logger.DebugWriteLine($"{sendOrRecv}: {Enum.GetName(typeof(OpCode), opcode)}({opcode})\r\n{asJson}");
             if (GameServer.Configuration.Server.KeepLog)
             {
-                File.WriteAllText($"{GameServer.Configuration.Server.LogLocation}\\{LogIndex++}{packet.GetType().Name}.json", JValue.Parse(asJson).ToString(Formatting.Indented));
+                File.WriteAllText($"{GameServer.Configuration.Server.LogLocation}\\{LogIndex++}_{packet.GetType().Name}.json", JValue.Parse(asJson).ToString(Formatting.Indented));
             }
         }
 #endif

@@ -1,0 +1,10 @@
+﻿using Newtonsoft.Json;
+
+namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp.Actions
+{
+    internal class TriggerSetVisible : BaseAction
+    {
+        [JsonProperty] public readonly bool doOffStage;
+        [JsonProperty] public readonly bool visible;
+    }
+}

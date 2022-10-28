@@ -169,6 +169,6 @@ namespace Weedwacker.GameServer.Enums
         Eff_Avatar_Pendant_Blink_Ice,
         Eff_Avatar_Pendant_Ready_Ice,
         Eff_Avatar_Pendant_Blink_Rock,
-        Eff_Avatar_Pendant_Ready_Rock
+        Eff_Avatar_Pendant_Ready_Rock,
     }
 }

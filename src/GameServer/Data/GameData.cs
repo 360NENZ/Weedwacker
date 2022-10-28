@@ -2,6 +2,10 @@
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using NLua;
+using Weedwacker.GameServer.Data.BinOut.Ability.Temp;
+using Weedwacker.GameServer.Data.BinOut.Ability.Temp.AbilityMixins;
+using Weedwacker.GameServer.Data.BinOut.Ability.Temp.Predicates;
+using Weedwacker.GameServer.Data.BinOut.Ability.Temp.Actions;
 using Weedwacker.GameServer.Data.BinOut.AbilityGroup;
 using Weedwacker.GameServer.Data.BinOut.Avatar;
 using Weedwacker.GameServer.Data.BinOut.Scene.Point;
@@ -11,6 +15,11 @@ using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.GameServer.Systems.Script.Scene;
 using Weedwacker.Shared.Utils;
 using static Weedwacker.GameServer.Data.SerializationSettings;
+using Weedwacker.GameServer.Data.BinOut.Ability.Temp.BornTypes;
+using Weedwacker.GameServer.Data.BinOut.Ability.Temp.DirectionTypes;
+using Weedwacker.GameServer.Data.BinOut.Ability.Temp.SelectTargetType;
+using Weedwacker.GameServer.Data.BinOut.Ability.Temp.AttackPatterns;
+using Weedwacker.GameServer.Data.BinOut.Ability.Temp.EventOps;
 
 namespace Weedwacker.GameServer.Data
 {
@@ -30,6 +39,7 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<int, AvatarSkillDepotData> AvatarSkillDepotDataMap = new(); // SkillDepotId
         public readonly static ConcurrentDictionary<string, BaseConfigTalent[]> AvatarTalentConfigDataMap = new(); // openConfig
         public readonly static SortedList<int, AvatarTalentData> AvatarTalentDataMap = new(); // talentId
+        public readonly static ConcurrentDictionary<string, ConfigAbilityContainer[]> ConfigAbilityAvatarMap = new(); // file name
         public readonly static SortedList<int, FetterCharacterCardData> FetterCharacterCardDataMap = new(); // avatarId
         public readonly static SortedList<int, FetterInfoData> FetterInfoDataMap = new(); // fetterId
         public readonly static SortedList<int, FettersData> FettersDataMap = new(); // fetterId
@@ -80,14 +90,51 @@ namespace Weedwacker.GameServer.Data
             TypeNameHandling = TypeNameHandling.Objects,
             SerializationBinder = new KnownTypesBinder
             {
-                KnownTypes = new List<Type> {
+                KnownTypes = new Type[] {
                     // Ability Types
                     typeof(AddAbility), typeof(AddTalentExtraLevel), typeof(ModifyAbility), typeof(ModifySkillCD), typeof(ModifySkillPoint), typeof(UnlockTalentParam),
                     typeof(UnlockControllerConditions),
                     // Point Types
                     typeof(DungeonEntry), typeof(DungeonExit), typeof(DungeonQuitPoint), typeof(DungeonSlipRevivePoint), typeof(DungeonWayPoint), typeof(SceneBuildingPoint),
                     typeof(SceneTransPoint), typeof(PersonalSceneJumpPoint), typeof(SceneVehicleSummonPoint), typeof(TransPointStatue), typeof(TransPointNormal),
-                    typeof(VehicleSummonPoint), typeof(VirtualTransPoint)}
+                    typeof(VehicleSummonPoint), typeof(VirtualTransPoint),
+                    // ConfigAbility
+                    typeof(ConfigAbility),
+                    // AbilityMixin
+                    typeof(AttachToStateIDMixin), typeof(SkillButtonHoldChargeMixin), typeof(ButtonHoldChargeMixin), typeof(AttachToNormalizedTimeMixin), typeof(DoReviveMixin),
+                    typeof(ModifyDamageMixin), typeof(OnAvatarUseSkillMixin), typeof(AvatarChangeSkillMixin), typeof(AttachToAnimatorStateIDMixin), typeof(AvatarSteerByCameraMixin),
+                    typeof(AttachModifierToSelfGlobalValueMixin), typeof(TriggerElementSupportMixin), typeof(ModifySkillCDByModifierCountMixin), typeof(DoActionByKillingMixin),
+                    typeof(DoActionByEnergyChangeMixin), typeof(ElementHittingOtherPredicatedMixin), typeof(RejectAttackMixin), typeof(DoActionByElementReactionMixin),
+                    typeof(DoActionByStateIDMixin), typeof(DoActionByTeamStatusMixin), typeof(AttachModifierToPredicateMixin), typeof(DoActionByEventMixin), typeof(AutoDefenceMixin),
+                    typeof(ExtendLifetimeByPickedGadgetMixin), typeof(ReviveElemEnergyMixin), typeof(ChangeFieldMixin),
+                    // Actions
+                    typeof(SetAnimatorTrigger), typeof(SetAnimatorInt), typeof(SetAnimatorBool), typeof(SetCameraLockTime), typeof(ResetAnimatorTrigger), typeof(RemoveModifier),
+                    typeof(ApplyModifier), typeof(TriggerBullet), typeof(EntityDoSkill), typeof(AvatarSkillStart), typeof(Predicated), typeof(SetGlobalValue), typeof(AttachModifier),
+                    typeof(KillSelf), typeof(TriggerAbility), typeof(UnlockSkill), typeof(RemoveUniqueModifier), typeof(FireAISoundEvent), typeof(TriggerAttackEvent), typeof(UseItem),
+                    typeof(DamageByAttackValue), typeof(CreateGadget), typeof(ActCameraRadialBlur), typeof(FireEffect), typeof(KillGadget), typeof(TriggerHideWeapon), typeof(ClearGlobalValue),
+                    typeof(ActCameraShake), typeof(DoWatcherSystemAction), typeof(AddGlobalValue), typeof(SetGlobalValueToOverrideMap), typeof(AddElementDurability), typeof(SetSelfAttackTarget),
+                    typeof(FireHitEffect), typeof(SetGlobalPos), typeof(AvatarEnterCameraShot), typeof(AvatarCameraParam), typeof(LoseHP), typeof(AvatarDoBlink), typeof(SendEffectTrigger),
+                    typeof(ModifyAvatarSkillCD), typeof(SetOverrideMapValue), typeof(DebugLog), typeof(CopyGlobalValue), typeof(SetTargetNumToGlobalValue), typeof(SetGlobalDir),
+                    typeof(ReviveDeadAvatar), typeof(ReviveAvatar), typeof(Randomed), typeof(FireSubEmitterEffect), typeof(TriggerAudio), typeof(ReviveElemEnergy), typeof(EnableHeadControl),
+                    typeof(AvatarExitCameraShot), typeof(ControlEmotion), typeof(SetAnimatorFloat), typeof(SetEmissionScaler), typeof(ClearEndura), typeof(ChangeShieldValue), typeof(Repeated),
+                    typeof(TriggerSetPassThrough), typeof(TriggerSetVisible), typeof(FixedAvatarRushMove), typeof(TryTriggerPlatformStartMove), typeof(AttachEffect), typeof(ForceUseSkillSuccess),
+                    // Predicate
+                    typeof(ByAny), typeof(ByAnimatorInt), typeof(ByLocalAvatarStamina), typeof(ByEntityAppearVisionType), typeof(ByTargetGlobalValue),typeof(ByTargetPositionToSelfPosition),
+                    typeof(ByCurrentSceneId), typeof(ByEntityTypes), typeof(ByIsTargetCamp), typeof(ByCurTeamHasFeatureTag), typeof(ByTargetHPRatio), typeof(BySkillReady), typeof(ByItemNumber),
+                    typeof(ByTargetHPValue), typeof(ByHasAttackTarget), typeof(ByAttackNotHitScene), typeof(ByAvatarInWaterDepth), typeof(ByTargetOverrideMapValue), typeof(ByUnlockTalentParam),
+                    typeof(ByAttackTags), typeof(ByTargetType), typeof(ByNot), typeof(ByHasChildGadget), typeof(ByHasElement), typeof(ByTargetIsCaster),
+                    // BornType
+                    typeof(ConfigBornByTarget), typeof(ConfigBornByAttachPoint), typeof(ConfigBornBySelf), typeof(ConfigBornByCollisionPoint), typeof(ConfigBornBySelectedPoint),
+                    typeof(ConfigBornByGlobalValue), typeof(ConfigBornBySelfOwner),
+                    // DirectionType
+                    typeof(ConfigDirectionByAttachPoint),
+                    // SelectTargetType
+                    typeof(SelectTargetsByEquipParts), typeof(SelectTargetsByShape), typeof(SelectTargetsByChildren),
+                    // AttackPattern
+                    typeof(ConfigAttackSphere), typeof(ConfigAttackCircle), typeof(ConfigAttackBox),
+                    // EventOp
+                    typeof(ConfigAudioEventOp),
+                }
             }
         };
         public static async Task<SceneInfo?> GetSceneScriptsAsync(int sceneId)
@@ -163,9 +210,22 @@ namespace Weedwacker.GameServer.Data
                 }
                 else
                 {
+                    
                     var fileData = Serializer.Deserialize<Obj>(jr);
                     // Use the name (without ".json") of the file as the key
                     map.Add(Regex.Replace(filePath.Name, "\\.json", ""), fileData);
+                    
+                    /*
+                    try
+                    {
+                        var fileData = Serializer.Deserialize<Obj>(jr);
+                        // Use the name (without ".json") of the file as the key
+                        map.Add(Regex.Replace(filePath.Name, "\\.json", ""), fileData);
+                    }
+                    catch(Exception e)
+                    {
+                        Logger.DebugWriteLine(e.Message);
+                    }*/
                 }
             });
         }
@@ -257,6 +317,7 @@ namespace Weedwacker.GameServer.Data
                 LoadExcel(excelPath, o => Tuple.Create(o.weaponPromoteId, o.promoteLevel), WeaponPromoteDataMap),
                 LoadExcel(excelPath, o => o.areaId, WeatherDataMap),
 
+                LoadBinOutFolder(Path.Combine(binPath, "Ability", "Temp", "AvatarAbilities"), ConfigAbilityAvatarMap, false),
                 LoadBinOutFolder(Path.Combine(binPath, "Scene/SceneNpcBorn"), o => o.sceneId,  SceneNpcBornDataMap),
                 LoadBinOutFolder(Path.Combine(binPath, "AbilityGroup"), AbilityGroupDataMap),
                 LoadBinOutFolder(Path.Combine(binPath, "Talent/AvatarTalents"), AvatarTalentConfigDataMap),

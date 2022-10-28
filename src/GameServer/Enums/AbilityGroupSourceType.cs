@@ -6,6 +6,7 @@ namespace Weedwacker.GameServer.Enums
     [JsonConverter(typeof(StringEnumConverter))]
     public enum AbilityGroupSourceType
     {
+        NONE,
         ABILITY_GROUP_SOURCE_AVATAR_SKILL_DEPOT,
         ABILITY_GROUP_SOURCE_QUEST,
         ABILITY_GROUP_SOURCE_GALLERY,

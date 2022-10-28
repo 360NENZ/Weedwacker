@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Weedwacker.GameServer.Data.Common;
+using Weedwacker.GameServer.Enums;
 
 namespace Weedwacker.GameServer.Data.Excel
 {
@@ -23,9 +24,9 @@ namespace Weedwacker.GameServer.Data.Excel
         [JsonProperty]
         public readonly string icon;
         [JsonProperty]
-        public readonly List<ItemParamData> costItems;
+        public readonly ItemParamData[] costItems;
         [JsonProperty]
-        public readonly List<string> filterConds;
+        public readonly TalentFilter[] filterConds;
         [JsonProperty]
         public readonly List<string> lifeEffectParams;
         [JsonProperty]

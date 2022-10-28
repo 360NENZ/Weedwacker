@@ -10,7 +10,6 @@ using Weedwacker.GameServer.Packet.Send;
 using Weedwacker.GameServer.Systems.Avatar;
 using Weedwacker.GameServer.Systems.Script.Scene;
 using Weedwacker.Shared.Network.Proto;
-using Weedwacker.Shared.Utils;
 using static Weedwacker.GameServer.Systems.Script.Scene.SceneGroup;
 
 namespace Weedwacker.GameServer.Systems.World
@@ -106,7 +105,7 @@ namespace Weedwacker.GameServer.Systems.World
 
             // Remove player avatars
             SortedList<int, AvatarEntity> team = player.TeamManager.ActiveTeam;
-            await RemoveEntitiesAsync(team.Values, VisionType.Remove);
+            await RemoveEntitiesAsync(team.Values, Shared.Network.Proto.VisionType.Remove);
             team.Clear();
 
             // Remove player gadgets
@@ -204,7 +203,7 @@ namespace Weedwacker.GameServer.Systems.World
 
         }
 
-        public async Task AddEntities(IEnumerable<GameEntity> entities, VisionType visionType = VisionType.Born)
+        public async Task AddEntities(IEnumerable<GameEntity> entities, Shared.Network.Proto.VisionType visionType = Shared.Network.Proto.VisionType.Born)
         {
             if (entities == null || !entities.Any())
             {
@@ -218,7 +217,7 @@ namespace Weedwacker.GameServer.Systems.World
             await BroadcastPacketAsync(new PacketSceneEntityAppearNotify(entities, visionType));
         }
 
-        public async Task<bool> RemoveEntityAsync(GameEntity entity, VisionType visionType = VisionType.Die)
+        public async Task<bool> RemoveEntityAsync(GameEntity entity, Shared.Network.Proto.VisionType visionType = Shared.Network.Proto.VisionType.Die)
         {
             if (ScriptEntities.Remove(entity.Id) || Entities.Remove(entity.Id) )
             {
@@ -227,7 +226,7 @@ namespace Weedwacker.GameServer.Systems.World
             }
             else return false;
         }
-        public async Task RemoveEntitiesAsync(IEnumerable<GameEntity> entity, VisionType visionType)
+        public async Task RemoveEntitiesAsync(IEnumerable<GameEntity> entity, Shared.Network.Proto.VisionType visionType)
         {
             var toRemove = entity.Where(w => ScriptEntities.Remove(w.Id) || Entities.Remove(w.Id) );
             if (toRemove.Any())
@@ -239,8 +238,8 @@ namespace Weedwacker.GameServer.Systems.World
         {
             Entities.Remove(oldEntity.Id);
             await AddEntityDirectly(newEntity);
-            await BroadcastPacketAsync(new PacketSceneEntityDisappearNotify(oldEntity, VisionType.Replace));
-            await BroadcastPacketAsync(new PacketSceneEntityAppearNotify(newEntity, VisionType.Replace, oldEntity.Id));
+            await BroadcastPacketAsync(new PacketSceneEntityDisappearNotify(oldEntity, Shared.Network.Proto.VisionType.Replace));
+            await BroadcastPacketAsync(new PacketSceneEntityAppearNotify(newEntity, Shared.Network.Proto.VisionType.Replace, oldEntity.Id));
         }
 
         public async Task ShowOtherEntitiesAsync(Player.Player player)
@@ -257,7 +256,7 @@ namespace Weedwacker.GameServer.Systems.World
                 entities.Add(entity);
             }
 
-            await player.SendPacketAsync(new PacketSceneEntityAppearNotify(entities, VisionType.Meet));
+            await player.SendPacketAsync(new PacketSceneEntityAppearNotify(entities, Shared.Network.Proto.VisionType.Meet));
         }
 
         public async Task HandleAttackAsync(AttackResult result)
@@ -353,7 +352,7 @@ namespace Weedwacker.GameServer.Systems.World
             // Remove from owner's gadget list
             gadget.Owner.GadgetManager.Gadgets.Remove(gadget);
 
-            await BroadcastPacketToOthersAsync(gadget.Owner, new PacketSceneEntityDisappearNotify(gadget, VisionType.Die));
+            await BroadcastPacketToOthersAsync(gadget.Owner, new PacketSceneEntityDisappearNotify(gadget, Shared.Network.Proto.VisionType.Die));
         }
 
         // Broadcasting

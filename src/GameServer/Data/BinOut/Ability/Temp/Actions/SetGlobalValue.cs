@@ -7,9 +7,9 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp.Actions
     {
         [JsonProperty] public readonly TargetType target;
         [JsonProperty] public readonly bool doOffStage;
-        [JsonProperty] public readonly object value; //TODO string[] or float
+        [JsonProperty] public readonly object value;
         [JsonProperty] public readonly string key;
-        [JsonProperty] public readonly object maxValue; //TODO string or float
+        [JsonProperty] public readonly object maxValue;
         [JsonProperty] public readonly float minValue;
     }
 }

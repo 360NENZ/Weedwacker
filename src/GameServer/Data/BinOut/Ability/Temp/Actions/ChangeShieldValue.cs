@@ -7,10 +7,10 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp.Actions
     {
         [JsonProperty] public readonly TargetType target;
         [JsonProperty] public readonly string modifierName;
-        [JsonProperty] public readonly object shieldHPRatio; //TODO string or float
-        [JsonProperty] public readonly object shieldHP; //TODO string or float
-        [JsonProperty] public readonly object maxShieldByHPRatio; //TODO string or float
-        [JsonProperty] public readonly object maxShieldHP; //TODO string or float
+        [JsonProperty] public readonly object shieldHPRatio;
+        [JsonProperty] public readonly object shieldHP;
+        [JsonProperty] public readonly object? maxShieldByHPRatio;
+        [JsonProperty] public readonly object? maxShieldHP;
         [JsonProperty] public readonly bool doOffStage;
     }
 }

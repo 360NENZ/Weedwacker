@@ -1,7 +1,6 @@
-﻿using System.Globalization;
-using System.Runtime.Serialization;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using Weedwacker.GameServer.Systems.Avatar;
 
 namespace Weedwacker.GameServer.Data.BinOut.Talent
 {
@@ -9,45 +8,34 @@ namespace Weedwacker.GameServer.Data.BinOut.Talent
     {
         [JsonProperty] public readonly string abilityName;
         [JsonProperty] public readonly string paramSpecial;
-        [JsonProperty] public readonly object? paramDelta;
-        [JsonProperty] public readonly object? paramRatio;
-        [JsonProperty] public double? paramDeltaUseThisDudeTrustMe { get; private set; }
-        [JsonProperty] public double? paramRatioForReal { get; private set; }
+        [JsonProperty] public readonly object? paramDelta; // plus or minus &(index in proudSkillData's or AvatarTalentData's paramList) or absolute delta
+        [JsonProperty] public readonly object? paramRatio; // plus or minus &(index in proudSkillData's or AvatarTalentData's paramList) or absolute delta
 
-        [OnDeserialized]
-        internal void OnDeserializedMethod(StreamingContext context)
+        public override void Apply(SkillDepot depot, double[] paramList)
         {
-            if (paramDelta != null)
+            float special = depot.AbilitySpecials[abilityName][paramSpecial];
+            if (paramDelta is string deltaString)
             {
-                string val = paramDelta as string;
-                if (string.IsNullOrEmpty(val))
-                {
-                    paramDeltaUseThisDudeTrustMe = (double)paramDelta;
-                }
-                else
-                {
-                    var culture = (CultureInfo)CultureInfo.CurrentCulture.Clone();
-                    culture.NumberFormat.NumberDecimalSeparator = ".";
-                    string newString = Regex.Replace((string)paramDelta, "(%)", "");
-                    paramDeltaUseThisDudeTrustMe = double.Parse(newString, culture) / 100;
-                }
+                string index = Regex.Replace(deltaString, "%", "");
+                float delta = (float)paramList[int.Parse(index)];
+                special += delta;
+            }
+            else if (paramDelta is double asD)
+                special += (float)asD;
+
+            if (paramRatio is string ratioString)
+            {
+                string index = Regex.Replace(ratioString, "%", "");
+                float ratio = (float)paramList[int.Parse(index)];
+                special *= ratio;
+            }
+            else if (paramRatio is double asD)
+            {
+                if (asD != 0)
+                    special *= (float)asD;
             }
 
-            if (paramRatio != null)
-            {
-                string val2 = paramRatio as string;
-                if (string.IsNullOrEmpty(val2))
-                {
-                    paramDeltaUseThisDudeTrustMe = (double)paramRatio;
-                }
-                else
-                {
-                    var culture = (CultureInfo)CultureInfo.CurrentCulture.Clone();
-                    culture.NumberFormat.NumberDecimalSeparator = ".";
-                    string newString = Regex.Replace((string)paramRatio, "(%)", "");
-                    paramDeltaUseThisDudeTrustMe = double.Parse(newString, culture) / 100;
-                }
-            }
+            depot.AbilitySpecials[abilityName][paramSpecial] = special;
         }
     }
 }

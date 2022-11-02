@@ -6,6 +6,6 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp.Actions
     {
         [JsonProperty] public readonly BasePredicate[] predicates;
         [JsonProperty] public readonly string intID;
-        [JsonProperty] public readonly float value;
+        [JsonProperty] public readonly object value;
     }
 }

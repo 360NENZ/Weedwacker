@@ -20,7 +20,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
     {
         [BsonElement] public int BornTime { get; private set; }
         [BsonElement] public int AvatarId { get; private set; }           // Id of avatar
-        [BsonIgnore] private Player.Player Owner { get; set; } // Loaded by DatabaseManager
+        [BsonIgnore] public Player.Player Owner { get; private set; } // Loaded by DatabaseManager
         [BsonIgnore] public AvatarCompiledData Data => GameServer.AvatarInfo[AvatarId];
         [BsonIgnore] public ulong Guid { get; private set; }           // Player unique Avatar id. Generated each session
         [BsonIgnore] public int EntityId { get; private set; }
@@ -85,8 +85,6 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
             return this;
         }
-
-        public Player.Player GetOwner() { return Owner; }
 
         internal Avatar Clone()
         {
@@ -582,9 +580,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
             {
                 avatarInfo.InherentProudSkillList.Add((uint)proud.proudSkillId);
             }
-            foreach (AvatarTalentData talent in GetCurSkillDepot().Talents)
+            foreach (int talent in GetCurSkillDepot().Talents)
             {
-                avatarInfo.TalentIdList.Add((uint)talent.talentId);
+                avatarInfo.TalentIdList.Add((uint)talent);
             }
             foreach (int skill in GetCurSkillDepot().GetSkillLevelMap().Keys)
             {
@@ -631,9 +629,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 CoreProudSkillLevel = GetCurSkillDepot().GetCoreProudSkillLevel(),
                 FetterInfo = avatarFetter
             };
-            foreach (AvatarTalentData talent in GetCurSkillDepot().Talents)
+            foreach (int talent in GetCurSkillDepot().Talents)
             {
-                showAvatarInfo.TalentIdList.Add((uint)talent.talentId);
+                showAvatarInfo.TalentIdList.Add((uint)talent);
             }
             foreach (ProudSkillData proudSkill in GetCurSkillDepot().InherentProudSkillOpens)
             {

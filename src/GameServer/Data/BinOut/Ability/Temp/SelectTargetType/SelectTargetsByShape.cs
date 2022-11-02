@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Weedwacker.GameServer.Enums;
+using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp.SelectTargetType
 {
@@ -10,6 +11,6 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp.SelectTargetType
         [JsonProperty] public readonly TargetType campTargetType;
         [JsonProperty] public readonly TargetType campBasedOn;
         [JsonProperty] public readonly int topLimit;
-        [JsonProperty] public readonly object sizeRatio; //TODO string or float
+        [JsonProperty] public readonly object sizeRatio;
     }
 }

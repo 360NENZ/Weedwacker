@@ -1,5 +1,7 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
+using Weedwacker.GameServer.Data.BinOut.Ability.Temp;
+using Weedwacker.GameServer.Data.BinOut.Talent;
 using Weedwacker.GameServer.Data.Common;
 using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.GameServer.Database;
@@ -23,8 +25,11 @@ namespace Weedwacker.GameServer.Systems.Avatar
         [BsonElement] public SortedList<int, int> SubSkills { get; private set; } = new(); // <skillId,level>
         [BsonElement] public SortedList<int, int> SkillExtraChargeMap { get; private set; } = new(); // Charges
         [BsonElement] public HashSet<ProudSkillData> InherentProudSkillOpens { get; private set; } = new(); // proudSkillId
-        [BsonElement] public HashSet<AvatarTalentData> Talents { get; private set; } = new(); // last digit of id = constellationRank. Also contain the openConfig name, which is needed to apply AbilityEmbryos
-        //TODO
+        [BsonIgnore] public IEnumerable<ProudSkillData> TeamOpens => InherentProudSkillOpens.Where(w => w.effectiveForTeam == 1);
+        [BsonElement] public HashSet<int> Talents { get; private set; } = new(); // talentId. last digit of id = constellationRank.
+        [BsonElement] public Dictionary<string, HashSet<string>> UnlockedTalentParams = new(); // <abilityName, talentParams> Added by ConfigTalent UnlockTalentParam
+        [BsonElement] public HashSet<string> ActiveDynamicAbilities { get; private set; } = new(); // abilityName
+        [BsonElement] public Dictionary<string, Dictionary<string, float>?>? AbilitySpecials { get; private set; } = new(); // <abilityName, <abilitySpecial, value>> Variables used in ConfigAbility_<Avatar>.json
         [BsonElement] public SortedList<int, int> ProudSkillExtraLevelMap { get; private set; } = new(); // <groupId,extraLevels> 
 
         public SkillDepot(Avatar avatar, int depotId, Player.Player owner)
@@ -33,6 +38,11 @@ namespace Weedwacker.GameServer.Systems.Avatar
             Character = avatar;
             DepotId = depotId;
             var avatarInfo = GameServer.AvatarInfo[avatar.AvatarId];
+            foreach (var configAbility in avatarInfo.AbilityConfigs)
+            {
+                if (configAbility.Default is ConfigAbility config)
+                    AbilitySpecials.Add(config.abilityName, config.abilitySpecials);
+            }
             EnergySkill = avatarInfo.SkillDepotData[depotId].energySkill;
             // Hero Avatars don't have an element at the beginning
             if (EnergySkill != 0)
@@ -86,6 +96,15 @@ namespace Weedwacker.GameServer.Systems.Avatar
                     InherentProudSkillOpens.Add(avatarInfo.ProudSkillData[depotId][id]);
                 }
             }
+
+            foreach (var proudSkill in InherentProudSkillOpens)
+            {
+                if (proudSkill.openConfig == null || proudSkill.openConfig == "") continue;
+                foreach (BaseConfigTalent config in Character.Data.ConfigTalentMap[DepotId][proudSkill.openConfig])
+                {
+                    config.Apply(this, proudSkill.paramList);
+                }                
+            }            
         }
 
         public async Task OnLoadAsync(Player.Player owner, Avatar avatar)
@@ -164,6 +183,15 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
             return true;
         }
+        private void AddTalent(int talentId)
+        {
+            var talentData = Character.Data.TalentData[DepotId][talentId];
+            Talents.Add(talentData.talentId);
+            foreach (BaseConfigTalent config in Character.Data.ConfigTalentMap[DepotId][talentData.openConfig])
+            {
+                config.Apply(this, talentData.paramList);
+            }
+        }
         public async Task<bool> UnlockConstellation(int talentId, bool skipPayment = false)
         {
             // Get talent
@@ -177,19 +205,17 @@ namespace Weedwacker.GameServer.Systems.Avatar
             }
 
             // Apply + recalc
-            Talents.Add(talentData);
+            AddTalent(talentId);
 
             // Update Database
             var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
-            var update = Builders<AvatarManager>.Update.Set(w => w.Avatars[Character.AvatarId].SkillDepots[DepotId].Talents, Talents);
+            var update = Builders<AvatarManager>.Update.Set(w => w.Avatars[Character.AvatarId].SkillDepots[DepotId], this);
             await DatabaseManager.UpdateAvatarsAsync(filter, update);
 
             // Packet
             await Owner.SendPacketAsync(new PacketAvatarUnlockTalentNotify(Character, DepotId, talentId));
 
-            //TODO openConfigs
-
-            // Recalc + save avatar
+            // Recalc + update avatar
             await Character.RecalcStatsAsync(true);
 
             return true;

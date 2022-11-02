@@ -5,6 +5,9 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp.AttackPatterns
 {
     internal class ConfigAttackCircle : BaseAttackPattern
     {
-        [JsonProperty] public readonly object radius; //TODO float or ... object[] -_-
+        [JsonProperty] public readonly object radius;
+        [JsonProperty] public readonly TriggerType? triggerType;
+        [JsonProperty] public readonly BaseBornType? born;
+        [JsonProperty] public readonly float? secondHeight;
     }
 }

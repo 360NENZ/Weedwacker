@@ -48,7 +48,7 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<int, PhotographPosenameData> PhotographPosenameDataMap = new(); // fetterId
         public readonly static SortedList<int, ProudSkillData> ProudSkillDataMap = new(); // proudSkillId
         //---------------------------------------------------------------------------------------------------------------------------------//
-        public readonly static ConcurrentDictionary<string, AbilityGroupData> AbilityGroupDataMap = new(); // openConfig name
+        public readonly static ConcurrentDictionary<string, AbilityGroupData> AbilityGroupDataMap = new(); // skillDepotAbilityGroup name
         public readonly static SortedList<int, AvatarHeroEntityData> AvatarHeroEntityDataMap = new();
         public readonly static ConcurrentDictionary<string, ConfigAvatar> ConfigAvatarMap = new();
         public readonly static SortedList<int, DungeonData> DungeonDataMap = new(); // id
@@ -118,14 +118,22 @@ namespace Weedwacker.GameServer.Data
                     typeof(ReviveDeadAvatar), typeof(ReviveAvatar), typeof(Randomed), typeof(FireSubEmitterEffect), typeof(TriggerAudio), typeof(ReviveElemEnergy), typeof(EnableHeadControl),
                     typeof(AvatarExitCameraShot), typeof(ControlEmotion), typeof(SetAnimatorFloat), typeof(SetEmissionScaler), typeof(ClearEndura), typeof(ChangeShieldValue), typeof(Repeated),
                     typeof(TriggerSetPassThrough), typeof(TriggerSetVisible), typeof(FixedAvatarRushMove), typeof(TryTriggerPlatformStartMove), typeof(AttachEffect), typeof(ForceUseSkillSuccess),
+                    typeof(AvatarEnterFocus), typeof(AvatarExitFocus), typeof(ServerLuaCall), typeof(EnableHitBoxByName), typeof(PlayEmoSync), typeof(AddAvatarSkillInfo), typeof(ChangePlayMode),
+                    typeof(SetRandomOverrideMapValue), typeof(GenerateElemBall), typeof(HealHP), typeof(EnableBulletCollisionPluginTrigger), typeof(EnableMainInterface), typeof(RemoveAvatarSkillInfo),
+                    typeof(AttachAbilityStateResistance), typeof(TriggerSetRenderersEnable), typeof(SetVelocityIgnoreAirGY), typeof(RemoveVelocityForce), typeof(CreateMovingPlatform),
+                    typeof(TurnDirection), typeof(DungeonFogEffects), typeof(SendEffectTriggerToLineEffect), typeof(TriggerTaunt), typeof(ClearLockTarget), typeof(TriggerAttackTargetMapEvent),
+                    typeof(EnablePushColliderName), typeof(TriggerSetShadowRamp), typeof(ReviveStamina), typeof(GetFightProperty), typeof(ChangeFollowDampTime), typeof(EnableRocketJump),
+                    typeof(EnableAvatarMoveOnWater), typeof(DummyAction), typeof(EnableAfterImage), typeof(HideUIBillBoard),
                     // Predicate
                     typeof(ByAny), typeof(ByAnimatorInt), typeof(ByLocalAvatarStamina), typeof(ByEntityAppearVisionType), typeof(ByTargetGlobalValue),typeof(ByTargetPositionToSelfPosition),
                     typeof(ByCurrentSceneId), typeof(ByEntityTypes), typeof(ByIsTargetCamp), typeof(ByCurTeamHasFeatureTag), typeof(ByTargetHPRatio), typeof(BySkillReady), typeof(ByItemNumber),
                     typeof(ByTargetHPValue), typeof(ByHasAttackTarget), typeof(ByAttackNotHitScene), typeof(ByAvatarInWaterDepth), typeof(ByTargetOverrideMapValue), typeof(ByUnlockTalentParam),
-                    typeof(ByAttackTags), typeof(ByTargetType), typeof(ByNot), typeof(ByHasChildGadget), typeof(ByHasElement), typeof(ByTargetIsCaster),
+                    typeof(ByAttackTags), typeof(ByTargetType), typeof(ByNot), typeof(ByHasChildGadget), typeof(ByHasElement), typeof(ByTargetIsCaster), typeof(ByAnimatorBool), typeof(ByTargetAltitude),
+                    typeof(ByAvatarWeaponType), typeof(ByHasAbilityState), typeof(ByIsCombat), typeof(ByTargetIsSelf), typeof(ByAvatarElementType), typeof(ByTargetForwardAndSelfPosition),
+                    typeof(ByTargetIsGhostToEnemy), typeof(ByIsLocalAvatar),
                     // BornType
                     typeof(ConfigBornByTarget), typeof(ConfigBornByAttachPoint), typeof(ConfigBornBySelf), typeof(ConfigBornByCollisionPoint), typeof(ConfigBornBySelectedPoint),
-                    typeof(ConfigBornByGlobalValue), typeof(ConfigBornBySelfOwner),
+                    typeof(ConfigBornByGlobalValue), typeof(ConfigBornBySelfOwner), typeof(ConfigBornByTargetLinearPoint),
                     // DirectionType
                     typeof(ConfigDirectionByAttachPoint),
                     // SelectTargetType
@@ -133,7 +141,7 @@ namespace Weedwacker.GameServer.Data
                     // AttackPattern
                     typeof(ConfigAttackSphere), typeof(ConfigAttackCircle), typeof(ConfigAttackBox),
                     // EventOp
-                    typeof(ConfigAudioEventOp),
+                    typeof(ConfigAudioEventOp), typeof(ConfigAudioPositionedEventOp),
                 }
             }
         };
@@ -210,12 +218,12 @@ namespace Weedwacker.GameServer.Data
                 }
                 else
                 {
-                    
+                    /*
                     var fileData = Serializer.Deserialize<Obj>(jr);
                     // Use the name (without ".json") of the file as the key
                     map.Add(Regex.Replace(filePath.Name, "\\.json", ""), fileData);
                     
-                    /*
+                    */
                     try
                     {
                         var fileData = Serializer.Deserialize<Obj>(jr);
@@ -225,7 +233,7 @@ namespace Weedwacker.GameServer.Data
                     catch(Exception e)
                     {
                         Logger.DebugWriteLine(e.Message);
-                    }*/
+                    }
                 }
             });
         }

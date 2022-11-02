@@ -6,7 +6,7 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp.Actions
     {
         [JsonProperty] public readonly BaseSelectTargetType otherTargets;
         [JsonProperty] public readonly BasePredicate[] predicates;
-        [JsonProperty] public readonly object value; //TODO string or float
+        [JsonProperty] public readonly object value;
         [JsonProperty] public readonly string overrideMapKey;
     }
 }

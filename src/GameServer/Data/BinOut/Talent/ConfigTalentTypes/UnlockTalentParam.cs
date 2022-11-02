@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Weedwacker.GameServer.Systems.Avatar;
 
 namespace Weedwacker.GameServer.Data.BinOut.Talent
 {
@@ -6,5 +7,10 @@ namespace Weedwacker.GameServer.Data.BinOut.Talent
     {
         [JsonProperty] public readonly string abilityName;
         [JsonProperty] public readonly string talentParam;
+
+        public override void Apply(SkillDepot depot, double[] paramList)
+        {
+            depot.UnlockedTalentParams[abilityName].Add(talentParam);
+        }
     }
 }

@@ -7,6 +7,6 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp.Predicates
     {
         [JsonProperty] public readonly TargetType target;
         [JsonProperty] public readonly LogicType logic;
-        [JsonProperty] public readonly object HPRatio; //TODO string or float
+        [JsonProperty] public readonly object HPRatio;
     }
 }

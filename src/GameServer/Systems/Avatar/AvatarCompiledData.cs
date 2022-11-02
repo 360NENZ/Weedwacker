@@ -1,6 +1,8 @@
 ﻿using Weedwacker.GameServer.Data;
+using Weedwacker.GameServer.Data.BinOut.Ability.Temp;
 using Weedwacker.GameServer.Data.BinOut.AbilityGroup;
 using Weedwacker.GameServer.Data.BinOut.Avatar;
+using Weedwacker.GameServer.Data.BinOut.Talent;
 using Weedwacker.GameServer.Data.Common;
 using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.GameServer.Enums;
@@ -16,9 +18,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
         public AvatarData GeneralData => GameData.AvatarDataMap[AvatarId];
         public ConfigAvatar ConfigAvatar => GameData.ConfigAvatarMap[$"ConfigAvatar_{AvatarName}"];
         public readonly SortedList<int, AvatarSkillDepotData> SkillDepotData; // <depotId,depot> Skill, SubSkill, Talent, and ProudSkill ids. So far only the twins have multiple. Assume first is default
-        public readonly SortedList<int,SortedList<int,AvatarSkillData>> SkillData; // <depotId,<skillId,data>>
+        public readonly SortedList<int, SortedList<int, AvatarSkillData>> SkillData; // <depotId,<skillId,data>>
         public SortedList<int, AvatarPromoteData> PromoteData => new(GameData.AvatarPromoteDataMap.Where(w => w.Key.Item1 == GeneralData.avatarPromoteId).ToDictionary(x => x.Key.Item2, x => x.Value)); // <promoteLevel,data> AKA Ascension
-        public readonly SortedList<int, SortedList<int, AvatarTalentData>> TalentData; // <depotId,<talentId,data>> AKA Constellations
+        public readonly SortedList<int, SortedList<int, AvatarTalentData>> TalentData; // <depotId,<talentId,data>> Constellations and skill upgrades
         public readonly SortedList<int, SortedList<int, ProudSkillData>> ProudSkillData; // <depotId,<proudSkillId,data>> Passives
         public readonly SortedList<int, ulong[]>? AbilityNameHashes; //<depotId,List<Hashes>>
         public SortedList<int, AvatarCostumeData> CostumeData => new(GameData.AvatarCostumeDataMap.Where(w => w.Value.avatarId == AvatarId).ToDictionary(x => x.Key, x => x.Value)); // costumeId
@@ -26,6 +28,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
         public static SortedList<int, AvatarLevelData> LevelData => GameData.AvatarLevelDataMap; // <level,exp> Level exp breakpoints
         public static SortedList<int, AvatarCurveData> CurveData => GameData.AvatarCurveDataMap; // <level,curveInfo> Base Stat multipliers
         public static SortedList<int, AvatarFlycloakData> FlycloakData => GameData.AvatarFlycloakDataMap; // flycloakId
+        public ConfigAbilityContainer[] AbilityConfigs => GameData.ConfigAbilityAvatarMap[$"ConfigAbility_Avatar_{AvatarName}"];
+        public SortedList<int, SortedList<string, BaseConfigTalent[]>> ConfigTalentMap = new(); // <depotId, <openConfigName, ConfigTalent>>
+
 
         // Fetters
         public FetterCharacterCardData CardData => GameData.FetterCharacterCardDataMap.GetValueOrDefault(AvatarId);
@@ -56,7 +61,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                     SkillDepotData.Add(depotId, GameData.AvatarSkillDepotDataMap[depotId]);
                 }
             }
-            else 
+            else
             {
                 SkillDepotData = new() { { GeneralData.skillDepotId, GameData.AvatarSkillDepotDataMap[GeneralData.skillDepotId] } };
             }
@@ -66,13 +71,19 @@ namespace Weedwacker.GameServer.Systems.Avatar
             AbilityNameHashes = new();
             foreach (AvatarSkillDepotData depot in SkillDepotData.Values)
             {
-                var dictionary = GameData.AvatarSkillDataMap.Where(w => depot.skills.Contains(w.Key) || depot.subSkills.Contains(w.Key) || depot.energySkill == w.Key).ToDictionary(x => x.Key, x => x.Value);
-                SkillData.Add(depot.id, new SortedList<int, AvatarSkillData>(dictionary));
+                var dictionary1 = GameData.AvatarSkillDataMap.Where(w => depot.skills.Contains(w.Key) || depot.subSkills.Contains(w.Key) || depot.energySkill == w.Key).ToDictionary(x => x.Key, x => x.Value);
+                SkillData.Add(depot.id, new SortedList<int, AvatarSkillData>(dictionary1));
                 var dictionary7 = GameData.AvatarTalentDataMap.Where(w => depot.talents.Contains(w.Value.talentId)).ToDictionary(x => x.Key, x => x.Value);
                 TalentData.Add(depot.id, new SortedList<int, AvatarTalentData>(dictionary7));
                 var dictionary8 = GameData.ProudSkillDataMap.Where(w => depot.inherentProudSkillOpens.Exists(y => y.proudSkillGroupId == w.Value.proudSkillGroupId)).ToDictionary(x => x.Key, x => x.Value);
                 ProudSkillData.Add(depot.id, new SortedList<int, ProudSkillData>(dictionary8));
-
+                ConfigTalentMap.Add(depot.id, new());
+                foreach (int talent in depot.talents)
+                {
+                    if (talent == 0) continue;
+                    else if (GameData.AvatarTalentConfigDataMap.TryGetValue(TalentData[depot.id][talent].openConfig, out BaseConfigTalent[] configTalents))
+                        ConfigTalentMap[depot.id].Add(TalentData[depot.id][talent].openConfig, configTalents);
+                }
                 // Set embryo abilities (if player skill depot)
                 if (depot.skillDepotAbilityGroup != null && depot.skillDepotAbilityGroup.Length > 0)
                 {
@@ -90,7 +101,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 }
             }
 
-            HpGrowthCurve = new Tuple<ArithType,float>[CurveData.Count];
+            HpGrowthCurve = new Tuple<ArithType, float>[CurveData.Count];
             AttackGrowthCurve = new Tuple<ArithType, float>[CurveData.Count];
             DefenseGrowthCurve = new Tuple<ArithType, float>[CurveData.Count];
             foreach (AvatarCurveData curveData in CurveData.Values)
@@ -117,9 +128,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
             }
         }
 
-        private static float CalcValue(float value, Tuple<ArithType,float> curve)
+        private static float CalcValue(float value, Tuple<ArithType, float> curve)
         {
-            switch(curve.Item1)
+            switch (curve.Item1)
             {
                 case ArithType.ARITH_MULTI:
                     return value * curve.Item2;
@@ -127,7 +138,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                     return value + curve.Item2;
                 default:
                     Logger.WriteErrorLine($"Unhandled Avatar curve operation {curve.Item1}");
-                    goto case ArithType.ARITH_MULTI;            
+                    goto case ArithType.ARITH_MULTI;
             }
         }
         public float GetBaseHp(int level)

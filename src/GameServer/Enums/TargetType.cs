@@ -9,6 +9,7 @@ namespace Weedwacker.GameServer.Enums
         None,
         Owner,
         All,
+        AllExceptSelf,
         Applier,
         Alliance,
         CurTeamAvatars,

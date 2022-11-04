@@ -10,7 +10,12 @@ namespace Weedwacker.GameServer.Data.BinOut.Talent
 
         public override void Apply(SkillDepot depot, double[] paramList)
         {
-            depot.UnlockedTalentParams[abilityName].Add(talentParam);
+            if(depot.UnlockedTalentParams.ContainsKey(abilityName))
+                depot.UnlockedTalentParams[abilityName].Add(talentParam);
+            else
+            {
+                depot.UnlockedTalentParams[abilityName] = new() { talentParam };
+            }
         }
     }
 }

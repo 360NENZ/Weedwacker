@@ -7,9 +7,16 @@ namespace Weedwacker.GameServer.Enums
     public enum ReactionType
     {
         None,
+        Burning,
         CrystallizeElectric,
+        CrystallizeFire,
+        CrystallizeIce,
+        CrystallizeWater,
         Explode,
+        Freeze,
+        Melt,
         Shock,
+        Stream,
         Superconductor,
         SwirlElectric,
         SwirlFire,

@@ -56,7 +56,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
             if (Data.GeneralData.candSkillDepotIds.Length > 0)
             {
-                foreach (int depotId in Data.GeneralData.candSkillDepotIds)
+                foreach (int depotId in Data.AbilityConfigMap.Keys)
                 {
                     SkillDepots.Add(depotId, new SkillDepot(this, depotId, owner));
                 }

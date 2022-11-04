@@ -1,4 +1,5 @@
-﻿using Weedwacker.GameServer.Data;
+﻿using System.Text.RegularExpressions;
+using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Data.BinOut.Ability.Temp;
 using Weedwacker.GameServer.Data.BinOut.AbilityGroup;
 using Weedwacker.GameServer.Data.BinOut.Avatar;
@@ -28,8 +29,8 @@ namespace Weedwacker.GameServer.Systems.Avatar
         public static SortedList<int, AvatarLevelData> LevelData => GameData.AvatarLevelDataMap; // <level,exp> Level exp breakpoints
         public static SortedList<int, AvatarCurveData> CurveData => GameData.AvatarCurveDataMap; // <level,curveInfo> Base Stat multipliers
         public static SortedList<int, AvatarFlycloakData> FlycloakData => GameData.AvatarFlycloakDataMap; // flycloakId
-        public ConfigAbilityContainer[] AbilityConfigs => GameData.ConfigAbilityAvatarMap[$"ConfigAbility_Avatar_{AvatarName}"];
-        public SortedList<int, SortedList<string, BaseConfigTalent[]>> ConfigTalentMap = new(); // <depotId, <openConfigName, ConfigTalent>>
+        public readonly SortedList<int, ConfigAbilityContainer[]> AbilityConfigMap = new(); // depotId
+        public readonly SortedList<int, Dictionary<string, BaseConfigTalent[]>> ConfigTalentMap = new(); // <depotId, file name>
 
 
         // Fetters
@@ -71,19 +72,29 @@ namespace Weedwacker.GameServer.Systems.Avatar
             AbilityNameHashes = new();
             foreach (AvatarSkillDepotData depot in SkillDepotData.Values)
             {
+                string name;
+                if (depot.skillDepotAbilityGroup != null && depot.skillDepotAbilityGroup != "")
+                {
+                    name = Regex.Replace(depot.skillDepotAbilityGroup, "AbilityGroup_Girl_", "");
+                    name = Regex.Replace(name, "AbilityGroup_Boy_", "");
+                }
+                else
+                {
+                    name = $"Avatar_{AvatarName}";
+                }
+                if (!GameData.ConfigAbilityAvatarMap.TryGetValue($"ConfigAbility_{name}", out ConfigAbilityContainer[]? config))
+                {
+                    continue;
+                }
+                AbilityConfigMap.Add(depot.id, config);
                 var dictionary1 = GameData.AvatarSkillDataMap.Where(w => depot.skills.Contains(w.Key) || depot.subSkills.Contains(w.Key) || depot.energySkill == w.Key).ToDictionary(x => x.Key, x => x.Value);
                 SkillData.Add(depot.id, new SortedList<int, AvatarSkillData>(dictionary1));
                 var dictionary7 = GameData.AvatarTalentDataMap.Where(w => depot.talents.Contains(w.Value.talentId)).ToDictionary(x => x.Key, x => x.Value);
                 TalentData.Add(depot.id, new SortedList<int, AvatarTalentData>(dictionary7));
                 var dictionary8 = GameData.ProudSkillDataMap.Where(w => depot.inherentProudSkillOpens.Exists(y => y.proudSkillGroupId == w.Value.proudSkillGroupId)).ToDictionary(x => x.Key, x => x.Value);
                 ProudSkillData.Add(depot.id, new SortedList<int, ProudSkillData>(dictionary8));
-                ConfigTalentMap.Add(depot.id, new());
-                foreach (int talent in depot.talents)
-                {
-                    if (talent == 0) continue;
-                    else if (GameData.AvatarTalentConfigDataMap.TryGetValue(TalentData[depot.id][talent].openConfig, out BaseConfigTalent[] configTalents))
-                        ConfigTalentMap[depot.id].Add(TalentData[depot.id][talent].openConfig, configTalents);
-                }
+                if (GameData.AvatarTalentConfigDataMap.TryGetValue($"ConfigTalent_{Regex.Replace(name, "Avatar_", "")}", out Dictionary<string, BaseConfigTalent[]>? configTalents))
+                        ConfigTalentMap[depot.id] = configTalents;
                 // Set embryo abilities (if player skill depot)
                 if (depot.skillDepotAbilityGroup != null && depot.skillDepotAbilityGroup.Length > 0)
                 {

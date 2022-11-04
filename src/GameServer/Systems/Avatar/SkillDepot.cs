@@ -38,7 +38,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             Character = avatar;
             DepotId = depotId;
             var avatarInfo = GameServer.AvatarInfo[avatar.AvatarId];
-            foreach (var configAbility in avatarInfo.AbilityConfigs)
+            foreach (var configAbility in avatarInfo.AbilityConfigMap[DepotId])
             {
                 if (configAbility.Default is ConfigAbility config)
                     AbilitySpecials.Add(config.abilityName, config.abilitySpecials);

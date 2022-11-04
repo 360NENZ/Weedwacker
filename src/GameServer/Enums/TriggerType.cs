@@ -7,5 +7,6 @@ namespace Weedwacker.GameServer.Enums
     public enum TriggerType
     {
         TriggerNoRepeat,
+        Skill,
     }
 }

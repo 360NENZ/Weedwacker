@@ -14,6 +14,8 @@ using Weedwacker.GameServer.Database;
 using Google.Protobuf.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Weedwacker.Shared.Enums;
+using Weedwacker.Shared.Network.Proto;
 
 namespace Weedwacker.GameServer
 {
@@ -71,7 +73,7 @@ namespace Weedwacker.GameServer
         }
 
 #if DEBUG
-        static void LogPacket(string sendOrRecv, ushort opcode, byte[] payload)
+        public static void LogPacket(string sendOrRecv, ushort opcode, byte[] payload)
         {
             //Logger.DebugWriteLine($"{sendOrRecv}: {Enum.GetName(typeof(OpCode), opcode)}({opcode})\r\n{Convert.ToHexString(payload)}");
             var typ = AppDomain.CurrentDomain.GetAssemblies().
@@ -84,6 +86,19 @@ namespace Weedwacker.GameServer
             if (GameServer.Configuration.Server.KeepLog)
             {
                 File.WriteAllText($"{GameServer.Configuration.Server.LogLocation}\\{LogIndex++}_{packet.GetType().Name}.json", JValue.Parse(asJson).ToString(Formatting.Indented));
+            }
+        }
+
+        internal static void LogCombatInvocation(string sendOrRecv, CombatInvokeEntry entry, Type invocType)
+        {
+            var descriptor = (MessageDescriptor)invocType.GetProperty("Descriptor", BindingFlags.Public | BindingFlags.Static).GetValue(null, null); // get the static property Descriptor
+            var invoc = descriptor.Parser.ParseFrom(entry.CombatData);
+            var formatter = Google.Protobuf.JsonFormatter.Default;
+            var asJson = formatter.Format(invoc);
+            Logger.DebugWriteLine($"{sendOrRecv} {entry.ForwardType}|{entry.ArgumentType}: \r\n{asJson}");
+            if (GameServer.Configuration.Server.KeepLog)
+            {
+                File.WriteAllText($"{GameServer.Configuration.Server.LogLocation}\\{LogIndex++}_{invocType.Name}.json", JValue.Parse(asJson).ToString(Formatting.Indented));
             }
         }
 #endif
@@ -129,6 +144,7 @@ namespace Weedwacker.GameServer
             }
             Stop();
         }
+
         // DO THE PROCESSING OF THE GAME PACKET
         async Task ProcessMessageAsync(Memory<byte> data)
         {
@@ -178,86 +194,39 @@ namespace Weedwacker.GameServer
 #if DEBUG
                         if (allDebug)
                         {
-                            Logger.WriteErrorLine(string.Format("Bad Data Package Received: got {0} ,expect 0x89ab", Magic2));
+                            Logger.WriteErrorLine($"Bad Data Package Received: got {Magic2} ,expect 0x89ab");
                         }
 #endif
                         return; // Bad packet
                     }
 #if DEBUG
                     // Log packet
-                    switch (GameServer.Configuration.Server.LogPackets)
+                    ServerDebugMode debugMode = GameServer.Configuration.Server.LogPackets;
+                    if (debugMode == ServerDebugMode.ALL)
                     {
-                        case Shared.Enums.ServerDebugMode.ALL:
-                            {
-                                LogPacket("RECV", opcode, payload);   
-                                break;
-                            }
-                        case Shared.Enums.ServerDebugMode.WHITELIST: 
-                            {
-                                if (GameServer.Configuration.Server.DebugWhitelist.Contains((OpCode)opcode))
-                                {
-                                    LogPacket("RECV", opcode, payload);
-                                }
-                                break;
-                            }
-                        case Shared.Enums.ServerDebugMode.BLACKLIST: 
-                            {
-                                if (!GameServer.Configuration.Server.DebugBlacklist.Contains((OpCode)opcode))
-                                {
-                                    LogPacket("RECV", opcode, payload);
-                                }
-                                break;
-                            }
+                        goto Log;
                     }
+                    else if (debugMode == ServerDebugMode.WHITELIST && GameServer.Configuration.Server.DebugWhitelist.Contains((OpCode)opcode))
+                    {
+                        goto Log;
+                    }
+                    else if (debugMode == ServerDebugMode.BLACKLIST && !GameServer.Configuration.Server.DebugBlacklist.Contains((OpCode)opcode))
+                    {
+                        goto Log;
+                    }
+                    else
+                        goto NotLog;
+                    Log:
+                    LogPacket("RECV", opcode, payload);
+                    NotLog:
 #endif
-                    // Find the Handler for this opcode
-                    var query =
-                        from type in Assembly.GetExecutingAssembly().GetTypes()
-                        where type.GetCustomAttribute<OpCodeAttribute>()?.OpCodeNum == opcode
-                        select type;
-                    var handlerType = query.FirstOrDefault();
-                    if (handlerType != null)
-                    {
-                        // Handle
-                        var handler = (BaseHandler)Activator.CreateInstance(handlerType);
-                        // Make sure session is ready for packets
-                        SessionState state = State;
-                        switch ((OpCode)opcode)
-                        {
-                            case OpCode.GetPlayerTokenReq:
-                                {
-                                    if (state != SessionState.WAITING_FOR_TOKEN)
-                                    {
-                                        return;
-                                    }
-                                    goto default;
-                                }
-                            case OpCode.PlayerLoginReq:
-                                {
-                                    if (state != SessionState.WAITING_FOR_LOGIN)
-                                    {
-                                        return;
-                                    }
-                                    goto default;
-                                }
-                            case OpCode.SetPlayerBornDataReq:
-                                {
-                                    if (state != SessionState.PICKING_CHARACTER)
-                                    {
-                                        return;
-                                    }
-                                    goto default;
-                                }
-                            default:
-                                break;
-                        }
-                        await handler.HandleAsync(this, header, payload);
-                    }
+                    bool handled = await HandlePacketAsync(opcode, header, payload);
+
 #if DEBUG
                     // Log unhandled packets
-                    if (GameServer.Configuration.Server.LogPackets == Shared.Enums.ServerDebugMode.MISSING)
+                    if (!handled && debugMode == ServerDebugMode.MISSING)
                     {
-                        Logger.DebugWriteLine("Unhandled packet (" + opcode + "): " + Enum.GetName(typeof(OpCode), opcode));
+                        Logger.DebugWriteLine($"Unhandled packet ({opcode}): {Enum.GetName(typeof(OpCode), opcode)}");
                     }
 #endif
                 }
@@ -272,7 +241,58 @@ namespace Weedwacker.GameServer
                 await ms.DisposeAsync();
             }
         }
-    
+
+        public async Task<bool> HandlePacketAsync(ushort opcode, byte[] header, byte[] payload)
+        {
+            // Find the Handler for this opcode
+            var query =
+                from type in Assembly.GetExecutingAssembly().GetTypes()
+                where type.GetCustomAttribute<OpCodeAttribute>()?.OpCodeNum == opcode
+                select type;
+            var handlerType = query.FirstOrDefault();
+            if (handlerType != null)
+            {
+                // Handle
+                var handler = (BaseHandler)Activator.CreateInstance(handlerType);
+                // Make sure session is ready for packets
+                SessionState state = State;
+                switch ((OpCode)opcode)
+                {
+                    case OpCode.GetPlayerTokenReq:
+                        {
+                            if (state != SessionState.WAITING_FOR_TOKEN)
+                            {
+                                return true;
+                            }
+                            goto default;
+                        }
+                    case OpCode.PlayerLoginReq:
+                        {
+                            if (state != SessionState.WAITING_FOR_LOGIN)
+                            {
+                                return true;
+                            }
+                            goto default;
+                        }
+                    case OpCode.SetPlayerBornDataReq:
+                        {
+                            if (state != SessionState.PICKING_CHARACTER)
+                            {
+                                return true;
+                            }
+                            goto default;
+                        }
+                    default:
+                        break;
+                }
+                await handler.HandleAsync(this, header, payload);
+                return true;
+            }
+            else
+                return false;
+        }
+
+
         public async Task SendPacketAsync(BasePacket packet)
         {
             // Test

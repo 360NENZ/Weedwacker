@@ -1,4 +1,5 @@
 ﻿using Weedwacker.GameServer.Enums;
+using Weedwacker.Shared.Network.Proto;
 using Weedwacker.Shared.Utils;
 using Weedwacker.Shared.Utils.Configuration;
 
@@ -30,10 +31,12 @@ namespace Weedwacker.GameServer
             public OpCode[] DebugWhitelist = Array.Empty<OpCode>();
             public OpCode[] DebugBlacklist = new[] {
                 OpCode.PingReq, OpCode.PingRsp, OpCode.PlayerSetPauseReq, OpCode.PlayerSetPauseRsp,
-                OpCode.WorldPlayerRTTNotify, OpCode.PlayerTimeNotify, OpCode.UnionCmdNotify,
+                OpCode.WorldPlayerRTTNotify, OpCode.PlayerTimeNotify, OpCode.UnionCmdNotify, OpCode.CombatInvocationsNotify,
             };
             public bool KeepLog = true;
             public string LogLocation = ".\\packetLogs";
+            public bool LogCombatInvocation = true;
+            public CombatTypeArgument[] combatArgTypeBlackList = new[] { CombatTypeArgument.EntityMove };
 #endif
             /* This is the address used in the default region. */
             public string AccessAddress = "127.0.0.1";

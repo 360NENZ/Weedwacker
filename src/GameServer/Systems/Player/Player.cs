@@ -6,12 +6,10 @@ using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet;
-using Weedwacker.GameServer.Packet.Recv;
 using Weedwacker.GameServer.Packet.Send;
 using Weedwacker.GameServer.Systems.Shop;
 using Weedwacker.GameServer.Systems.World;
 using Weedwacker.Shared.Network.Proto;
-using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.Player
 {
@@ -42,6 +40,7 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonIgnore] public PlayerPropertyManager PropManager;
         [BsonIgnore] public OpenStateManager OpenStateManager;
         [BsonIgnore] public ResinManager ResinManager;
+        [BsonIgnore] public StaminaManager StaminaManager;
         [BsonIgnore] public Connection? Session; // Set by HandleGetPlayerTokenReq
         [BsonIgnore] public string Token { get; set; } // Obtained and used When Logging in
         [BsonIgnore] public uint EnterSceneToken;
@@ -61,8 +60,10 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonIgnore] public ShopManager ShopManager; // Loaded by DatabaseManager
         [BsonIgnore] public Social.SocialManager SocialManager; // Loaded by DatabaseManager
         [BsonIgnore] public TeamManager TeamManager; // Loaded by DatabaseManager
-
-
+     
+        [BsonIgnore] public InvokeNotifier<CombatInvokeEntry> CombatInvNotifyList;
+        [BsonIgnore] public InvokeNotifier<AbilityInvokeEntry> AbilityInvNotifyList;
+        [BsonIgnore] public InvokeNotifier<AbilityInvokeEntry> ClientAbilityInitFinishNotifyList;
 
         public Player(string heroName, string accountUid, int gameUid)
         {
@@ -80,6 +81,10 @@ namespace Weedwacker.GameServer.Systems.Player
             ShopManager = new(this);
             SocialManager = new(this);
             OpenStateManager = new(this);
+            StaminaManager = new(this);
+            CombatInvNotifyList = new(this, typeof(PacketCombatInvocationsNotify));
+            AbilityInvNotifyList = new(this, typeof(PacketAbilityInvocationsNotify));
+            ClientAbilityInitFinishNotifyList = new(this, typeof(PacketClientAbilityInitFinishNotify));
         }
 
         private async Task OnCreate()
@@ -177,6 +182,7 @@ namespace Weedwacker.GameServer.Systems.Player
                 {
                     await SendPacketAsync(new PacketWorldPlayerLocationNotify(World));
                     await SendPacketAsync(new PacketScenePlayerLocationNotify(Scene));
+
                     NextSendPlayerLocTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() + 5000;
                 }
                 if(Scene != null && time > NextSendPlayerTimeNotify)
@@ -184,10 +190,16 @@ namespace Weedwacker.GameServer.Systems.Player
                     // Send every 10 seconds
                     await SendPacketAsync(new PacketPlayerTimeNotify(this));
                     NextSendPlayerTimeNotify = DateTimeOffset.Now.ToUnixTimeMilliseconds() + 10000;
+
+                    // periodically update location in the database
+                    var filter = Builders<Player>.Filter.Where(w => w.AccountUid == AccountUid);
+                    var update = Builders<Player>.Update.Set(w => w.PositionArray, PositionArray).Set(w => w.RotationArray, RotationArray);
+                    await DatabaseManager.UpdatePlayerAsync(filter, update);
                 }
             }
             // Recharge resin.
             await ResinManager.RechargeResin();
+            //await StaminaManager.OnTickAsync();
         }
 
         public async Task OnLoginAsync()
@@ -261,6 +273,10 @@ namespace Weedwacker.GameServer.Systems.Player
             GadgetManager = new(this);
             EnergyManager = new(this);
             OpenStateManager = new(this);
+            StaminaManager = new(this);
+            CombatInvNotifyList = new(this, typeof(PacketCombatInvocationsNotify));
+            AbilityInvNotifyList = new(this, typeof(PacketAbilityInvocationsNotify));
+            ClientAbilityInitFinishNotifyList = new(this, typeof(PacketClientAbilityInitFinishNotify));
         }
         public bool IsInMultiplayer() { return World != null && World.IsMultiplayer; }
 

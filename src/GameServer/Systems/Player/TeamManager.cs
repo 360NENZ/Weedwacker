@@ -1,13 +1,11 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Driver;
-using Vim.Math3d;
 using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
-using Weedwacker.GameServer.Packet;
 using Weedwacker.GameServer.Packet.Send;
 using Weedwacker.GameServer.Systems.Avatar;
 using Weedwacker.GameServer.Systems.World;
 using Weedwacker.Shared.Network.Proto;
+using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.Player
 {
@@ -48,15 +46,19 @@ namespace Weedwacker.GameServer.Systems.Player
                 reloadedTeams.Add(team.Key, new(team.Value.TeamName));
                 foreach(var entry in team.Value.AvatarInfo)
                 {
-                    reloadedTeams[team.Key].AvatarInfo.Add(entry.Key, owner.Avatars.GetAvatarById(entry.Value.AvatarId));
+                    if (entry.Value == null) continue;
+                    reloadedTeams[team.Key].AvatarInfo[entry.Key] = owner.Avatars.GetAvatarById(entry.Value.AvatarId);
                 }
             }
             Teams = reloadedTeams;
 
             // You stay simple clones >:)
             TowerTeams.Values.AsParallel().ForAll(async w => await w.OnLoadAsync(owner));
-            foreach (ushort characterIndex in Teams[CurrentTeamIndex].AvatarInfo.Keys)
-                ActiveTeam.Add(characterIndex, new AvatarEntity(Teams[CurrentTeamIndex], characterIndex));
+            foreach (var characterIndex in Teams[CurrentTeamIndex].AvatarInfo)
+            {
+                if (characterIndex.Value == null) continue;
+                ActiveTeam.Add(characterIndex.Key, new AvatarEntity(Teams[CurrentTeamIndex], (ushort)characterIndex.Key));
+            }
         }
 
         /**
@@ -76,19 +78,34 @@ namespace Weedwacker.GameServer.Systems.Player
             return -1;
         }
 
-        public async Task AddToTeamAsync(Avatar.Avatar avatar, int teamIndex = -1, int cIndex = -1)
+        public async Task<bool> AddToTeamAsync(Avatar.Avatar avatar, int teamIndex = -1, int cIndex = -1)
         {
             if(teamIndex == -1)
             {
-                Teams[CurrentTeamIndex].AddAvatar(avatar);
+                teamIndex = CurrentTeamIndex;
             }
-            else
+            if (cIndex == -1)
             {
-                Teams[teamIndex].AddAvatar(avatar, cIndex == -1 ? CurrentCharacterIndex : cIndex);
+                for (int i = 0; i < GameServer.Configuration.Server.GameOptions.AvatarLimits.SinglePlayerTeam; i++)
+                {
+                    if (Teams[teamIndex].AvatarInfo[i] == null)
+                    {
+                        cIndex = i;
+                        break;
+                    }
+                }
+                if (cIndex == -1)
+                {
+                    Logger.DebugWriteLine($"failed to add avatar to team {teamIndex}");
+                    return false;
+                }
             }
+            Teams[teamIndex].AddAvatar(avatar, cIndex);           
 
             // Update Database
             await DatabaseManager.SaveTeamsAsync(this);
+
+            return true;
         }
 
         private bool SetCurrentTeamId(int currentTeamIndex)
@@ -159,6 +176,7 @@ namespace Weedwacker.GameServer.Systems.Player
             // update ActiveTeam using the entries of the current TeamInfo
             for (int i = 0; i < GetCurrentTeamInfo().AvatarInfo.Count;  i++)
             {
+                if (GetCurrentTeamInfo().AvatarInfo[i] == null) continue;
                 int avatarId = GetCurrentTeamInfo().AvatarInfo[i].AvatarId;
 
                 if (previousTeam.TryGetValue(avatarId, out AvatarEntity? entity))

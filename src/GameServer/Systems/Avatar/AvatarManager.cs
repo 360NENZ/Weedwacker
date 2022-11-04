@@ -74,12 +74,16 @@ namespace Weedwacker.GameServer.Systems.Avatar
             await DatabaseManager.UpdateAvatarsAsync(filter, update); 
 
             bool addToTeam = false;
-            if(Owner.TeamManager.GetCurrentTeamInfo().AvatarInfo.Count < (Owner.IsInMultiplayer() ? GameServer.Configuration.Server.GameOptions.AvatarLimits.SinglePlayerTeam : GameServer.Configuration.Server.GameOptions.AvatarLimits.SinglePlayerTeam))
+            if (notify) await Owner.SendPacketAsync(new PacketAvatarAddNotify(avatar, addToTeam));
+            if (Owner.TeamManager.GetCurrentTeamInfo().AvatarInfo.Count <= (Owner.IsInMultiplayer() ? GameServer.Configuration.Server.GameOptions.AvatarLimits.SinglePlayerTeam : GameServer.Configuration.Server.GameOptions.AvatarLimits.SinglePlayerTeam))
             {
                 addToTeam = true;
                 await Owner.TeamManager.AddToTeamAsync(avatar);
+                if (Owner.World != null)
+                {
+                    await Owner.TeamManager.UpdateTeamEntities();
+                }
             }
-            if (notify) await Owner.SendPacketAsync(new PacketAvatarAddNotify(avatar, addToTeam));
 
             return true; ;
         }

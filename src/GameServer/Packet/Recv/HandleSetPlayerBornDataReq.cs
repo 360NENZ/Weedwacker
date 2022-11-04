@@ -17,7 +17,7 @@ namespace Weedwacker.GameServer.Packet.Recv
             if (GameData.AvatarHeroEntityDataMap.ContainsKey((int)avatarId))
             {
                 var newAvatar = await Avatar.CreateAsync((int)avatarId, session.Player);
-                session.Player.SetMainCharacter((int)avatarId, heroName);
+                await session.Player.SetMainCharacter((int)avatarId, heroName);
                 await session.Player.Avatars.AddAvatar(newAvatar, false);
                 await session.Player.OnLoginAsync();
                 await session.SendPacketAsync(new BasePacket(OpCode.SetPlayerBornDataRsp));

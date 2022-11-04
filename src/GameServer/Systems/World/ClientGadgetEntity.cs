@@ -1,4 +1,5 @@
-﻿using Weedwacker.GameServer.Enums;
+﻿using Vim.Math3d;
+using Weedwacker.GameServer.Enums;
 using Weedwacker.Shared.Network.Proto;
 
 namespace Weedwacker.GameServer.Systems.World

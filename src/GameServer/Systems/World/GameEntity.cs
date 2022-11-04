@@ -10,8 +10,9 @@ namespace Weedwacker.GameServer.Systems.World
         public uint Id { get; protected set; }
         public readonly Scene? Scene;
 
-        public Vector3 Position { get; protected set; }
-        public Vector3 Rotation { get; protected set; }
+        public abstract Vector3 Position { get; protected set; }
+        public abstract Vector3 Rotation { get; protected set; }
+        public Vector3 Speed { get; protected set; }
 
         public LifeState LiveState { get; protected set; }
         public MotionState MotionState { get; protected set; }
@@ -44,7 +45,8 @@ namespace Weedwacker.GameServer.Systems.World
 
         public virtual bool SetMotionState(MotionState state)
         {
-            return false;
+            MotionState = state;
+            return true;
         }
         protected MotionInfo GetMotionInfo()
         {
@@ -104,18 +106,35 @@ namespace Weedwacker.GameServer.Systems.World
                 await Scene.KillEntityAsync(this, attackerId);
         }
 
+        public virtual async Task SetHealthAsync(float newHP)
+        {
+            // Check if the entity has properties.
+            if (!FightProps.ContainsKey(FightProperty.FIGHT_PROP_CUR_HP)
+                || !FightProps.ContainsKey(FightProperty.FIGHT_PROP_MAX_HP)) return;
+
+            FightProps[FightProperty.FIGHT_PROP_CUR_HP] = Math.Min(newHP,
+                FightProps[FightProperty.FIGHT_PROP_MAX_HP]);
+
+            // Packets
+            await Scene.BroadcastPacketAsync(new PacketEntityFightPropUpdateNotify(this, FightProperty.FIGHT_PROP_CUR_HP));
+
+            if (newHP == 0f)
+                await OnDeathAsync();
+        }
+
         /**
         * Move this entity to a new position.
         * @param position The new position.
         * @param rotation The new rotation.
         */
-        public async Task MoveAsync(Vector3 position, Vector3 rotation)
+        public virtual async Task MoveAsync(EntityMoveInfo moveInfo)
         {
             // Set the position and rotation.
-            Position = position;
-            Rotation = rotation;
+            if(moveInfo.MotionInfo.Pos != null)
+                Position = new Vector3(moveInfo.MotionInfo.Pos.X, moveInfo.MotionInfo.Pos.Y, moveInfo.MotionInfo.Pos.Z);
+            if(moveInfo.MotionInfo.Rot != null)
+                Rotation = new Vector3(moveInfo.MotionInfo.Rot.X, moveInfo.MotionInfo.Rot.Y, moveInfo.MotionInfo.Rot.Z);
         }
-
         /**
          * Called when a player interacts with this entity
          * @param player Player that is interacting with this entity
@@ -140,7 +159,7 @@ namespace Weedwacker.GameServer.Systems.World
          * Called when this entity dies
          * @param killerId Entity id of the entity that killed this entity
          */
-        public virtual async Task OnDeathAsync(uint killerId)
+        public virtual async Task OnDeathAsync(uint killerId = default)
         {
 
         }

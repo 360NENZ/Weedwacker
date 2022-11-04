@@ -95,21 +95,25 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 ProudSkillData.Add(depot.id, new SortedList<int, ProudSkillData>(dictionary8));
                 if (GameData.AvatarTalentConfigDataMap.TryGetValue($"ConfigTalent_{Regex.Replace(name, "Avatar_", "")}", out Dictionary<string, BaseConfigTalent[]>? configTalents))
                         ConfigTalentMap[depot.id] = configTalents;
-                // Set embryo abilities (if player skill depot)
+                HashSet<ulong> abilityHashes = new();
+                // add abilityGroup abilities (if player skill depot)
                 if (depot.skillDepotAbilityGroup != null && depot.skillDepotAbilityGroup.Length > 0)
                 {
                     AbilityGroupData? abilityData = GameData.AbilityGroupDataMap.GetValueOrDefault(depot.skillDepotAbilityGroup);
 
                     if (abilityData != null)
                     {
-                        List<ulong> hashes = new();
                         foreach (TargetAbility ability in abilityData.targetAbilities.Concat(ConfigAvatar.abilities))
                         {
-                            hashes.Add(Utils.AbilityHash(ability.abilityName));
-                        }
-                        AbilityNameHashes.Add(depot.id, hashes.ToArray());
+                            abilityHashes.Add(Utils.AbilityHash(ability.abilityName));
+                        }                        
                     }
                 }
+                foreach (var ability in GameData.ConfigAvatarMap[$"ConfigAvatar_{AvatarName}"].abilities)
+                {
+                    abilityHashes.Add(Utils.AbilityHash(ability.abilityName));
+                }
+                AbilityNameHashes.Add(depot.id, abilityHashes.ToArray());
             }
 
             HpGrowthCurve = new Tuple<ArithType, float>[CurveData.Count];

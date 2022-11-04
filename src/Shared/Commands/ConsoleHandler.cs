@@ -1,19 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
-using Weedwacker.Shared.Enums;
+﻿using Weedwacker.Shared.Enums;
 using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.Shared.Commands
 {
-    public static class ConsoleHandler
+    public static partial class ConsoleHandler
     {
         static readonly Dictionary<string, (byte, UserRank, Func<string[], Task<string>>)> RegisteredCommands = new()
         {
-            { "help", (0, UserRank.Mod, ConsoleCommands.OnHelp) }
+            { "help", (0, UserRank.Mod, ConsoleCommands.OnHelp) },
         };
         public static void AddCommand(string cmd, byte argCount, UserRank rank, Func<string[], Task<string>> action)
         {

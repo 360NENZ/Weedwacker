@@ -1,5 +1,4 @@
-﻿using Weedwacker.GameServer.Data.Excel;
-using Weedwacker.GameServer.Enums;
+﻿using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet.Send;
 using Weedwacker.GameServer.Systems.Avatar;
 using Weedwacker.GameServer.Systems.Inventory;
@@ -13,6 +12,11 @@ namespace Weedwacker.GameServer.Systems.World
         public readonly Avatar.Avatar Avatar;
         public TeamInfo TeamInfo { get; private set; }
         public uint KilledBy { get; protected set; }
+        public override Vim.Math3d.Vector3 Position { get => Avatar.Owner.Position; protected set => Avatar.Owner.Position = value; }
+        public override Vim.Math3d.Vector3 Rotation { get => Avatar.Owner.Rotation; protected set => Avatar.Owner.Rotation = value; }
+        private float CachedLandingSpeed = 0;
+        private long CachedLandingTimeMillisecond = 0;
+        private bool monitorLandingEvent = false;
 
         public AvatarEntity(TeamInfo team, Scene scene, Avatar.Avatar avatar) : base(scene)
         {
@@ -33,8 +37,40 @@ namespace Weedwacker.GameServer.Systems.World
             FightProps = Avatar.FightProp;
         }
 
+        public override async Task MoveAsync(EntityMoveInfo moveInfo)
+        {
+            await base.MoveAsync(moveInfo);
+            MotionState = moveInfo.MotionInfo.State;
+            LastMoveReliableSeq = moveInfo.ReliableSeq;
+            LastMoveSceneTimeMs = moveInfo.SceneTime;
+            await Avatar.Owner.StaminaManager.HandleMoveInfoAsync(moveInfo);
 
-        public override async Task OnDeathAsync(uint killerId)
+            // TODO: handle MOTION_FIGHT landing which has a different damage factor
+            // 		Also, for plunge attacks, LAND_SPEED is always -30 and is not useful.
+            //  	May need the height when starting plunge attack.
+
+            // MOTION_LAND_SPEED and MOTION_FALL_ON_GROUND arrive in different packets.
+            // Cache land speed for later use.
+            if (MotionState == MotionState.LandSpeed)
+            {
+                CachedLandingSpeed = moveInfo.MotionInfo.Speed.Y;
+                CachedLandingTimeMillisecond = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                monitorLandingEvent = true;
+            }
+            if (monitorLandingEvent)
+            {
+                if (moveInfo.MotionInfo.State == MotionState.FallOnGround)
+                {
+                    monitorLandingEvent = false;
+                    await HandleFallOnGround();
+                }
+            }
+        }
+
+        private async Task HandleFallOnGround()
+        {
+        }
+        public override async Task OnDeathAsync(uint killerId = default)
         {
             KilledBy = killerId;
             await ClearEnergy(ChangeEnergyReason.None);
@@ -112,10 +148,10 @@ namespace Weedwacker.GameServer.Systems.World
         {
             SceneAvatarInfo avatarInfo = new SceneAvatarInfo()
             {
-                Uid = (uint)Avatar.GetOwner().GameUid,
+                Uid = (uint)Avatar.Owner.GameUid,
                 AvatarId = (uint)Avatar.AvatarId,
                 Guid = Avatar.Guid,
-                PeerId = Avatar.GetOwner().PeerId,
+                PeerId = Avatar.Owner.PeerId,
                 CostumeId = (uint)Avatar.Costume,
                 WearingFlycloakId = (uint)Avatar.FlyCloak,
                 BornTime = (uint)Avatar.BornTime,
@@ -129,7 +165,7 @@ namespace Weedwacker.GameServer.Systems.World
                 ServerBuffList =,
                 */
             };
-            foreach(var talent in Avatar.GetCurSkillDepot().Talents) avatarInfo.TalentIdList.Add((uint)talent.talentId);
+            foreach(var talent in Avatar.GetCurSkillDepot().Talents) avatarInfo.TalentIdList.Add((uint)talent);
             foreach (var skill in Avatar.GetCurSkillDepot().Skills) avatarInfo.SkillLevelMap.Add((uint)skill.Key, (uint)skill.Value);
             foreach (var proudSkill in Avatar.GetCurSkillDepot().InherentProudSkillOpens) avatarInfo.InherentProudSkillList.Add((uint)proudSkill.proudSkillId);
             foreach (var extra in Avatar.GetCurSkillDepot().ProudSkillExtraLevelMap) avatarInfo.ProudSkillExtraLevelMap.Add((uint)extra.Key, (uint)extra.Value);
@@ -175,11 +211,13 @@ namespace Weedwacker.GameServer.Systems.World
             };
             entityInfo.AnimatorParaList.Add(new AnimatorParameterValueInfoPair());
 
-            if (Scene != null && Avatar.GetOwner().TeamManager.GetCurrentAvatarEntity() == this)
+            if (Scene != null && Avatar.Owner.TeamManager.GetCurrentAvatarEntity() == this)
             {
-                Position = Avatar.GetOwner().Position;
-                Rotation = Avatar.GetOwner().Rotation;
                 entityInfo.MotionInfo = GetMotionInfo();
+            }
+            else
+            {
+                entityInfo.MotionInfo = new() { Pos = new(), Rot = new(), Speed = new() };
             }
 
             foreach (var entry in FightProps)
@@ -261,11 +299,6 @@ namespace Weedwacker.GameServer.Systems.World
             }
 
             return abilityControlBlock;
-        }
-
-        public override bool SetMotionState(MotionState state)
-        {
-            throw new NotImplementedException();
         }
     }
 }

@@ -1,7 +1,12 @@
-﻿namespace Weedwacker.GameServer.Systems.World
+﻿using Vim.Math3d;
+
+namespace Weedwacker.GameServer.Systems.World
 {
     internal abstract class ScriptEntity : GameEntity
     {
+        public override Vector3 Position { get => throw new NotImplementedException(); protected set => throw new NotImplementedException(); }
+        public override Vector3 Rotation { get => throw new NotImplementedException(); protected set => throw new NotImplementedException(); }
+
         public readonly uint BlockId;
         public readonly uint GroupId;
         public uint ConfigId { get; protected set; }

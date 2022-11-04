@@ -11,12 +11,16 @@ namespace Weedwacker.GameServer.Systems.Avatar
         private TeamManager Manager;
         public string TeamName;
         [BsonSerializer(typeof(IntSortedListSerializer<Avatar>))]
-        [BsonElement] public SortedList<int, Avatar> AvatarInfo { get; private set; } = new(); // <index, avatar>> clone avatars for abyss teams
+        [BsonElement] public SortedList<int, Avatar?> AvatarInfo { get; private set; } = new(); // <index, avatar>> clone avatars for abyss teams
         public List<TeamResonanceData> TeamResonances = new();
         [BsonElement] public bool IsTowerTeam { get; private set; } = false; //Don't allow any further team editing if it's an abyss team
         public TeamInfo(string name = "")
         {
             TeamName = name;
+            for(int i = 0; i < GameServer.Configuration.Server.GameOptions.AvatarLimits.SinglePlayerTeam; i++)
+            {
+                AvatarInfo[i] = null;
+            }
         }
 
         public TeamInfo(IEnumerable<Avatar> avatars, string name = "", bool isTowerTeam = false)
@@ -36,15 +40,12 @@ namespace Weedwacker.GameServer.Systems.Avatar
               
         public bool AddAvatar(Avatar avatar, int index = 0)
         {
-            if (IsTowerTeam || AvatarInfo.ContainsValue(avatar) || AvatarInfo.Count >= GameServer.Configuration.Server.GameOptions.AvatarLimits.SinglePlayerTeam)
+            if (IsTowerTeam || AvatarInfo.ContainsValue(avatar) || index > GameServer.Configuration.Server.GameOptions.AvatarLimits.SinglePlayerTeam)
             {
                 return false;
             }
 
-            if (!AvatarInfo.ContainsKey(index))
-                AvatarInfo.Add(index, IsTowerTeam ? avatar.Clone() : avatar);
-            else
-                AvatarInfo[index] = IsTowerTeam ? avatar.Clone() : avatar;
+            AvatarInfo[index] = IsTowerTeam ? avatar.Clone() : avatar;
 
             //TODO update team resonance and add team openConfigs
 
@@ -72,7 +73,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         public bool CopyFrom(TeamInfo team, int maxTeamSize)
         {
             if (IsTowerTeam || team.AvatarInfo.Count > maxTeamSize) return false;
-            AvatarInfo = (SortedList<int, Avatar>)team.MemberwiseClone();
+            AvatarInfo = (SortedList<int, Avatar?>)team.MemberwiseClone();
             return true;
         }
 
@@ -84,8 +85,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
             };
 
             foreach (var entry in AvatarInfo)
-            {               
-                avatarTeam.AvatarGuidList.Add(entry.Value.Guid);
+            {          
+                if(entry.Value != null)
+                    avatarTeam.AvatarGuidList.Add(entry.Value.Guid);
             }
 
             return avatarTeam;

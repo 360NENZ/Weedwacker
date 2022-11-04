@@ -215,6 +215,12 @@ namespace Weedwacker.GameServer.Systems.World
             Players.AsParallel().ForAll(async p => await p.SendPacketAsync(packet));
         }
 
+        public async Task BroadcastPacketToOthersAsync(BasePacket packet, Player.Player player)
+        {
+            // Send to all players - might have to check if player has been sent data packets
+            Players.AsParallel().ForAll(async p => { if (p != player) await p.SendPacketAsync(packet); });
+        }
+
         // Returns false if there are no players in this world
         public async Task<bool> OnTickAsync()
         {

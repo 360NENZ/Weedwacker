@@ -101,7 +101,6 @@ namespace Weedwacker.GameServer.Systems.World
         {
             // Remove player from scene
             Players.Remove(player);
-            await player.SetSceneAsync(null);
 
             // Remove player avatars
             SortedList<int, AvatarEntity> team = player.TeamManager.ActiveTeam;
@@ -128,6 +127,7 @@ namespace Weedwacker.GameServer.Systems.World
             player.TeamManager.ActiveTeam = new();
             foreach (var entry in teamInfo.AvatarInfo)
             {
+                if (entry.Value == null) continue;
                 AvatarEntity entity = new AvatarEntity(teamInfo, player.Scene, player.Avatars.GetAvatarById(entry.Value.AvatarId));
                 player.TeamManager.ActiveTeam.Add(entry.Key, entity);
             }

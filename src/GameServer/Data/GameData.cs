@@ -20,6 +20,7 @@ using Weedwacker.GameServer.Data.BinOut.Ability.Temp.DirectionTypes;
 using Weedwacker.GameServer.Data.BinOut.Ability.Temp.SelectTargetType;
 using Weedwacker.GameServer.Data.BinOut.Ability.Temp.AttackPatterns;
 using Weedwacker.GameServer.Data.BinOut.Ability.Temp.EventOps;
+using Weedwacker.GameServer.Data.Common;
 
 namespace Weedwacker.GameServer.Data
 {
@@ -56,6 +57,7 @@ namespace Weedwacker.GameServer.Data
         public readonly static SortedList<int, EquipAffixData> EquipAffixDataMap = new(); // affixId
         public readonly static SortedList<Tuple<int, int>, GatherData> GatherDataMap = new(); // <id, gadgetId>
         public readonly static SortedList<int, GadgetData> GadgetDataMap = new(); // id
+        public static GlobalCombatData GlobalCombatData { get; private set; }
         public readonly static SortedList<int, HomeWorldFurnitureData> HomeWorldFurnitureDataMap = new(); // id
         public readonly static SortedList<int, ItemData> ItemDataMap = new(); // id ItemData is subclassed, and loaded as MaterialData, ReliquaryData, and WeaponData
         public readonly static SortedList<int, MonsterCurveData> MonsterCurveDataMap = new(); // level
@@ -283,6 +285,13 @@ namespace Weedwacker.GameServer.Data
             string excelPath = Path.Combine(resourcesPath, "ExcelBinOutput/");
             string binPath = Path.Combine(resourcesPath, "BinOutput/");
             ScriptPath = Path.Combine(resourcesPath, "Scripts/");
+
+            var file = Path.Combine(binPath, "Common", "ConfigGlobalCombat.json");
+            FileInfo fi = new(file);
+            using var sr = new StringReader(await File.ReadAllTextAsync(fi.FullName));
+            using var jr = new JsonTextReader(sr);
+            GlobalCombatData = Serializer.Deserialize<GlobalCombatData>(jr);
+
             await Task.WhenAll(new Task[]
             {
                 LoadExcel(excelPath, o => o.sortId, AvatarCodexDataMap),

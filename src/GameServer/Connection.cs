@@ -85,7 +85,7 @@ namespace Weedwacker.GameServer
             Logger.DebugWriteLine($"{sendOrRecv}: {Enum.GetName(typeof(OpCode), opcode)}({opcode})\r\n{asJson}");
             if (GameServer.Configuration.Server.KeepLog)
             {
-                File.WriteAllText($"{GameServer.Configuration.Server.LogLocation}\\{LogIndex++}_{packet.GetType().Name}.json", JValue.Parse(asJson).ToString(Formatting.Indented));
+                File.WriteAllText($"{GameServer.Configuration.Server.LogLocation}\\{LogIndex++}_Packet_{packet.GetType().Name}.json", JValue.Parse(asJson).ToString(Formatting.Indented));
             }
         }
 
@@ -95,10 +95,25 @@ namespace Weedwacker.GameServer
             var invoc = descriptor.Parser.ParseFrom(entry.CombatData);
             var formatter = Google.Protobuf.JsonFormatter.Default;
             var asJson = formatter.Format(invoc);
-            Logger.DebugWriteLine($"{sendOrRecv} {entry.ForwardType}|{entry.ArgumentType}: \r\n{asJson}");
+            Logger.DebugWriteLine($"{sendOrRecv} {entry.ForwardType} | {entry.ArgumentType}: \r\n{asJson}");
             if (GameServer.Configuration.Server.KeepLog)
             {
-                File.WriteAllText($"{GameServer.Configuration.Server.LogLocation}\\{LogIndex++}_{invocType.Name}.json", JValue.Parse(asJson).ToString(Formatting.Indented));
+                File.WriteAllText($"{GameServer.Configuration.Server.LogLocation}\\{LogIndex++}_CInv_{entry.ArgumentType}.json", JValue.Parse(asJson).ToString(Formatting.Indented));
+            }
+        }
+
+        internal static void LogAbilityInvocation(string sendOrRecv, AbilityInvokeEntry entry, Type invocType, uint entityId)
+        {
+            var descriptor = (MessageDescriptor)invocType.GetProperty("Descriptor", BindingFlags.Public | BindingFlags.Static).GetValue(null, null); // get the static property Descriptor
+            var invoc = descriptor.Parser.ParseFrom(entry.AbilityData);
+            var formatter = Google.Protobuf.JsonFormatter.Default;
+            var asJson = formatter.Format(invoc);
+            var headJson = formatter.Format(entry.Head);
+            Logger.DebugWriteLine($"{sendOrRecv} {entry.Head} | {entry.ForwardType} | {entry.ArgumentType}: \r\n{asJson}");
+            if (GameServer.Configuration.Server.KeepLog)
+            {
+                File.WriteAllText($"{GameServer.Configuration.Server.LogLocation}\\{LogIndex++}_AInv_Head_{entityId}_{entry.ArgumentType}.json", JValue.Parse(headJson).ToString(Formatting.Indented));
+                File.WriteAllText($"{GameServer.Configuration.Server.LogLocation}\\{LogIndex++}_AInv_{entityId}_{entry.ArgumentType}.json", JValue.Parse(asJson).ToString(Formatting.Indented));
             }
         }
 #endif

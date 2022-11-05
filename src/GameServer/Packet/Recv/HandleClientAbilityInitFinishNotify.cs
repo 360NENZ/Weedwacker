@@ -5,12 +5,12 @@ using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Packet.Recv
 {
-    [OpCode((ushort)OpCode.AbilityInvocationsNotify)]
-    internal class HandleAbilityInvocationsNotify : BaseHandler
+    [OpCode((ushort)OpCode.ClientAbilityInitFinishNotify)]
+    internal class HandleClientAbilityInitFinishNotify : BaseHandler
     {
         public override async Task HandleAsync(Connection session, byte[] header, byte[] payload)
         {
-            AbilityInvocationsNotify proto = AbilityInvocationsNotify.Parser.ParseFrom(payload);
+            ClientAbilityInitFinishNotify proto = ClientAbilityInitFinishNotify.Parser.ParseFrom(payload);
             foreach (var invoke in proto.Invokes)
             {
                 session.Player.AbilityInvNotifyList.AddEntry(invoke, invoke.ForwardType, invoke.ForwardPeer);

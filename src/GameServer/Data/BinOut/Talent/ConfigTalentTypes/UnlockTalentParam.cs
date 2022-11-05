@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-using Weedwacker.GameServer.Systems.Avatar;
+using Weedwacker.GameServer.Systems.Ability;
 
 namespace Weedwacker.GameServer.Data.BinOut.Talent
 {
@@ -8,13 +8,13 @@ namespace Weedwacker.GameServer.Data.BinOut.Talent
         [JsonProperty] public readonly string abilityName;
         [JsonProperty] public readonly string talentParam;
 
-        public override void Apply(SkillDepot depot, double[] paramList)
+        public override void Apply(BaseAbilityManager abilityManager, double[] paramList)
         {
-            if(depot.UnlockedTalentParams.ContainsKey(abilityName))
-                depot.UnlockedTalentParams[abilityName].Add(talentParam);
+            if(abilityManager.UnlockedTalentParams.ContainsKey(abilityName))
+                abilityManager.UnlockedTalentParams[abilityName].Add(talentParam);
             else
             {
-                depot.UnlockedTalentParams[abilityName] = new() { talentParam };
+                abilityManager.UnlockedTalentParams[abilityName] = new() { talentParam };
             }
         }
     }

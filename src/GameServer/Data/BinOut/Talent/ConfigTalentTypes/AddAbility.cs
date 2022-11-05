@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Weedwacker.GameServer.Systems.Ability;
 using Weedwacker.GameServer.Systems.Avatar;
 
 namespace Weedwacker.GameServer.Data.BinOut.Talent
@@ -7,9 +8,9 @@ namespace Weedwacker.GameServer.Data.BinOut.Talent
     {
         [JsonProperty] public readonly string abilityName;
 
-        public override void Apply(SkillDepot depot, double[] paramList)
+        public override void Apply(BaseAbilityManager abilityManager, double[] paramList)
         {
-            depot.ActiveDynamicAbilities.Add(abilityName);
+            abilityManager.ActiveDynamicAbilities.Add(abilityName);
         }
     }
 }

@@ -1,10 +1,10 @@
-﻿using Weedwacker.GameServer.Systems.Avatar;
+﻿using Weedwacker.GameServer.Systems.Ability;
 
 namespace Weedwacker.GameServer.Data.BinOut.Talent
 {
     internal abstract class BaseConfigTalent
     {
-        public virtual void Apply(SkillDepot depot, double[] paramList)
+        public virtual void Apply(BaseAbilityManager abilityManager, double[] paramList)
         {
 
         }

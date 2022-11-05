@@ -30,13 +30,16 @@ namespace Weedwacker.GameServer
 #if DEBUG
             public OpCode[] DebugWhitelist = Array.Empty<OpCode>();
             public OpCode[] DebugBlacklist = new[] {
-                OpCode.PingReq, OpCode.PingRsp, OpCode.PlayerSetPauseReq, OpCode.PlayerSetPauseRsp,
+                OpCode.PingReq, OpCode.PingRsp, OpCode.PlayerSetPauseReq, OpCode.PlayerSetPauseRsp, OpCode.AbilityInvocationsNotify,
                 OpCode.WorldPlayerRTTNotify, OpCode.PlayerTimeNotify, OpCode.UnionCmdNotify, OpCode.CombatInvocationsNotify,
+                OpCode.ClientAbilityChangeNotify,
             };
             public bool KeepLog = true;
             public string LogLocation = ".\\packetLogs";
-            public bool LogCombatInvocation = true;
-            public CombatTypeArgument[] combatArgTypeBlackList = new[] { CombatTypeArgument.EntityMove };
+            public bool LogCombatInvocations = true;
+            public CombatTypeArgument[] CombatArgTypeBlacklist = new[] { CombatTypeArgument.EntityMove };
+            public bool LogAbilityInvocations = true;
+            public AbilityInvokeArgument[] AbilityInvArgBlacklist = new[] { AbilityInvokeArgument.MetaModifierDurabilityChange };
 #endif
             /* This is the address used in the default region. */
             public string AccessAddress = "127.0.0.1";
@@ -97,19 +100,7 @@ namespace Weedwacker.GameServer
                 public int BATTLE_PASS_LEVEL_PRICE = 150;
                 public int BATTLE_PASS_CURRENT_INDEX = 2;
 
-                // Default entity ability hashes.
-                public string[] DEFAULT_ABILITY_STRINGS = {
-                    "Avatar_DefaultAbility_VisionReplaceDieInvincible", "Avatar_DefaultAbility_AvartarInShaderChange", "Avatar_SprintBS_Invincible",
-                    "Avatar_Freeze_Duration_Reducer", "Avatar_Attack_ReviveEnergy", "Avatar_Component_Initializer", "Avatar_FallAnthem_Achievement_Listener"
-                    };
-
-                public ulong[] DEFAULT_ABILITY_HASHES;
                 public ulong DEFAULT_ABILITY_NAME = Utils.AbilityHash("Default");
-
-                public ConstantsJson()
-                {
-                    DEFAULT_ABILITY_HASHES = DEFAULT_ABILITY_STRINGS.Select(x => Utils.AbilityHash(x)).ToArray();
-                }
             }
 
             public class InventoryLimitsJson

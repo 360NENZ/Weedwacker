@@ -12,7 +12,7 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp.Actions
         [JsonProperty] public readonly bool lethal;
         [JsonProperty] public readonly float? limboByTargetMaxHPRatio;
 
-        public override async Task Execute(string abilityName, AvatarEntity avatar, GameEntity enemyTarget = null)
+        public override async Task Execute(string abilityName, AvatarEntity avatar, SceneEntity enemyTarget = null)
         {
             if (!doOffStage && avatar.Avatar.Owner.TeamManager.GetCurrentAvatarEntity() != avatar) return;
 

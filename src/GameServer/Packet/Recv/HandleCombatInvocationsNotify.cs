@@ -46,7 +46,7 @@ namespace Weedwacker.GameServer.Packet.Recv
                     case CombatTypeArgument.EntityMove: // Seems to only handle avatar entities, despite the generic name...
                         info = EntityMoveInfo.Parser.ParseFrom(data);
                         var moveInfo = info as EntityMoveInfo;
-                        if (session.Player.TeamManager.GetCurrentAvatarEntity().Id == moveInfo.EntityId)
+                        if (session.Player.TeamManager.GetCurrentAvatarEntity().EntityId == moveInfo.EntityId)
                         {
                             var avatar = session.Player.TeamManager.GetCurrentAvatarEntity();
                             await avatar.MoveAsync(moveInfo);
@@ -103,9 +103,9 @@ namespace Weedwacker.GameServer.Packet.Recv
 
                 session.Player.CombatInvNotifyList.AddEntry(entry, entry.ForwardType);
 #if DEBUG
-                if (GameServer.Configuration.Server.LogCombatInvocation)
+                if (GameServer.Configuration.Server.LogCombatInvocations)
                 {
-                    if(!GameServer.Configuration.Server.combatArgTypeBlackList.Contains(entry.ArgumentType))
+                    if(!GameServer.Configuration.Server.CombatArgTypeBlacklist.Contains(entry.ArgumentType))
                     {
                         Connection.LogCombatInvocation("RECV combat invoke: ", entry, info.GetType());
                     }

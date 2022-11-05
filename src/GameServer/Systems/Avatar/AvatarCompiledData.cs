@@ -23,7 +23,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         public SortedList<int, AvatarPromoteData> PromoteData => new(GameData.AvatarPromoteDataMap.Where(w => w.Key.Item1 == GeneralData.avatarPromoteId).ToDictionary(x => x.Key.Item2, x => x.Value)); // <promoteLevel,data> AKA Ascension
         public readonly SortedList<int, SortedList<int, AvatarTalentData>> TalentData; // <depotId,<talentId,data>> Constellations and skill upgrades
         public readonly SortedList<int, SortedList<int, ProudSkillData>> ProudSkillData; // <depotId,<proudSkillId,data>> Passives
-        public readonly SortedList<int, ulong[]>? AbilityNameHashes; //<depotId,List<Hashes>>
+        public readonly SortedList<int, Dictionary<uint, ConfigAbility>?> AbilityHashMap; //<depotId,<Hashes, config>>
         public SortedList<int, AvatarCostumeData> CostumeData => new(GameData.AvatarCostumeDataMap.Where(w => w.Value.avatarId == AvatarId).ToDictionary(x => x.Key, x => x.Value)); // costumeId
         public SortedList<int, AvatarCodexData> CodexData => new(GameData.AvatarCodexDataMap.Where(w => w.Value.avatarId == AvatarId).ToDictionary(x => x.Key, x => x.Value)); // sortId Codex entry
         public static SortedList<int, AvatarLevelData> LevelData => GameData.AvatarLevelDataMap; // <level,exp> Level exp breakpoints
@@ -69,12 +69,13 @@ namespace Weedwacker.GameServer.Systems.Avatar
             SkillData = new();
             TalentData = new();
             ProudSkillData = new();
-            AbilityNameHashes = new();
+            AbilityHashMap = new();
             foreach (AvatarSkillDepotData depot in SkillDepotData.Values)
             {
                 string name;
                 if (depot.skillDepotAbilityGroup != null && depot.skillDepotAbilityGroup != "")
                 {
+                    // Get the ConfigAbility name used. twins have 1 ConfigAbility and ConfigTalent per element
                     name = Regex.Replace(depot.skillDepotAbilityGroup, "AbilityGroup_Girl_", "");
                     name = Regex.Replace(name, "AbilityGroup_Boy_", "");
                 }
@@ -82,11 +83,11 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 {
                     name = $"Avatar_{AvatarName}";
                 }
-                if (!GameData.ConfigAbilityAvatarMap.TryGetValue($"ConfigAbility_{name}", out ConfigAbilityContainer[]? config))
+                if (!GameData.ConfigAbilityAvatarMap.TryGetValue($"ConfigAbility_{name}", out ConfigAbilityContainer[]? configContainer))
                 {
                     continue;
                 }
-                AbilityConfigMap.Add(depot.id, config);
+                AbilityConfigMap.Add(depot.id, configContainer);
                 var dictionary1 = GameData.AvatarSkillDataMap.Where(w => depot.skills.Contains(w.Key) || depot.subSkills.Contains(w.Key) || depot.energySkill == w.Key).ToDictionary(x => x.Key, x => x.Value);
                 SkillData.Add(depot.id, new SortedList<int, AvatarSkillData>(dictionary1));
                 var dictionary7 = GameData.AvatarTalentDataMap.Where(w => depot.talents.Contains(w.Value.talentId)).ToDictionary(x => x.Key, x => x.Value);
@@ -95,8 +96,8 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 ProudSkillData.Add(depot.id, new SortedList<int, ProudSkillData>(dictionary8));
                 if (GameData.AvatarTalentConfigDataMap.TryGetValue($"ConfigTalent_{Regex.Replace(name, "Avatar_", "")}", out Dictionary<string, BaseConfigTalent[]>? configTalents))
                         ConfigTalentMap[depot.id] = configTalents;
-                HashSet<ulong> abilityHashes = new();
-                // add abilityGroup abilities (if player skill depot)
+                Dictionary<uint, ConfigAbility> abilityHashMap = new();
+                // add abilityGroup abilities (if player skill depot ability group)
                 if (depot.skillDepotAbilityGroup != null && depot.skillDepotAbilityGroup.Length > 0)
                 {
                     AbilityGroupData? abilityData = GameData.AbilityGroupDataMap.GetValueOrDefault(depot.skillDepotAbilityGroup);
@@ -105,15 +106,35 @@ namespace Weedwacker.GameServer.Systems.Avatar
                     {
                         foreach (TargetAbility ability in abilityData.targetAbilities.Concat(ConfigAvatar.abilities))
                         {
-                            abilityHashes.Add(Utils.AbilityHash(ability.abilityName));
+                            ConfigAbility? config = null;
+                            foreach(var container in AbilityConfigMap[depot.id])
+                            {
+                                if(container.Default is ConfigAbility konfig && konfig.abilityName == ability.abilityName)
+                                {
+                                    config = konfig;
+                                    break;
+                                }
+                            }
+                            if (config == null) continue;
+                            abilityHashMap[(uint)Utils.AbilityHash(ability.abilityName)] = config;
                         }                        
                     }
                 }
-                foreach (var ability in GameData.ConfigAvatarMap[$"ConfigAvatar_{AvatarName}"].abilities)
+                foreach (TargetAbility ability in GameData.ConfigAvatarMap[$"ConfigAvatar_{AvatarName}"].abilities)
                 {
-                    abilityHashes.Add(Utils.AbilityHash(ability.abilityName));
+                    ConfigAbility? config = null;
+                    foreach (var container in AbilityConfigMap[depot.id])
+                    {
+                        if (container.Default is ConfigAbility konfig && konfig.abilityName == ability.abilityName)
+                        {
+                            config = konfig;
+                            break;
+                        }
+                    }
+                    if (config == null) continue;
+                    abilityHashMap[(uint)Utils.AbilityHash(ability.abilityName)] = config;
                 }
-                AbilityNameHashes.Add(depot.id, abilityHashes.ToArray());
+                AbilityHashMap.Add(depot.id, abilityHashMap);
             }
 
             HpGrowthCurve = new Tuple<ArithType, float>[CurveData.Count];

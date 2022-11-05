@@ -2,7 +2,7 @@
 
 namespace Weedwacker.GameServer.Systems.World
 {
-    internal abstract class ScriptEntity : GameEntity
+    internal abstract class ScriptEntity : SceneEntity
     {
         public override Vector3 Position { get => throw new NotImplementedException(); protected set => throw new NotImplementedException(); }
         public override Vector3 Rotation { get => throw new NotImplementedException(); protected set => throw new NotImplementedException(); }

@@ -7,22 +7,22 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketEntityFightPropUpdateNotify : BasePacket
     {
-		public PacketEntityFightPropUpdateNotify(GameEntity entity, FightProperty prop) : base(OpCode.EntityFightPropUpdateNotify)
+		public PacketEntityFightPropUpdateNotify(SceneEntity entity, FightProperty prop) : base(OpCode.EntityFightPropUpdateNotify)
 		{
 			EntityFightPropUpdateNotify proto = new EntityFightPropUpdateNotify()
 			{
-				EntityId = entity.Id
+				EntityId = entity.EntityId
 			};
 			proto.FightPropMap.Add((uint)prop, entity.FightProps[prop]);
 
 			Data = proto.ToByteArray();
 		}
 
-		public PacketEntityFightPropUpdateNotify(GameEntity entity, IEnumerable<FightProperty> props) : base(OpCode.EntityFightPropUpdateNotify)
+		public PacketEntityFightPropUpdateNotify(SceneEntity entity, IEnumerable<FightProperty> props) : base(OpCode.EntityFightPropUpdateNotify)
 		{
 			EntityFightPropUpdateNotify proto = new EntityFightPropUpdateNotify()
 			{
-				EntityId = entity.Id
+				EntityId = entity.EntityId
 			};
 			props.AsParallel().ForAll(w => proto.FightPropMap.Add((uint)w, entity.FightProps[w]));
 

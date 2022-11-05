@@ -4,12 +4,13 @@ using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet;
 using Weedwacker.GameServer.Packet.Send;
+using Weedwacker.GameServer.Systems.Ability;
 using Weedwacker.GameServer.Systems.Script.Scene;
 using Weedwacker.Shared.Network.Proto;
 
 namespace Weedwacker.GameServer.Systems.World
 {
-    internal class World
+    internal class World : BaseEntity // Yes... the world is an entity...
     {
         public readonly Player.Player Host;
         public HashSet<Player.Player> Players { get; private set; } = new();
@@ -24,6 +25,7 @@ namespace Weedwacker.GameServer.Systems.World
         {
             Host = owner;
             LevelEntityId = GetNextEntityId(EntityIdType.MPLEVEL);
+            AbilityManager = new WorldAbilityManager(this);
             WorldLevel = owner.Profile.WorldLevel;
             GameServer.RegisterWorld(this);
         }

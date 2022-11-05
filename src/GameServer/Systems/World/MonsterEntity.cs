@@ -20,7 +20,7 @@ namespace Weedwacker.GameServer.Systems.World
 
         public MonsterEntity(Scene scene, MonsterData monsterData, uint blockId, uint groupId, SceneGroup.Monster spawnInfo, int level) : base(scene, blockId, groupId, spawnInfo.config_id)
         {
-            Id = scene.World.GetNextEntityId(EntityIdType.MONSTER);
+            EntityId = scene.World.GetNextEntityId(EntityIdType.MONSTER);
             MonsterData = monsterData;
             FightProps = new();
             Position = spawnInfo.pos;
@@ -151,7 +151,7 @@ namespace Weedwacker.GameServer.Systems.World
 
             SceneEntityInfo entityInfo = new()
             {
-                EntityId = Id,
+                EntityId = EntityId,
                 EntityType = ProtEntityType.Monster,
                 MotionInfo = GetMotionInfo(),
                 EntityClientData = new(),
@@ -175,7 +175,7 @@ namespace Weedwacker.GameServer.Systems.World
 
             SceneMonsterInfo monsterInfo = new SceneMonsterInfo()
             {
-                MonsterId = Id,
+                MonsterId = EntityId,
                 BlockId = BlockId,
                 GroupId = GroupId,
                 ConfigId = ConfigId,

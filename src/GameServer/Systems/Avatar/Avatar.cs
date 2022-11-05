@@ -44,6 +44,8 @@ namespace Weedwacker.GameServer.Systems.Avatar
         [BsonElement] public int FlyCloak { get; private set; } = 140001;
         [BsonElement] public int Costume { get; private set; } = default; // no costume
 
+        [BsonIgnore] public AvatarEntity AsEntity;
+
         public static Task<Avatar> CreateAsync(int avatarId, Player.Player owner)
         {
             var ret = new Avatar();

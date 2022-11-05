@@ -2,6 +2,7 @@
 using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet.Send;
+using Weedwacker.GameServer.Systems.Ability;
 using Weedwacker.GameServer.Systems.Avatar;
 using Weedwacker.GameServer.Systems.World;
 using Weedwacker.Shared.Network.Proto;
@@ -9,7 +10,7 @@ using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.Player
 {
-    internal class TeamManager
+    internal class TeamManager : BaseEntity
     {
         [BsonId] public int OwnerId;
         private Player Owner;
@@ -22,13 +23,13 @@ namespace Weedwacker.GameServer.Systems.Player
         public int CurrentCharacterIndex = 0; // count from 0
         [BsonIgnore] public SortedList<int, AvatarEntity> ActiveTeam = new(); // index
 
-        [BsonIgnore] public uint EntityId;
         [BsonIgnore] public AbilitySyncStateInfo AbilitySyncState = new(); //TODO
 
         public TeamManager(Player player)
         {
             Owner = player;
             OwnerId = player.GameUid;
+            AbilityManager = new TeamAbilityManager(this);
             for (int i = 1; i <= GameServer.Configuration.Server.GameOptions.Constants.DEFAULT_TEAMS; i++)
             {
                 Teams.Add(i, new TeamInfo());
@@ -38,6 +39,7 @@ namespace Weedwacker.GameServer.Systems.Player
         public async Task OnLoadAsync(Player owner)
         {
             Owner = owner;
+            AbilityManager = new TeamAbilityManager(this);
             ActiveTeam = new();
             // Point to the "real" avatars
             var reloadedTeams = new SortedList<int, TeamInfo>();
@@ -140,7 +142,7 @@ namespace Weedwacker.GameServer.Systems.Player
 
         public bool IsSpawned()
         {
-            return Owner.Scene != null && Owner.Scene.Entities.ContainsKey(GetCurrentAvatarEntity().Id);
+            return Owner.Scene != null && Owner.Scene.Entities.ContainsKey(GetCurrentAvatarEntity().EntityId);
         }
 
         public int GetMaxTeamSize()
@@ -360,7 +362,7 @@ namespace Weedwacker.GameServer.Systems.Player
                 if (replacement == null)
                 {
                     // No more living team members...
-                    await Owner.SendPacketAsync(new PacketWorldPlayerDieNotify(deadAvatar.Id, dieType, killedBy));
+                    await Owner.SendPacketAsync(new PacketWorldPlayerDieNotify(deadAvatar.EntityId, dieType, killedBy));
                 }
                 else
                 {

@@ -7,12 +7,12 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketEntityFightPropChangeReasonNotify : BasePacket
     {
-        public PacketEntityFightPropChangeReasonNotify(GameEntity entity, FightProperty prop, float value,
+        public PacketEntityFightPropChangeReasonNotify(SceneEntity entity, FightProperty prop, float value,
              PropChangeReason reason, ChangeHpReason changeHpReason = ChangeHpReason.None, IEnumerable<uint>? param = null) : base(OpCode.EntityFightPropChangeReasonNotify)
         {
             EntityFightPropChangeReasonNotify proto = new()
             {
-                EntityId = entity.Id,
+                EntityId = entity.EntityId,
                 PropType = (uint)prop,
                 PropDelta = value,
                 Reason = reason,
@@ -24,12 +24,12 @@ namespace Weedwacker.GameServer.Packet.Send
             Data = proto.ToByteArray();
         }
 
-        public PacketEntityFightPropChangeReasonNotify(GameEntity entity, FightProperty prop, float value,
+        public PacketEntityFightPropChangeReasonNotify(SceneEntity entity, FightProperty prop, float value,
             ChangeHpReason changeHpReason, IEnumerable<uint>? param = null) : base(OpCode.EntityFightPropChangeReasonNotify)
         {
             EntityFightPropChangeReasonNotify proto = new()
             {
-                EntityId = entity.Id,
+                EntityId = entity.EntityId,
                 PropType = (uint)prop,
                 PropDelta = value,
                 ChangeHpReason = changeHpReason
@@ -40,12 +40,12 @@ namespace Weedwacker.GameServer.Packet.Send
             Data = proto.ToByteArray();
         }
 
-        public PacketEntityFightPropChangeReasonNotify(GameEntity entity, FightProperty prop, float value,
+        public PacketEntityFightPropChangeReasonNotify(SceneEntity entity, FightProperty prop, float value,
             ChangeEnergyReason changeEnergyReason, IEnumerable<uint>? param = null) : base(OpCode.EntityFightPropChangeReasonNotify)
         {
             EntityFightPropChangeReasonNotify proto = new()
             {
-                EntityId = entity.Id,
+                EntityId = entity.EntityId,
                 PropType = (uint)prop,
                 PropDelta = value,
                 ChangeEnergyReson = changeEnergyReason

@@ -195,7 +195,7 @@ namespace Weedwacker.GameServer.Systems.Player
             MotionInfo motionInfo = moveInfo.MotionInfo;
             MotionState motionState = motionInfo.State;
             uint notifyEntityId = moveInfo.EntityId;
-            uint currentAvatarEntityId = Owner.TeamManager.GetCurrentAvatarEntity().Id;
+            uint currentAvatarEntityId = Owner.TeamManager.GetCurrentAvatarEntity().EntityId;
             if (notifyEntityId != currentAvatarEntityId && notifyEntityId != VehicleId)
             {
                 return;

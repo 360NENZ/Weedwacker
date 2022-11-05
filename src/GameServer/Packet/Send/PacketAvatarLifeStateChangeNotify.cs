@@ -9,7 +9,7 @@ namespace Weedwacker.GameServer.Packet.Send
     internal class PacketAvatarLifeStateChangeNotify : BasePacket
     {
 		public PacketAvatarLifeStateChangeNotify(Avatar avatar, PlayerDieType dieType = PlayerDieType.None,
-			GameEntity? sourceEntity = null, string attackTag = "") : base(OpCode.AvatarLifeStateChangeNotify)
+			SceneEntity? sourceEntity = null, string attackTag = "") : base(OpCode.AvatarLifeStateChangeNotify)
 		{
 			AvatarLifeStateChangeNotify proto = new()
 			{
@@ -21,7 +21,7 @@ namespace Weedwacker.GameServer.Packet.Send
 
 			if (sourceEntity != null)
 			{
-				proto.SourceEntityId = sourceEntity.Id;
+				proto.SourceEntityId = sourceEntity.EntityId;
 			}
 
 			Data = proto.ToByteArray();

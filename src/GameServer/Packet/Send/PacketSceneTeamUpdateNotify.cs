@@ -29,7 +29,7 @@ namespace Weedwacker.GameServer.Packet.Send
 					{
 						PlayerUid = (uint)p.GameUid,
 						AvatarGuid = avatar.Avatar.Guid,
-						EntityId = avatar.Id,
+						EntityId = avatar.EntityId,
 						SceneId = (uint)p.SceneId,
 						SceneEntityInfo = avatar.ToProto(),
 						WeaponGuid = avatar.Avatar.GetWeapon().Guid,

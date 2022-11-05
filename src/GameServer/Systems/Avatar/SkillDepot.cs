@@ -1,12 +1,12 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
+using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Data.BinOut.Ability.Temp;
 using Weedwacker.GameServer.Data.BinOut.Talent;
 using Weedwacker.GameServer.Data.Common;
 using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Packet.Send;
-using Weedwacker.GameServer.Systems.Player;
 using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.Avatar
@@ -16,21 +16,20 @@ namespace Weedwacker.GameServer.Systems.Avatar
         [BsonElement] public int DepotId { get; private set; }
         [BsonIgnore] private Player.Player Owner; // Loaded by DatabaseManager
         [BsonIgnore] private Avatar Character; // Loaded by DatabaseManager
-        [BsonElement] public ushort PromoteLevel = 0; // Constellation rank
         [BsonElement] public int EnergySkill { get; private set; } // Ultimate elemental ability (Q)
         [BsonElement] public int EnergySkillLevel { get; private set; }
         [BsonElement] public ElementType? Element { get; private set; } // Stores current and max energy
-        [BsonElement] public ulong[] Abilities { get; private set; } // Just the hashes
+        [BsonIgnore] public Dictionary<uint, ConfigAbility>? Abilities { get; private set; } // hash
         [BsonElement] public SortedList<int, int> Skills { get; private set; } = new(); // <skillId,level>
         [BsonElement] public SortedList<int, int> SubSkills { get; private set; } = new(); // <skillId,level>
         [BsonElement] public SortedList<int, int> SkillExtraChargeMap { get; private set; } = new(); // Charges
         [BsonElement] public HashSet<ProudSkillData> InherentProudSkillOpens { get; private set; } = new(); // proudSkillId
         [BsonIgnore] public IEnumerable<ProudSkillData> TeamOpens => InherentProudSkillOpens.Where(w => w.effectiveForTeam == 1);
         [BsonElement] public HashSet<int> Talents { get; private set; } = new(); // talentId. last digit of id = constellationRank.
-        [BsonElement] public Dictionary<string, HashSet<string>> UnlockedTalentParams = new(); // <abilityName, talentParams> Added by ConfigTalent UnlockTalentParam
-        [BsonElement] public HashSet<string> ActiveDynamicAbilities { get; private set; } = new(); // abilityName
-        [BsonElement] public Dictionary<string, Dictionary<string, float>?>? AbilitySpecials { get; private set; } = new(); // <abilityName, <abilitySpecial, value>> Variables used in ConfigAbility_<Avatar>.json
-        [BsonElement] public SortedList<int, int> ProudSkillExtraLevelMap { get; private set; } = new(); // <groupId,extraLevels> 
+        [BsonIgnore] public Dictionary<string, HashSet<string>> UnlockedTalentParams = new(); // <abilityName, talentParams> Added by ConfigTalent UnlockTalentParam
+        [BsonIgnore] public HashSet<string> ActiveDynamicAbilities { get; private set; } = new(); // abilityName
+        [BsonIgnore] public Dictionary<string, Dictionary<string, float>?>? AbilitySpecials { get; private set; } = new(); // <abilityName, <abilitySpecial, value>> Variables used in ConfigAbility_<Avatar>.json
+        [BsonIgnore] public SortedList<int, int> ProudSkillExtraLevelMap { get; private set; } = new(); // <groupId,extraLevels> 
 
         public SkillDepot(Avatar avatar, int depotId, Player.Player owner)
         {
@@ -38,11 +37,6 @@ namespace Weedwacker.GameServer.Systems.Avatar
             Character = avatar;
             DepotId = depotId;
             var avatarInfo = GameServer.AvatarInfo[avatar.AvatarId];
-            foreach (var configAbility in avatarInfo.AbilityConfigMap[DepotId])
-            {
-                if (configAbility.Default is ConfigAbility config)
-                    AbilitySpecials.Add(config.abilityName, config.abilitySpecials);
-            }
             EnergySkill = avatarInfo.SkillDepotData[depotId].energySkill;
             // Hero Avatars don't have an element at the beginning
             if (EnergySkill != 0)
@@ -84,9 +78,6 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 if (skillId != 0) Skills.Add(skillId, 1); 
             }
 
-            if (avatarInfo.AbilityNameHashes.TryGetValue(depotId, out ulong[]? hashes))
-                Abilities = hashes;
-
             var inherentProudSkillGroups = avatarInfo.SkillDepotData[depotId].inherentProudSkillOpens.Where(w => w.needAvatarPromoteLevel <= 1).ToDictionary(q => q.proudSkillGroupId).Keys.ToList();
             foreach (int group in inherentProudSkillGroups)
             {
@@ -97,20 +88,47 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 }
             }
 
-            foreach (var proudSkill in InherentProudSkillOpens)
+            InitializeConfig();
+        }
+
+        private void InitializeConfig()
+        {
+            Abilities = new();
+            AbilitySpecials = new();
+            ProudSkillExtraLevelMap = new();
+            foreach (var configAbility in Character.Data.AbilityConfigMap[DepotId])
             {
-                if (proudSkill.openConfig == null || proudSkill.openConfig == "") continue;
-                foreach (BaseConfigTalent config in Character.Data.ConfigTalentMap[DepotId][proudSkill.openConfig])
+                if (configAbility.Default is ConfigAbility config)
+                    AbilitySpecials.Add(config.abilityName, config.abilitySpecials);
+            }
+            if (Character.Data.AbilityHashMap.TryGetValue(DepotId, out Dictionary<uint, ConfigAbility>? hashMap))
+                Abilities = hashMap;
+
+            foreach(ConfigAbilityContainer container in GameData.ConfigAbilityAvatarMap["ConfigAbility_Avatar_AllDefault"])
+            {
+                if(container.Default is ConfigAbility config)
                 {
-                    config.Apply(this, proudSkill.paramList);
-                }                
-            }            
+                    Abilities[(uint)Utils.AbilityHash(config.abilityName)] = config;
+                }
+            }
+            foreach(string abilityName in GameData.GlobalCombatData.defaultAbilities.defaultAvatarAbilities)
+            {
+                foreach (ConfigAbilityContainer container in GameData.ConfigAbilityAvatarMap["ConfigAbility_Avatar_Common"])
+                {
+                    if (container.Default is ConfigAbility config && config.abilityName == abilityName)
+                    {
+                        Abilities[(uint)Utils.AbilityHash(config.abilityName)] = config;
+                    }
+                }
+            }
+
         }
 
         public async Task OnLoadAsync(Player.Player owner, Avatar avatar)
         {
             Owner = owner;
             Character = avatar;
+            InitializeConfig();          
         }
         public uint GetCoreProudSkillLevel()
         {
@@ -189,7 +207,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             Talents.Add(talentData.talentId);
             foreach (BaseConfigTalent config in Character.Data.ConfigTalentMap[DepotId][talentData.openConfig])
             {
-                config.Apply(this, talentData.paramList);
+                config.Apply(Character.AsEntity.AbilityManager, talentData.paramList);
             }
         }
         public async Task<bool> UnlockConstellation(int talentId, bool skipPayment = false)

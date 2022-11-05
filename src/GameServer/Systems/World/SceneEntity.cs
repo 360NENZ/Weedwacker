@@ -5,9 +5,8 @@ using Weedwacker.Shared.Network.Proto;
 
 namespace Weedwacker.GameServer.Systems.World
 {
-    internal abstract class GameEntity
+    internal abstract class SceneEntity : BaseEntity
     {
-        public uint Id { get; protected set; }
         public readonly Scene? Scene;
 
         public abstract Vector3 Position { get; protected set; }
@@ -26,15 +25,10 @@ namespace Weedwacker.GameServer.Systems.World
         public Dictionary<string, float> MetaOverrideMap { get; protected set; }
         public Dictionary<int, string> MetaModifiers { get; protected set; }
 
-        public GameEntity(Scene? scene)
+        public SceneEntity(Scene? scene)
         {
             Scene = scene;
             MotionState = MotionState.None;
-        }
-
-        public uint GetEntityType()
-        {
-            return Id >> 24;
         }
 
         public World? GetWorld()

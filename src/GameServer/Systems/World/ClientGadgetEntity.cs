@@ -20,7 +20,7 @@ namespace Weedwacker.GameServer.Systems.World
         public ClientGadgetEntity(Scene scene, Player.Player player, EvtCreateGadgetNotify notify) : base(scene)
         {
             Owner = player;
-            Id = notify.EntityId;
+            EntityId = notify.EntityId;
             Position = new(notify.InitPos.X, notify.InitPos.Y, notify.InitPos.Z);
             Rotation = new(notify.InitEulerAngles.X, notify.InitEulerAngles.Y, notify.InitEulerAngles.Z);
             ConfigId = notify.ConfigId;
@@ -30,7 +30,7 @@ namespace Weedwacker.GameServer.Systems.World
             TargetEntityId = notify.TargetEntityId;
             AsyncLoad = notify.IsAsyncLoad;
 
-            GameEntity owner = scene.GetEntityById(OwnerEntityId);
+            SceneEntity owner = scene.GetEntityById(OwnerEntityId) as SceneEntity;
             if (owner is ClientGadgetEntity ownerGadget) {
                 OriginalOwnerEntityId = ownerGadget.OriginalOwnerEntityId;
             }
@@ -58,7 +58,7 @@ namespace Weedwacker.GameServer.Systems.World
 
             SceneEntityInfo entityInfo = new SceneEntityInfo()
             {
-                EntityId = Id,
+                EntityId = EntityId,
                 EntityType = ProtEntityType.Gadget,
                 MotionInfo = GetMotionInfo(),
                 EntityClientData = new(),

@@ -1,5 +1,6 @@
 ﻿using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet.Send;
+using Weedwacker.GameServer.Systems.Ability;
 using Weedwacker.GameServer.Systems.Avatar;
 using Weedwacker.GameServer.Systems.Inventory;
 using Weedwacker.Shared.Network.Proto;
@@ -7,7 +8,7 @@ using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.World
 {
-    internal class AvatarEntity : GameEntity
+    internal class AvatarEntity : SceneEntity
     {
         public readonly Avatar.Avatar Avatar;
         public TeamInfo TeamInfo { get; private set; }
@@ -19,14 +20,17 @@ namespace Weedwacker.GameServer.Systems.World
         private bool monitorLandingEvent = false;
 
         public AvatarEntity(TeamInfo team, Scene scene, Avatar.Avatar avatar) : base(scene)
-        {
+        {           
             TeamInfo = team;
             Avatar = avatar;
             LiveState = LifeState.LIFE_ALIVE;
-            Id = scene.World.GetNextEntityId(EntityIdType.AVATAR);
+            EntityId = scene.World.GetNextEntityId(EntityIdType.AVATAR);
             FightProps = avatar.FightProp;
             WeaponItem weapon = avatar.GetWeapon();
             weapon.WeaponEntityId = scene.World.GetNextEntityId(EntityIdType.WEAPON);
+            AbilityManager = new AvatarAbilityManager(this);
+            AbilityManager.Initialize();
+            Avatar.AsEntity = this;
         }
 
         public AvatarEntity(TeamInfo info, ushort index) : base(null)
@@ -169,7 +173,7 @@ namespace Weedwacker.GameServer.Systems.World
             foreach (var skill in Avatar.GetCurSkillDepot().Skills) avatarInfo.SkillLevelMap.Add((uint)skill.Key, (uint)skill.Value);
             foreach (var proudSkill in Avatar.GetCurSkillDepot().InherentProudSkillOpens) avatarInfo.InherentProudSkillList.Add((uint)proudSkill.proudSkillId);
             foreach (var extra in Avatar.GetCurSkillDepot().ProudSkillExtraLevelMap) avatarInfo.ProudSkillExtraLevelMap.Add((uint)extra.Key, (uint)extra.Value);
-            TeamInfo.TeamResonances.ForEach(w => avatarInfo.TeamResonanceList.Add((uint)w.teamResonanceId));
+            TeamInfo.TeamResonances.AsParallel().ForAll(w => avatarInfo.TeamResonanceList.Add((uint)w.teamResonanceId));
 
             foreach (EquipItem item in Avatar.Equips.Values)
             {
@@ -201,7 +205,7 @@ namespace Weedwacker.GameServer.Systems.World
             //TODO
             SceneEntityInfo entityInfo = new SceneEntityInfo()
             {
-                EntityId = Id,
+                EntityId = EntityId,
                 EntityType = ProtEntityType.Avatar,
                 EntityClientData = new(),
                 EntityAuthorityInfo = authority,
@@ -244,18 +248,6 @@ namespace Weedwacker.GameServer.Systems.World
             AbilityControlBlock abilityControlBlock = new AbilityControlBlock();
             uint embryoId = 0;
 
-            // Add default abilities
-            foreach (int hash in GameServer.Configuration.Server.GameOptions.Constants.DEFAULT_ABILITY_HASHES)
-            {
-                AbilityEmbryo emb = new AbilityEmbryo()
-                {
-                    AbilityId = ++embryoId,
-                    AbilityNameHash = (uint)hash,
-                    AbilityOverrideNameHash = (uint)GameServer.Configuration.Server.GameOptions.Constants.DEFAULT_ABILITY_NAME
-                };
-
-                abilityControlBlock.AbilityEmbryoList.Add(emb);
-            }
             // Add team resonances
             //TODO apply properly
             foreach (var resonance in TeamInfo.TeamResonances)
@@ -271,7 +263,7 @@ namespace Weedwacker.GameServer.Systems.World
             }
             // Add skill depot abilities
 
-            foreach (int hash in Avatar.GetCurSkillDepot().Abilities)
+            foreach (int hash in Avatar.GetCurSkillDepot().Abilities.Keys)
             {
                 AbilityEmbryo emb = new AbilityEmbryo()
                 {

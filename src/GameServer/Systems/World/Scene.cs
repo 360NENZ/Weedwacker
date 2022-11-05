@@ -19,7 +19,7 @@ namespace Weedwacker.GameServer.Systems.World
         public readonly World World;
         public readonly SceneData SceneData;
         public readonly List<Player.Player> Players = new();
-        public readonly Dictionary<uint, GameEntity> Entities = new(); // entityId
+        public readonly Dictionary<uint, BaseEntity> Entities = new(); // entityId
         public readonly Dictionary<uint, ScriptEntity> ScriptEntities = new(); // entityId
         public readonly HashSet<SpawnInfo> SpawnedEntities;
         public readonly HashSet<SpawnInfo> DeadSpawnedEntities;
@@ -53,9 +53,18 @@ namespace Weedwacker.GameServer.Systems.World
         {
             return SceneData.id;
         }
-        public GameEntity GetEntityById(uint id)
+        public BaseEntity? GetEntityById(uint id)
         {
-            return Entities[id];
+            if (Entities.TryGetValue(id, out BaseEntity entity))
+            {
+                return entity;
+            }
+            else if (ScriptEntities.TryGetValue(id, out ScriptEntity scriptEntity))
+            {
+                return scriptEntity;
+            }
+            else
+                return null;
         }
 
         public void ChangeTime(int time)
@@ -63,9 +72,9 @@ namespace Weedwacker.GameServer.Systems.World
             Time = (uint)time % 1440;
         }
 
-        public bool IsInScene(GameEntity entity)
+        public bool IsInScene(SceneEntity entity)
         {
-            return Entities.ContainsKey(entity.Id);
+            return Entities.ContainsKey(entity.EntityId);
         }
 
         public async Task UpdateActiveAreaWeathersAsync(Tuple<int, int> areaIDs)
@@ -84,6 +93,7 @@ namespace Weedwacker.GameServer.Systems.World
 
             // Add
             Players.Add(player);
+            Entities.Add(player.TeamManager.EntityId, player.TeamManager);
             await player.SetSceneAsync(this);
             player.Position = newPosition;
 
@@ -101,6 +111,7 @@ namespace Weedwacker.GameServer.Systems.World
         {
             // Remove player from scene
             Players.Remove(player);
+            Entities.Remove(player.TeamManager.EntityId);
 
             // Remove player avatars
             SortedList<int, AvatarEntity> team = player.TeamManager.ActiveTeam;
@@ -181,35 +192,35 @@ namespace Weedwacker.GameServer.Systems.World
             return deathPos;
         }
 
-        private async Task AddEntityDirectly(GameEntity entity)
+        private async Task AddEntityDirectly(SceneEntity entity)
         {
             if (entity is ScriptEntity scriptEntity && scriptEntity.GroupId != 0) // need an extra check against client gadgets. Oh if only I could do multiple inheritance
-                ScriptEntities.Add(scriptEntity.Id, scriptEntity);
+                ScriptEntities.Add(scriptEntity.EntityId, scriptEntity);
             else
-                Entities.Add(entity.Id, entity);
+                Entities.Add(entity.EntityId, entity);
             await entity.OnCreateAsync(); // Call entity create event
         }
 
-        public async Task AddEntityAsync(GameEntity entity)
+        public async Task AddEntityAsync(SceneEntity entity)
         {
             await AddEntityDirectly(entity);
             await BroadcastPacketAsync(new PacketSceneEntityAppearNotify(entity));
         }
 
-        public async Task AddEntityToSingleClient(Player.Player player, GameEntity entity)
+        public async Task AddEntityToSingleClient(Player.Player player, SceneEntity entity)
         {
             await AddEntityDirectly(entity);
             await player.SendPacketAsync(new PacketSceneEntityAppearNotify(entity));
 
         }
 
-        public async Task AddEntities(IEnumerable<GameEntity> entities, Shared.Network.Proto.VisionType visionType = Shared.Network.Proto.VisionType.Born)
+        public async Task AddEntities(IEnumerable<SceneEntity> entities, Shared.Network.Proto.VisionType visionType = Shared.Network.Proto.VisionType.Born)
         {
             if (entities == null || !entities.Any())
             {
                 return;
             }
-            foreach (GameEntity entity in entities)
+            foreach (SceneEntity entity in entities)
             {
                 await AddEntityDirectly(entity);
             }
@@ -217,18 +228,18 @@ namespace Weedwacker.GameServer.Systems.World
             await BroadcastPacketAsync(new PacketSceneEntityAppearNotify(entities, visionType));
         }
 
-        public async Task<bool> RemoveEntityAsync(GameEntity entity, Shared.Network.Proto.VisionType visionType = Shared.Network.Proto.VisionType.Die)
+        public async Task<bool> RemoveEntityAsync(SceneEntity entity, Shared.Network.Proto.VisionType visionType = Shared.Network.Proto.VisionType.Die)
         {
-            if (ScriptEntities.Remove(entity.Id) || Entities.Remove(entity.Id) )
+            if (ScriptEntities.Remove(entity.EntityId) || Entities.Remove(entity.EntityId) )
             {
                 await BroadcastPacketAsync(new PacketSceneEntityDisappearNotify(entity, visionType));
                 return true;
             }
             else return false;
         }
-        public async Task RemoveEntitiesAsync(IEnumerable<GameEntity> entity, Shared.Network.Proto.VisionType visionType)
+        public async Task RemoveEntitiesAsync(IEnumerable<SceneEntity> entity, Shared.Network.Proto.VisionType visionType)
         {
-            var toRemove = entity.Where(w => ScriptEntities.Remove(w.Id) || Entities.Remove(w.Id) );
+            var toRemove = entity.Where(w => ScriptEntities.Remove(w.EntityId) || Entities.Remove(w.EntityId) );
             if (toRemove.Any())
             {
                 await BroadcastPacketAsync(new PacketSceneEntityDisappearNotify(toRemove, visionType));
@@ -236,18 +247,18 @@ namespace Weedwacker.GameServer.Systems.World
         }
         public async Task ReplaceAvatarAsync(AvatarEntity oldEntity, AvatarEntity newEntity)
         {
-            Entities.Remove(oldEntity.Id);
+            Entities.Remove(oldEntity.EntityId);
             await AddEntityDirectly(newEntity);
             await BroadcastPacketAsync(new PacketSceneEntityDisappearNotify(oldEntity, Shared.Network.Proto.VisionType.Replace));
-            await BroadcastPacketAsync(new PacketSceneEntityAppearNotify(newEntity, Shared.Network.Proto.VisionType.Replace, oldEntity.Id));
+            await BroadcastPacketAsync(new PacketSceneEntityAppearNotify(newEntity, Shared.Network.Proto.VisionType.Replace, oldEntity.EntityId));
         }
 
         public async Task ShowOtherEntitiesAsync(Player.Player player)
         {
-            List<GameEntity> entities = new();
-            GameEntity currentEntity = player.TeamManager.GetCurrentAvatarEntity();
+            List<SceneEntity> entities = new();
+            SceneEntity currentEntity = player.TeamManager.GetCurrentAvatarEntity();
 
-            foreach (GameEntity entity in Entities.Values.Concat(ScriptEntities.Values))
+            foreach (SceneEntity entity in Entities.Values.Concat(ScriptEntities.Values).Where(w => w is SceneEntity))
             {
                 if (entity == currentEntity)
                 {
@@ -263,7 +274,7 @@ namespace Weedwacker.GameServer.Systems.World
         {
             //TODO use AttackResult's data properly
 
-            GameEntity target = GetEntityById(result.DefenseId);
+            SceneEntity target = (SceneEntity)GetEntityById(result.DefenseId);
 
             if (target == null)
             {
@@ -273,13 +284,13 @@ namespace Weedwacker.GameServer.Systems.World
             await target.DamageAsync(result.Damage, result.AttackerId);
         }
 
-        public async Task KillEntityAsync(GameEntity target, uint attackerId = 0)
+        public async Task KillEntityAsync(SceneEntity target, uint attackerId = 0)
         {
-            GameEntity? attacker = null;
+            SceneEntity? attacker = null;
 
             if (attackerId != 0)
             {
-                attacker = GetEntityById(attackerId);
+                attacker = (SceneEntity)GetEntityById(attackerId);
             }
 
             if (attacker != null)
@@ -338,7 +349,7 @@ namespace Weedwacker.GameServer.Systems.World
 
         public async Task OnPlayerDestroyGadget(uint entityId)
         {
-            GameEntity entity = Entities[entityId];
+            SceneEntity entity = (SceneEntity)Entities[entityId];
 
             if (entity == null || !(entity is ClientGadgetEntity))
             {
@@ -347,7 +358,7 @@ namespace Weedwacker.GameServer.Systems.World
 
             // Get and remove entity
             ClientGadgetEntity gadget = (ClientGadgetEntity)entity;
-            Entities.Remove(gadget.Id);
+            Entities.Remove(gadget.EntityId);
 
             // Remove from owner's gadget list
             gadget.Owner.GadgetManager.Gadgets.Remove(gadget);
@@ -381,7 +392,7 @@ namespace Weedwacker.GameServer.Systems.World
             }
         }
 
-        public async Task AddItemEntity(int itemId, int amount, GameEntity bornForm)
+        public async Task AddItemEntity(int itemId, int amount, SceneEntity bornForm)
         {
             if (!GameData.ItemDataMap.TryGetValue(itemId, out ItemData itemData))
             {

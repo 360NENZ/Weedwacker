@@ -21,7 +21,7 @@ namespace Weedwacker.GameServer.Systems.World
         // but if you broke regional mine, when someone picked up the drop then it disappeared
         public ItemEntity(Scene scene, Player.Player player, ItemData itemData, Vector3 pos, int count, bool share = true) : base(scene)
         {
-            Id = Scene.World.GetNextEntityId(EntityIdType.GADGET);
+            EntityId = Scene.World.GetNextEntityId(EntityIdType.GADGET);
             Position = pos;
             Guid = player == null ? scene.World.Host.GetNextGameGuid() : player.GetNextGameGuid();
             ItemData = itemData;
@@ -79,7 +79,7 @@ namespace Weedwacker.GameServer.Systems.World
             //TODO
             SceneEntityInfo entityInfo = new SceneEntityInfo()
             {
-                EntityId = Id,
+                EntityId = EntityId,
                 EntityType = ProtEntityType.Gadget,
                 MotionInfo = new() { Pos = new() { X = Position.X, Y = Position.Y, Z = Position.Z}, Rot = new() { X = Rotation.X, Y = Rotation.Y, Z = Rotation.Z}, Speed = new() },
                 EntityClientData = new(),

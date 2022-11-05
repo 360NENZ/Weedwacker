@@ -6,7 +6,7 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketSceneEntityAppearNotify : BasePacket
     {
-		public PacketSceneEntityAppearNotify(GameEntity entity, VisionType visionType = VisionType.Born, uint param = 0) : base(Enums.OpCode.SceneEntityAppearNotify, true)
+		public PacketSceneEntityAppearNotify(SceneEntity entity, VisionType visionType = VisionType.Born, uint param = 0) : base(Enums.OpCode.SceneEntityAppearNotify, true)
 		{
 			SceneEntityAppearNotify proto = new SceneEntityAppearNotify()
 			{
@@ -18,7 +18,7 @@ namespace Weedwacker.GameServer.Packet.Send
 			Data = proto.ToByteArray();
 		}
 
-		public PacketSceneEntityAppearNotify(IEnumerable<GameEntity> entities, VisionType visionType = VisionType.Born, uint param = 0) : base(Enums.OpCode.SceneEntityAppearNotify, true)
+		public PacketSceneEntityAppearNotify(IEnumerable<SceneEntity> entities, VisionType visionType = VisionType.Born, uint param = 0) : base(Enums.OpCode.SceneEntityAppearNotify, true)
 		{
 			SceneEntityAppearNotify proto = new SceneEntityAppearNotify()
 			{

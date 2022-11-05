@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using Newtonsoft.Json;
-using Weedwacker.GameServer.Systems.Avatar;
+using Weedwacker.GameServer.Systems.Ability;
 
 namespace Weedwacker.GameServer.Data.BinOut.Talent
 {
@@ -11,9 +11,9 @@ namespace Weedwacker.GameServer.Data.BinOut.Talent
         [JsonProperty] public readonly object? paramDelta; // plus or minus &(index in proudSkillData's or AvatarTalentData's paramList) or absolute delta
         [JsonProperty] public readonly object? paramRatio; // plus or minus &(index in proudSkillData's or AvatarTalentData's paramList) or absolute delta
 
-        public override void Apply(SkillDepot depot, double[] paramList)
+        public override void Apply(BaseAbilityManager abilityManager, double[] paramList)
         {
-            float special = depot.AbilitySpecials[abilityName][paramSpecial];
+            float special = abilityManager.AbilitySpecials[abilityName][paramSpecial];
             if (paramDelta is string deltaString)
             {
                 string index = Regex.Replace(deltaString, "%", "");
@@ -35,7 +35,7 @@ namespace Weedwacker.GameServer.Data.BinOut.Talent
                     special *= (float)asD;
             }
 
-            depot.AbilitySpecials[abilityName][paramSpecial] = special;
+            abilityManager.AbilitySpecials[abilityName][paramSpecial] = special;
         }
     }
 }

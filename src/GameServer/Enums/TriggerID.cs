@@ -41,6 +41,7 @@ namespace Weedwacker.GameServer.Enums
         Mask_TriggerTalent,
         NextLoopTrigger,
         NextSkillTrigger,
+        Panda_Attack_Trigger,
         PRIVATE_DoLastSpecialExtra,
         PRIVATE_DoSpecialExtra,
         PRIVATE_ElementalArt_End,

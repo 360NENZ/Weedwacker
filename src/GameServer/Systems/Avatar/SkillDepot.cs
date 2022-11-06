@@ -23,7 +23,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         [BsonElement] public SortedList<int, int> Skills { get; private set; } = new(); // <skillId,level>
         [BsonElement] public SortedList<int, int> SubSkills { get; private set; } = new(); // <skillId,level>
         [BsonElement] public SortedList<int, int> SkillExtraChargeMap { get; private set; } = new(); // Charges
-        [BsonElement] public HashSet<ProudSkillData> InherentProudSkillOpens { get; private set; } = new(); // proudSkillId
+        [BsonElement] public HashSet<ProudSkillData> InherentProudSkillOpens { get; private set; } = new();
         [BsonIgnore] public IEnumerable<ProudSkillData> TeamOpens => InherentProudSkillOpens.Where(w => w.effectiveForTeam == 1);
         [BsonElement] public HashSet<int> Talents { get; private set; } = new(); // talentId. last digit of id = constellationRank.
         [BsonIgnore] public Dictionary<string, HashSet<string>> UnlockedTalentParams = new(); // <abilityName, talentParams> Added by ConfigTalent UnlockTalentParam

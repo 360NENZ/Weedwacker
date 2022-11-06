@@ -6,6 +6,6 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp.Actions
     {
         [JsonProperty] public readonly bool doOffStage;
         [JsonProperty] public readonly string floatID;
-        [JsonProperty] public readonly float value;
+        [JsonProperty] public readonly object value;
     }
 }

@@ -23,9 +23,10 @@ namespace Weedwacker.GameServer.Data.Excel
         [JsonProperty] public readonly string? skillIcon;
         [JsonProperty] public readonly bool isRanged;
         [JsonProperty] public readonly string? lockShape;
-        [JsonProperty] public readonly string? globalValueKey;
         [JsonProperty] public readonly bool needStore;
         [JsonProperty] public readonly string? buffIcon;
         [JsonProperty] public readonly double[] lockWeightParams;
+        [JsonProperty] public readonly string? globalValueKey; // when this is not empty, set the avatar's global's value to energyMin
+        [JsonProperty] public readonly int energyMin;
     }
 }

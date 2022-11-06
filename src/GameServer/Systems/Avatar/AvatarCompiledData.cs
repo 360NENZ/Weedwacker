@@ -94,6 +94,14 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 TalentData.Add(depot.id, new SortedList<int, AvatarTalentData>(dictionary7));
                 var dictionary8 = GameData.ProudSkillDataMap.Where(w => depot.inherentProudSkillOpens.Exists(y => y.proudSkillGroupId == w.Value.proudSkillGroupId)).ToDictionary(x => x.Key, x => x.Value);
                 ProudSkillData.Add(depot.id, new SortedList<int, ProudSkillData>(dictionary8));
+                foreach (var skilldata in dictionary1.Values)
+                {
+                    var proudData = GameData.ProudSkillDataMap.Where(w => w.Value.proudSkillGroupId == skilldata.proudSkillGroupId);
+                    foreach (var proud in proudData)
+                    {
+                        ProudSkillData[depot.id][proud.Key] = proud.Value;
+                    }
+                }
                 if (GameData.AvatarTalentConfigDataMap.TryGetValue($"ConfigTalent_{Regex.Replace(name, "Avatar_", "")}", out Dictionary<string, BaseConfigTalent[]>? configTalents))
                         ConfigTalentMap[depot.id] = configTalents;
                 Dictionary<uint, ConfigAbility> abilityHashMap = new();

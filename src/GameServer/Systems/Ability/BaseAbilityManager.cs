@@ -25,12 +25,17 @@ namespace Weedwacker.GameServer.Systems.Ability
 
         public virtual void Initialize()
         {
-            foreach(var specials in AbilitySpecials.Values)
+            foreach(var ability in AbilitySpecials)
             {
-                if (specials == null) continue;
-                foreach(var special in specials.Keys)
+                uint ablHash = (uint)Utils.AbilityHash(ability.Key);
+                AbilitySpecialOverrideMap[ablHash] = new();
+                if (ability.Value != null)
                 {
-                    AbilitySpecialHashMap[(uint)Utils.AbilityHash(special)] = special;
+                    foreach (var special in ability.Value)
+                    {
+                        AbilitySpecialOverrideMap[ablHash][(uint)Utils.AbilityHash(special.Key)] = special.Value;
+                        AbilitySpecialHashMap[(uint)Utils.AbilityHash(special.Key)] = special.Key;
+                    }
                 }
             }
         }
@@ -130,7 +135,15 @@ namespace Weedwacker.GameServer.Systems.Ability
                     Logger.DebugWriteLine($"Unhandled value type {entry.ValueType} in Config {ConfigAbilityHashMap[abilityNameHash].abilityName}");
                     continue;
                 }
-                AbilitySpecialOverrideMap[abilityNameHash][entry.Key.Hash] = entry.FloatValue;
+                try
+                {
+                    AbilitySpecialOverrideMap[abilityNameHash][entry.Key.Hash] = entry.FloatValue;
+                }
+                catch
+                {
+                    AbilitySpecialOverrideMap[abilityNameHash] = new();
+                    AbilitySpecialOverrideMap[abilityNameHash][entry.Key.Hash] = entry.FloatValue;
+                }
             }
         }
 
@@ -139,7 +152,6 @@ namespace Weedwacker.GameServer.Systems.Ability
             uint hash = ability.AbilityName.Hash;
             uint instancedId = ability.InstancedAbilityId;
             InstanceToAbilityHashMap[instancedId] = hash;
-            AbilitySpecialOverrideMap[hash] = new();
             if(ability.OverrideMap.Any())
             {
                 foreach (var entry in ability.OverrideMap)
@@ -147,7 +159,16 @@ namespace Weedwacker.GameServer.Systems.Ability
                     switch (entry.ValueType)
                     {
                         case AbilityScalarType.Float:
-                            AbilitySpecialOverrideMap[hash][entry.Key.Hash] = entry.FloatValue;
+                            try
+                            {
+                                AbilitySpecialOverrideMap[hash][entry.Key.Hash] = entry.FloatValue;
+                            }
+                            catch
+                            {
+                                //TODO fix missing ability hashes
+                                AbilitySpecialOverrideMap[hash] = new();
+                                AbilitySpecialOverrideMap[hash][entry.Key.Hash] = entry.FloatValue;
+                            }
                             break;
                         default:
                             Logger.WriteErrorLine($"Unhandled value type {entry.ValueType} in Config {ConfigAbilityHashMap[hash].abilityName}");

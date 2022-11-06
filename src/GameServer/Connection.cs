@@ -125,7 +125,7 @@ namespace Weedwacker.GameServer
                 KcpConversationReceiveResult result = await Conversation.WaitToReceiveAsync(CancelToken.Token);
                 if (result.TransportClosed)
                 {
-                    Logger.WriteErrorLine("Connection was closed");
+                    Logger.DebugWriteLine("Connection was closed");
                     break;
                 }
                 if (result.BytesReceived > Listener.MAX_MSG_SIZE)
@@ -304,7 +304,10 @@ namespace Weedwacker.GameServer
                 return true;
             }
             else
+            {
+                Logger.DebugWriteLine($"Unhandled packet: {Enum.GetName(typeof(OpCode), opcode)}");
                 return false;
+            }
         }
 
 

@@ -7,6 +7,7 @@ namespace Weedwacker.GameServer.Enums
     public enum AbilityState
     {
         ElementFreeze,
+        ElementPetrifaction,
         ElementWet,
         MuteTaunt,
     }

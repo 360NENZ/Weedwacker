@@ -46,23 +46,29 @@ namespace Weedwacker.GameServer.Systems.Ability
             //TODO add all cases
             switch (invoke.ArgumentType)
             {
+                case AbilityInvokeArgument.None:
+                    //TODO process head
+                    info = new AbilityMetaModifierChange(); // just to satisfy the compiler. abilityData is empty anyway.
+                    break;
                 case AbilityInvokeArgument.MetaModifierChange:
                     info = AbilityMetaModifierChange.Parser.ParseFrom(data);
                     break;
-                case AbilityInvokeArgument.MetaModifierDurabilityChange:
-                    info = AbilityMetaModifierDurabilityChange.Parser.ParseFrom(data);
+                case AbilityInvokeArgument.MetaSpecialFloatArgument:
+                    info = AbilityMetaSpecialFloatArgument.Parser.ParseFrom(data);
                     break;
-                case AbilityInvokeArgument.MixinCostStamina:
-                    info = AbilityMixinCostStamina.Parser.ParseFrom(data);
+                case AbilityInvokeArgument.MetaOverrideParam:
+                    info = AbilityScalarValueEntry.Parser.ParseFrom(data);
+                    var asEntri = info as AbilityScalarValueEntry;
+                    AbilitySpecialOverrideMap[InstanceToAbilityHashMap[invoke.Head.InstancedAbilityId]][asEntri.Key.Hash] = asEntri.FloatValue;
                     break;
-                case AbilityInvokeArgument.ActionGenerateElemBall:
-                    info = AbilityActionGenerateElemBall.Parser.ParseFrom(data);
+                case AbilityInvokeArgument.MetaReinitOverridemap:
+                    info = AbilityMetaReInitOverrideMap.Parser.ParseFrom(data);
+                    ReInitOverrideMap(InstanceToAbilityHashMap[invoke.Head.InstancedAbilityId], info as AbilityMetaReInitOverrideMap);
                     break;
-                case AbilityInvokeArgument.ActionFireAfterImage:
-                    info = AbilityActionFireAfterImage.Parser.ParseFrom(data);
-                    break;
-                case AbilityInvokeArgument.ActionTriggerAbility:
-                    info = AbilityActionTriggerAbility.Parser.ParseFrom(data);
+                case AbilityInvokeArgument.MetaGlobalFloatValue:
+                    info = AbilityScalarValueEntry.Parser.ParseFrom(data);
+                    var asEntry = info as AbilityScalarValueEntry;
+                    GlobalValueHashMap[asEntry.Key.Hash] = asEntry.FloatValue;
                     break;
                 case AbilityInvokeArgument.MetaAddOrGetAbilityAndTrigger:
                     info = AbilityMetaAddOrGetAbilityAndTrigger.Parser.ParseFrom(data);
@@ -71,43 +77,41 @@ namespace Weedwacker.GameServer.Systems.Ability
                     info = AbilityMetaAddAbility.Parser.ParseFrom(data);
                     AddAbility((info as AbilityMetaAddAbility).Ability);
                     break;
-                case AbilityInvokeArgument.MetaLoseHp:
-                    info = AbilityMetaLoseHp.Parser.ParseFrom(data);
-                    break;
-                case AbilityInvokeArgument.MetaReinitOverridemap:
-                    info = AbilityMetaReInitOverrideMap.Parser.ParseFrom(data);
-                    ReInitOverrideMap(InstanceToAbilityHashMap[invoke.Head.InstancedAbilityId], info as AbilityMetaReInitOverrideMap);
-                    break;
-                case AbilityInvokeArgument.MixinWindZone:
-                    info = AbilityMixinWindZone.Parser.ParseFrom(data);
-                    break;
-                case AbilityInvokeArgument.MixinWindSeedSpawner:
-                    info = AbilityMixinWindSeedSpawner.Parser.ParseFrom(data);
-                    break;
-                case AbilityInvokeArgument.MixinGlobalShield:
-                    info = AbilityMixinGlobalShield.Parser.ParseFrom(data);
+                case AbilityInvokeArgument.MetaModifierDurabilityChange:
+                    info = AbilityMetaModifierDurabilityChange.Parser.ParseFrom(data);
                     break;
                 case AbilityInvokeArgument.MetaElementReactionVisual:
                     info = AbilityMetaElementReactionVisual.Parser.ParseFrom(data);
                     break;
-                case AbilityInvokeArgument.MetaTriggerElementReaction:
-                    info = AbilityMetaTriggerElementReaction.Parser.ParseFrom(data);
-                    break;
-                case AbilityInvokeArgument.MetaSpecialFloatArgument:
-                    info = AbilityMetaSpecialFloatArgument.Parser.ParseFrom(data);
-                    break;
-                case AbilityInvokeArgument.MetaGlobalFloatValue:
-                    info = AbilityScalarValueEntry.Parser.ParseFrom(data);
-                    var asEntry = info as AbilityScalarValueEntry;
-                    GlobalValueHashMap[asEntry.Key.Hash] = asEntry.FloatValue;
-                    break;
                 case AbilityInvokeArgument.MetaUpdateBaseReactionDamage:
                     info = AbilityMetaUpdateBaseReactionDamage.Parser.ParseFrom(data);
                     break;
-                case AbilityInvokeArgument.MetaOverrideParam:
-                    info = AbilityScalarValueEntry.Parser.ParseFrom(data);
-                    var asEntri = info as AbilityScalarValueEntry;
-                    AbilitySpecialOverrideMap[InstanceToAbilityHashMap[invoke.Head.InstancedAbilityId]][asEntri.Key.Hash] = asEntri.FloatValue;
+                case AbilityInvokeArgument.MetaTriggerElementReaction:
+                    info = AbilityMetaTriggerElementReaction.Parser.ParseFrom(data);
+                    break;
+                case AbilityInvokeArgument.MetaLoseHp:
+                    info = AbilityMetaLoseHp.Parser.ParseFrom(data);
+                    break;
+                case AbilityInvokeArgument.ActionTriggerAbility:
+                    info = AbilityActionTriggerAbility.Parser.ParseFrom(data);
+                    break;
+                case AbilityInvokeArgument.ActionGenerateElemBall:
+                    info = AbilityActionGenerateElemBall.Parser.ParseFrom(data);
+                    break;
+                case AbilityInvokeArgument.ActionFireAfterImage:
+                    info = AbilityActionFireAfterImage.Parser.ParseFrom(data);
+                    break;
+                case AbilityInvokeArgument.MixinWindZone:
+                    info = AbilityMixinWindZone.Parser.ParseFrom(data);
+                    break;
+                case AbilityInvokeArgument.MixinCostStamina:
+                    info = AbilityMixinCostStamina.Parser.ParseFrom(data);
+                    break;
+                case AbilityInvokeArgument.MixinGlobalShield:
+                    info = AbilityMixinGlobalShield.Parser.ParseFrom(data);
+                    break;
+                case AbilityInvokeArgument.MixinWindSeedSpawner:
+                    info = AbilityMixinWindSeedSpawner.Parser.ParseFrom(data);
                     break;
                 default:
                     Logger.DebugWriteLine($"Unhandled AbilityInvokeArgument: {invoke.ArgumentType}");

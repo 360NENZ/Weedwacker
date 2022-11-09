@@ -19,6 +19,7 @@ namespace Weedwacker.GameServer.Enums
         SelfCamp,
         OriginOwner,
         Caster,
+        Other,
         Team,
         Enemy,
         Target,

@@ -9,6 +9,9 @@ namespace Weedwacker.GameServer.Enums
         ElementFreeze,
         ElementPetrifaction,
         ElementWet,
+        Invincible,
+        Limbo,
+        LockHP,
         MuteTaunt,
     }
 }

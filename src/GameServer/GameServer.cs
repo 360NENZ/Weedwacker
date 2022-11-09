@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using Newtonsoft.Json;
 using Weedwacker.GameServer.Data;
+using Weedwacker.GameServer.Data.BinOut.Ability.Temp;
 using Weedwacker.GameServer.Systems.Avatar;
 using Weedwacker.GameServer.Systems.World;
 using Weedwacker.Shared.Authentication;
@@ -24,6 +25,7 @@ namespace Weedwacker.GameServer
         public static SortedList<int,Connection> OnlinePlayers = new(); // <gameUid,connection>
         private static HashSet<World> Worlds = new();
         public static SortedList<int, AvatarCompiledData> AvatarInfo = new(); // <avatarId,data>
+        public static Dictionary<uint, string> AbilityNameHashMap;
         public static async Task<bool> VerifyToken(string accountUid, string token)
         {
             var req = JsonConvert.SerializeObject(new VerifyTokenRequestJson() { uid = accountUid, token = token });
@@ -75,6 +77,8 @@ namespace Weedwacker.GameServer
             {
                 AvatarInfo.Add(id, new AvatarCompiledData(id));
             }
+            SetAbilityHashMap();
+            
             // Create a timer with a one second interval.
             TickTimer = new System.Timers.Timer(1000);
             // Hook up the Elapsed event for the timer. 
@@ -83,6 +87,34 @@ namespace Weedwacker.GameServer
             TickTimer.Enabled = true;
 
             Listener.StartListener();
+        }
+
+        private static void SetAbilityHashMap()
+        {
+            Dictionary<uint, string> hashMap = new();
+            foreach (var container in GameData.ConfigAbilityAvatarMap.Values)
+            {
+                foreach (var ability in container)
+                {
+                    var config = ability.Default as ConfigAbility;
+                    hashMap[(uint)Utils.AbilityHash(config.abilityName)] = config.abilityName;
+                    if (config.abilitySpecials != null)
+                    {
+                        foreach (string special in config.abilitySpecials.Keys)
+                        {
+                            hashMap[(uint)Utils.AbilityHash(special)] = special;
+                        }
+                    }
+                    if (config.modifiers != null)
+                    {
+                        foreach (string modifier in config.modifiers.Keys)
+                        {
+                            hashMap[(uint)Utils.AbilityHash(modifier)] = modifier;
+                        }
+                    }
+                }
+            }
+            AbilityNameHashMap = hashMap;
         }
 
         private static async void OnTick(object? source, ElapsedEventArgs e)

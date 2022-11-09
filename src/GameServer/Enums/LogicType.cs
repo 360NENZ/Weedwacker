@@ -8,6 +8,7 @@ namespace Weedwacker.GameServer.Enums
     {
         None,
         Equal,
+        Greater,
         GreaterOrEqual,
         Lesser,
         LesserOrEqual,

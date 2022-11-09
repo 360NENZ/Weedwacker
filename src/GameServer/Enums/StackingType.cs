@@ -13,6 +13,7 @@ namespace Weedwacker.GameServer.Enums
         MultipleRefresh,
         MultipleRefreshNoRemove,
         Overlap,
+        Refresh,
         RefreshUniqueDurability,
     }
 }

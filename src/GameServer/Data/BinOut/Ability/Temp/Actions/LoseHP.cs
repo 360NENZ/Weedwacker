@@ -12,8 +12,9 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp.Actions
         [JsonProperty] public readonly bool lethal;
         [JsonProperty] public readonly float? limboByTargetMaxHPRatio;
 
-        public override async Task Execute(string abilityName, AvatarEntity avatar, SceneEntity enemyTarget = null)
+        public override async Task Invoke(string abilityName, BaseEntity avatarr, SceneEntity? enemyTarget = null)
         {
+            if (!(avatarr is AvatarEntity avatar)) return;
             if (!doOffStage && avatar.Avatar.Owner.TeamManager.GetCurrentAvatarEntity() != avatar) return;
 
             float curHP;
@@ -21,10 +22,11 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp.Actions
             float newHP;
             switch(target)
             {
+                case TargetType.None:
                 case TargetType.Self:
                     curHP = avatar.FightProps[FightProperty.FIGHT_PROP_CUR_HP];
                     maxHP = avatar.FightProps[FightProperty.FIGHT_PROP_MAX_HP];
-                    newHP = curHP - DynamicFloatHelper.ResolveDynamicFloat(amountByTargetCurrentHPRatio, avatar.Avatar, abilityName) * curHP;
+                    newHP = curHP - DynamicFloatHelper.ResolveDynamicFloat(amountByTargetCurrentHPRatio, avatar, abilityName) * curHP;
                     if(limboByTargetMaxHPRatio != null)
                     {
                         newHP = Math.Max(newHP, (float)limboByTargetMaxHPRatio);

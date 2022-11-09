@@ -2,9 +2,9 @@
 {
     public static class Utils
     {
-        public static ulong AbilityHash(string str)
+        public static uint AbilityHash(string str)
         {
-            ulong hash = 0;
+            uint hash = 0;
             char[] asCharArray = str.ToCharArray();
             for (int i = 0; i < str.Length; i++)
             {

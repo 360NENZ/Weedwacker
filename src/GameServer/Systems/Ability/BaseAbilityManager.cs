@@ -11,7 +11,7 @@ namespace Weedwacker.GameServer.Systems.Ability
         protected readonly BaseEntity Owner;
         protected Dictionary<uint, uint> InstanceToAbilityHashMap = new(); // <instancedAbilityId, abilityNameHash>
         protected abstract Dictionary<uint, ConfigAbility> ConfigAbilityHashMap { get; } // <abilityNameHash, configAbility>
-        protected Dictionary<uint, Dictionary<uint, float>> AbilitySpecialOverrideMap = new(); // <abilityNameHash, <abilitySpecialNameHash, value>>
+        public readonly Dictionary<uint, Dictionary<uint, float>> AbilitySpecialOverrideMap = new(); // <abilityNameHash, <abilitySpecialNameHash, value>>
         public abstract Dictionary<string, Dictionary<string, float>?>? AbilitySpecials { get; }// <abilityName, <abilitySpecial, value>>
         public abstract HashSet<string> ActiveDynamicAbilities { get; }
         public abstract Dictionary<string, HashSet<string>> UnlockedTalentParams { get; }
@@ -41,13 +41,16 @@ namespace Weedwacker.GameServer.Systems.Ability
         }
         public virtual async Task HandleAbilityInvokeAsync(AbilityInvokeEntry invoke)
         {
-            IBufferMessage info;
+            IBufferMessage info = new AbilityMetaModifierChange();
             ByteString data = invoke.AbilityData;
             //TODO add all cases
             switch (invoke.ArgumentType)
             {
                 case AbilityInvokeArgument.None:
-                    //TODO process head
+                    //TODO
+                    ConfigAbility ability = ConfigAbilityHashMap[InstanceToAbilityHashMap[invoke.Head.InstancedAbilityId]];
+                    IInvocation invocation = ability.LocalIdToInvocationMap[(uint)invoke.Head.LocalId];
+                    await invocation.Invoke(ability.abilityName, Owner);
                     info = new AbilityMetaModifierChange(); // just to satisfy the compiler. abilityData is empty anyway.
                     break;
                 case AbilityInvokeArgument.MetaModifierChange:

@@ -6,25 +6,25 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp
     internal class LocalIdGenerator
     {
         public ConfigAbilitySubContainerType Type = ConfigAbilitySubContainerType.NONE;
+        public uint ModifierIndex = 0;
         public uint ConfigIndex = 0;
         public uint MixinIndex = 0;
         private uint ActionIndex = 0;
 
         public LocalIdGenerator(ConfigAbilitySubContainerType type)
         {
-            if (type == ConfigAbilitySubContainerType.NONE) throw new Exception();
             Type = type;
         }
 
-        public void InitializeActionLocalIds(BaseAction[]? actions, Dictionary<uint, IInvocation> localIdToInvocationMap)
+        public void InitializeActionLocalIds(BaseAction[]? actions, IDictionary<uint, IInvocation> localIdToInvocationMap)
         {
             if (actions == null) return;
-            ActionIndex = 0;
+            ActionIndex = 1;
             for (ushort i = 0; i < actions.Length; i++)
             {
                 ActionIndex++;
                 uint id = GetLocalId();
-                localIdToInvocationMap[id] = actions[i];
+                localIdToInvocationMap.Add(id, actions[i]);
             }
             ActionIndex = 0;
         }
@@ -34,13 +34,13 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp
             switch (Type)
             {
                 case ConfigAbilitySubContainerType.ACTION:
-                    return 8 * ConfigIndex + 0x200 * ActionIndex + 1;
+                    return (uint)Type + (ConfigIndex<< 3)    + (ActionIndex << 9);
                 case ConfigAbilitySubContainerType.MIXIN:
-                    return 0;
+                    return (uint)Type + (MixinIndex << 3)    + (ConfigIndex << 9) + (ActionIndex << 15);
                 case ConfigAbilitySubContainerType.MODIFIER_ACTION:
-                    return 0;
+                    return (uint)Type + (ModifierIndex << 3) + (ConfigIndex << 9) + (ActionIndex << 15);
                 case ConfigAbilitySubContainerType.MODIFIER_MIXIN:
-                    return 0;
+                    return (uint)Type + (ModifierIndex << 3) + (MixinIndex << 9)  + (ConfigIndex << 15) + (ActionIndex << 21);
                 default:
                     Logger.WriteErrorLine("Invalid ConfigAbilitySubContainerType");
                     return 0;

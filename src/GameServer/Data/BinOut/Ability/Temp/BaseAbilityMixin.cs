@@ -6,11 +6,12 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp
     {
         public virtual async Task Invoke(string abilityName, BaseEntity srcEntity, SceneEntity? targetEntity = null)
         {
-
+            await Task.Yield();
         }
 
-        public virtual async Task Initialize(LocalIdGenerator idGenerator, Dictionary<uint, IInvocation> localIdToInvocationMap)
+        public virtual async Task Initialize(LocalIdGenerator idGenerator, IDictionary<uint, IInvocation> localIdToInvocationMap)
         {
+            await Task.Yield();
             uint id = idGenerator.GetLocalId();
             localIdToInvocationMap[id] = this;
             /*

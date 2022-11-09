@@ -33,55 +33,50 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp
         [JsonProperty] public readonly BaseAction[]? onHeal;
         [JsonProperty] public readonly BaseAction[]? onBeingHealed;
 
-        internal async Task Initialize(Dictionary<uint, IInvocation> localIdToInvocationMap)
+        internal async Task Initialize(LocalIdGenerator idGenerator, IDictionary<uint, IInvocation> localIdToInvocationMap)
         {
+            ushort configIndex = 0;
             // DO NOT CHANGE THE ORDER
-            LocalIdGenerator idGenerator = new(ConfigAbilitySubContainerType.MODIFIER_ACTION);
-            idGenerator.InitializeActionLocalIds(onAdded, localIdToInvocationMap);
-            idGenerator.ConfigIndex++;
-            idGenerator.InitializeActionLocalIds(onRemoved, localIdToInvocationMap);
-            idGenerator.ConfigIndex++;
-            idGenerator.InitializeActionLocalIds(onBeingHit, localIdToInvocationMap);
-            idGenerator.ConfigIndex++;
-            idGenerator.InitializeActionLocalIds(onAttackLanded, localIdToInvocationMap);
-            idGenerator.ConfigIndex++;
-            idGenerator.InitializeActionLocalIds(onHittingOther, localIdToInvocationMap);
-            idGenerator.ConfigIndex++;
-            idGenerator.InitializeActionLocalIds(onThinkInterval, localIdToInvocationMap);
-            idGenerator.ConfigIndex++;
-            idGenerator.InitializeActionLocalIds(onKill, localIdToInvocationMap);
-            idGenerator.ConfigIndex++;
-            idGenerator.InitializeActionLocalIds(onCrash, localIdToInvocationMap);
-            idGenerator.ConfigIndex++;
-            idGenerator.InitializeActionLocalIds(onAvatarIn, localIdToInvocationMap);
-            idGenerator.ConfigIndex++;
-            idGenerator.InitializeActionLocalIds(onAvatarOut, localIdToInvocationMap);
-            idGenerator.ConfigIndex++;
-            idGenerator.InitializeActionLocalIds(onReconnect, localIdToInvocationMap);
-            idGenerator.ConfigIndex++;
-            idGenerator.InitializeActionLocalIds(onChangeAuthority, localIdToInvocationMap);
-            idGenerator.ConfigIndex++;
-            idGenerator.InitializeActionLocalIds(onVehicleIn, localIdToInvocationMap);
-            idGenerator.ConfigIndex++;
-            idGenerator.InitializeActionLocalIds(onVehicleOut, localIdToInvocationMap);
-            idGenerator.ConfigIndex++;
-            idGenerator.InitializeActionLocalIds(onZoneEnter, localIdToInvocationMap);
-            idGenerator.ConfigIndex++;
-            idGenerator.InitializeActionLocalIds(onZoneExit, localIdToInvocationMap);
-            idGenerator.ConfigIndex++;
-            idGenerator.InitializeActionLocalIds(onHeal, localIdToInvocationMap);
-            idGenerator.ConfigIndex++;
-            idGenerator.InitializeActionLocalIds(onBeingHealed, localIdToInvocationMap);
-            idGenerator.ConfigIndex++;
+            var tasks = new Task[]
+                {
+                    InitializeActionSubCategory(idGenerator.ModifierIndex, configIndex++, onAdded, localIdToInvocationMap),
+                    InitializeActionSubCategory(idGenerator.ModifierIndex, configIndex++, onRemoved, localIdToInvocationMap),
+                    InitializeActionSubCategory(idGenerator.ModifierIndex, configIndex++, onBeingHit, localIdToInvocationMap),
+                    InitializeActionSubCategory(idGenerator.ModifierIndex, configIndex++, onAttackLanded, localIdToInvocationMap),
+                    InitializeActionSubCategory(idGenerator.ModifierIndex, configIndex++, onHittingOther, localIdToInvocationMap),
+                    InitializeActionSubCategory(idGenerator.ModifierIndex, configIndex++, onThinkInterval, localIdToInvocationMap),
+                    InitializeActionSubCategory(idGenerator.ModifierIndex, configIndex++, onKill, localIdToInvocationMap),
+                    InitializeActionSubCategory(idGenerator.ModifierIndex, configIndex++, onCrash, localIdToInvocationMap),
+                    InitializeActionSubCategory(idGenerator.ModifierIndex, configIndex++, onAvatarIn, localIdToInvocationMap),
+                    InitializeActionSubCategory(idGenerator.ModifierIndex, configIndex++, onAvatarOut, localIdToInvocationMap),
+                    InitializeActionSubCategory(idGenerator.ModifierIndex, configIndex++, onReconnect, localIdToInvocationMap),
+                    InitializeActionSubCategory(idGenerator.ModifierIndex, configIndex++, onChangeAuthority, localIdToInvocationMap),
+                    InitializeActionSubCategory(idGenerator.ModifierIndex, configIndex++, onVehicleIn, localIdToInvocationMap),
+                    InitializeActionSubCategory(idGenerator.ModifierIndex, configIndex++, onVehicleOut, localIdToInvocationMap),
+                    InitializeActionSubCategory(idGenerator.ModifierIndex, configIndex++, onZoneEnter, localIdToInvocationMap),
+                    InitializeActionSubCategory(idGenerator.ModifierIndex, configIndex++, onZoneExit, localIdToInvocationMap),
+                    InitializeActionSubCategory(idGenerator.ModifierIndex, configIndex++, onHeal, localIdToInvocationMap),
+                    InitializeActionSubCategory(idGenerator.ModifierIndex, configIndex++, onBeingHealed, localIdToInvocationMap),
+
+                };
+            await Task.WhenAll(tasks);
 
             if (modifierMixins == null) return;
             idGenerator.Type = ConfigAbilitySubContainerType.MODIFIER_MIXIN;
+            ushort mixinIndex = 0;
+            var tasks2 = new List<Task>();
             for (uint i = 0; i < modifierMixins.Length; i++)
             {
-                idGenerator.ConfigIndex = 0;
-                await modifierMixins[i].Initialize(idGenerator, localIdToInvocationMap);
-                idGenerator.MixinIndex++;
+                idGenerator = new(ConfigAbilitySubContainerType.MODIFIER_MIXIN) { ConfigIndex = 0, MixinIndex = mixinIndex++ };
+                tasks2.Add(modifierMixins[i].Initialize(idGenerator, localIdToInvocationMap));
             }
+        }
+        private async Task InitializeActionSubCategory(uint modifierIndex, ushort configIndex, BaseAction[]? actions, IDictionary<uint, IInvocation> localIdToInvocationMap)
+        {
+            if (actions == null) return;
+            await Task.Yield();
+            LocalIdGenerator idGenerator = new(ConfigAbilitySubContainerType.MODIFIER_ACTION) { ConfigIndex = configIndex, ModifierIndex =  modifierIndex};
+            idGenerator.InitializeActionLocalIds(actions, localIdToInvocationMap);
         }
     }
 }

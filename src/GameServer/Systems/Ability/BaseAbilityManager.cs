@@ -49,8 +49,10 @@ namespace Weedwacker.GameServer.Systems.Ability
                 case AbilityInvokeArgument.None:
                     //TODO
                     ConfigAbility ability = ConfigAbilityHashMap[InstanceToAbilityHashMap[invoke.Head.InstancedAbilityId]];
-                    IInvocation invocation = ability.LocalIdToInvocationMap[(uint)invoke.Head.LocalId];
-                    await invocation.Invoke(ability.abilityName, Owner);
+                    if (ability.LocalIdToInvocationMap.TryGetValue((uint)invoke.Head.LocalId, out IInvocation invocation))
+                        await invocation.Invoke(ability.abilityName, Owner);
+                    else
+                        Logger.DebugWriteLine($"Missing localId: {invoke.Head.LocalId}, ability: {invoke.Head.InstancedAbilityId}");
                     info = new AbilityMetaModifierChange(); // just to satisfy the compiler. abilityData is empty anyway.
                     break;
                 case AbilityInvokeArgument.MetaModifierChange:

@@ -1,4 +1,5 @@
-﻿using System.Runtime.Serialization;
+﻿using System.Collections.Concurrent;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Weedwacker.GameServer.Enums;
 
@@ -25,15 +26,29 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp
         [JsonProperty] public readonly BaseAction[]? onVehicleOut;
         [JsonProperty] public readonly bool isDynamicAbility; // if true, disable this ability by default. Enable via ConfigTalent AddAbility     
 
-        [JsonIgnore] public Dictionary<uint, IInvocation> LocalIdToInvocationMap;
+        [JsonIgnore] public ConcurrentDictionary<uint, IInvocation> LocalIdToInvocationMap;
         [JsonIgnore] public SortedList<uint, AbilityModifier> ModifierList;
 
-        [OnDeserialized]
-        internal async void OnDeserializedMethod(StreamingContext context)
+        internal async Task Initialize()
         {
             // DO NOT CHANGE THE ORDER
             LocalIdToInvocationMap = new();
 
+            var tasks = new Task[]
+            {
+                InitializeMixinIds(), 
+                InitializeModifierIds(), 
+                InitializeActionIds()
+            };
+
+            await Task.WhenAll(tasks);
+
+        }
+
+        private async Task InitializeActionIds()
+        {
+            await Task.Yield();
+            ushort configIndex = 0;
             LocalIdGenerator idGenerator = new(ConfigAbilitySubContainerType.ACTION);
             idGenerator.InitializeActionLocalIds(onAdded, LocalIdToInvocationMap);
             idGenerator.ConfigIndex++;
@@ -60,27 +75,39 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp
             idGenerator.InitializeActionLocalIds(onVehicleIn, LocalIdToInvocationMap);
             idGenerator.ConfigIndex++;
             idGenerator.InitializeActionLocalIds(onVehicleOut, LocalIdToInvocationMap);
+        }
 
+        private async Task InitializeMixinIds()
+        {
+            if (abilityMixins != null)
+            {
+                LocalIdGenerator idGenerator = new(ConfigAbilitySubContainerType.MIXIN);
+                for (uint i = 0; i < abilityMixins.Length; i++)
+                {
+                    idGenerator.ConfigIndex = 0;
+                    await abilityMixins[i].Initialize(idGenerator, LocalIdToInvocationMap);
+                    idGenerator.MixinIndex++;
+                }
+            }
+        }
+
+        private async Task InitializeModifierIds()
+        {
             if (modifiers != null)
             {
                 ModifierList = new();
                 var modifierArray = modifiers.ToArray();
+                var tasks = new Task[modifierArray.Length];
+                ushort modifierIndex = 0;
                 for (uint i = 0; i < modifierArray.Length; i++)
                 {
+                    LocalIdGenerator idGenerator = new(ConfigAbilitySubContainerType.NONE) { ModifierIndex = modifierIndex};
                     ModifierList[i] = modifierArray[i].Value;
-                    await modifierArray[i].Value.Initialize(LocalIdToInvocationMap);
+                    tasks[i] = modifierArray[i].Value.Initialize(idGenerator, LocalIdToInvocationMap);
+                    modifierIndex++;
                 }
-            }
 
-            if (abilityMixins != null)
-            {
-                LocalIdGenerator idGenerator2 = new(ConfigAbilitySubContainerType.MIXIN);
-                for (uint i = 0; i < abilityMixins.Length; i++)
-                {
-                    idGenerator2.ConfigIndex = 0;
-                    await abilityMixins[i].Initialize(idGenerator2, LocalIdToInvocationMap);
-                    idGenerator2.MixinIndex++;
-                }
+                await Task.WhenAll(tasks);
             }
         }
     }

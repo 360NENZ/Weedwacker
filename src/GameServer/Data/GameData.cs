@@ -354,7 +354,16 @@ namespace Weedwacker.GameServer.Data
 
                 LoadScripts(ScriptPath)
             });
-
+            Logger.WriteLine("Initializing ConfigAbility local ids...");
+            var tasks = new List<Task>();
+            foreach(var container in ConfigAbilityAvatarMap.Values)
+            {
+                foreach (var config in container)
+                {
+                    tasks.Add((config.Default as ConfigAbility).Initialize());
+                }
+            }
+            await Task.WhenAll(tasks);
             Logger.WriteLine("Finished Loading Resources");
         }
     }

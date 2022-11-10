@@ -19,7 +19,7 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp
         public void InitializeActionLocalIds(BaseAction[]? actions, IDictionary<uint, IInvocation> localIdToInvocationMap)
         {
             if (actions == null) return;
-            ActionIndex = 1;
+            ActionIndex = 0;
             for (ushort i = 0; i < actions.Length; i++)
             {
                 ActionIndex++;

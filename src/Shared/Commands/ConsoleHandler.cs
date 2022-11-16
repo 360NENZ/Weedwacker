@@ -31,7 +31,7 @@ namespace Weedwacker.Shared.Commands
             goto Start;
         }
         static bool CheckCommandArguments(params string[] args) => !args.Any(arg => string.IsNullOrEmpty(arg) || string.IsNullOrWhiteSpace(arg));
-        static async Task<string> ExecuteCommand(string cmd, UserRank reqRank, params string[] args)
+        public static async Task<string> ExecuteCommand(string cmd, UserRank reqRank, params string[] args)
         {
             if (!RegisteredCommands.TryGetValue(cmd, out var com))
                 return "Invalid command";
@@ -45,7 +45,7 @@ namespace Weedwacker.Shared.Commands
                 return "Command does not exists";
             return await com.Item3(args);
         }
-        static string ParseCommandString(string? input, out string[] args)
+        public static string ParseCommandString(string? input, out string[] args)
         {
             args = Array.Empty<string>();
             if (string.IsNullOrEmpty(input))

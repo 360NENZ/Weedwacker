@@ -3,23 +3,44 @@ using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Data.Common;
 using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.GameServer.Enums;
+using Weedwacker.GameServer.Systems.Ability;
 using Weedwacker.GameServer.Systems.Script;
 using Weedwacker.GameServer.Systems.Script.Scene;
 using Weedwacker.Shared.Network.Proto;
+using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.World
 {
     internal class MonsterEntity : ScriptEntity
     {
         public readonly MonsterData MonsterData;
-        public readonly SceneGroup.SpawnInfo SpawnInfo;
+        public readonly SceneGroup.SpawnInfo? SpawnInfo;
         public readonly int Level;
         public readonly uint RightWeaponEntityId;
         public readonly uint LeftWeaponEntityId;
         public int PoseId;
 
-        public MonsterEntity(Scene scene, MonsterData monsterData, uint blockId, uint groupId, SceneGroup.Monster spawnInfo, int level) : base(scene, blockId, groupId, spawnInfo.config_id)
+        public static Task<MonsterEntity?> CreateAsync(Scene scene, MonsterData monsterData, int level, SceneGroup.Monster spawnInfo, uint blockId, uint groupId)
         {
+            MonsterEntity ret = new MonsterEntity(scene, monsterData, level, spawnInfo, blockId, groupId);
+            return ret.InitializeAsync();
+        }
+
+        public static Task<MonsterEntity?> CreateAsync(Scene scene, Player.Player targetPlayer, MonsterData monsterData, int level, Vector3 pos = default, Vector3 rot = default)
+        {
+            var ret = new MonsterEntity(scene, targetPlayer, monsterData, level, pos, rot);
+            return ret.InitializeAsync();
+        }
+
+        private async Task<MonsterEntity?> InitializeAsync()
+        {
+            AbilityManager = new MonsterAbilityManager(this);
+            await RecalcStatsAsync();
+            return this;
+        }
+        private MonsterEntity(Scene scene, MonsterData monsterData, int level, SceneGroup.Monster? spawnInfo, uint blockId, uint groupId) : base(scene, blockId, groupId, spawnInfo.config_id)
+        {
+            
             EntityId = scene.World.GetNextEntityId(EntityIdType.MONSTER);
             MonsterData = monsterData;
             FightProps = new();
@@ -30,9 +51,21 @@ namespace Weedwacker.GameServer.Systems.World
 
             // Monster weapon
             if (monsterData.equips[0] != 0) RightWeaponEntityId = scene.World.GetNextEntityId(EntityIdType.WEAPON);
-            if (monsterData.equips[1] != 0) LeftWeaponEntityId = scene.World.GetNextEntityId(EntityIdType.WEAPON);
+            if (monsterData.equips[1] != 0) LeftWeaponEntityId = scene.World.GetNextEntityId(EntityIdType.WEAPON);          
+        }
 
-            RecalcStatsAsync();
+        private MonsterEntity(Scene? scene, Player.Player targetPlayer, MonsterData monsterData, int level, Vector3 posOffset = default, Vector3 rotOffset = default) : base(scene)
+        {
+            EntityId = scene.World.GetNextEntityId(EntityIdType.MONSTER);
+            MonsterData = monsterData;
+            FightProps = new();
+            Level = level;
+            Position = targetPlayer.Position + new Vector3(10,0,10) + posOffset;
+            Rotation = targetPlayer.Rotation + rotOffset;
+
+            // Monster weapon
+            if (monsterData.equips[0] != 0) RightWeaponEntityId = scene.World.GetNextEntityId(EntityIdType.WEAPON);
+            if (monsterData.equips[1] != 0) LeftWeaponEntityId = scene.World.GetNextEntityId(EntityIdType.WEAPON);
         }
 
         public override async Task OnInteractAsync(Player.Player player, GadgetInteractReq interactReq)
@@ -53,8 +86,11 @@ namespace Weedwacker.GameServer.Systems.World
 
         public override async Task OnCreateAsync()
         {
-            // Lua event
-            await Scene.ScriptManager.CallEvent(EventType.EVENT_ANY_MONSTER_LIVE, new ScriptArgs((int)ConfigId));
+            if (SpawnInfo != null)
+            {
+                // Lua event
+                await Scene.ScriptManager.CallEvent(EventType.EVENT_ANY_MONSTER_LIVE, new ScriptArgs((int)ConfigId));
+            }
         }
 
         public override async Task DamageAsync(float amount, uint killerId)
@@ -98,8 +134,9 @@ namespace Weedwacker.GameServer.Systems.World
 
         public async Task RecalcStatsAsync()
         {
+            await Task.Yield();
             // Get hp percent, set to 100% if none
-            float hpPercent = FightProps[FightProperty.FIGHT_PROP_MAX_HP] <= 0 ? 1f : FightProps[FightProperty.FIGHT_PROP_CUR_HP] / FightProps[FightProperty.FIGHT_PROP_MAX_HP];
+            float hpPercent = FightProps.GetValueOrDefault(FightProperty.FIGHT_PROP_MAX_HP, 0) <= 0 ? 1f : FightProps.GetValueOrDefault(FightProperty.FIGHT_PROP_CUR_HP) / FightProps.GetValueOrDefault(FightProperty.FIGHT_PROP_MAX_HP, MonsterData.hpBase);
 
             // Base stats
             FightProps[FightProperty.FIGHT_PROP_BASE_HP] = MonsterData.hpBase;
@@ -128,11 +165,11 @@ namespace Weedwacker.GameServer.Systems.World
 
             // Set % stats
             FightProps[FightProperty.FIGHT_PROP_MAX_HP] =
-                (FightProps[FightProperty.FIGHT_PROP_BASE_HP] * (1f + FightProps[FightProperty.FIGHT_PROP_HP_PERCENT])) + FightProps[FightProperty.FIGHT_PROP_HP];
+                (FightProps[FightProperty.FIGHT_PROP_BASE_HP] * (1f + FightProps.GetValueOrDefault(FightProperty.FIGHT_PROP_HP_PERCENT))) + FightProps.GetValueOrDefault(FightProperty.FIGHT_PROP_HP);
             FightProps[FightProperty.FIGHT_PROP_CUR_ATTACK] =
-                (FightProps[FightProperty.FIGHT_PROP_BASE_ATTACK] * (1f + FightProps[FightProperty.FIGHT_PROP_ATTACK_PERCENT])) + FightProps[FightProperty.FIGHT_PROP_ATTACK];
+                (FightProps[FightProperty.FIGHT_PROP_BASE_ATTACK] * (1f + FightProps.GetValueOrDefault(FightProperty.FIGHT_PROP_ATTACK_PERCENT))) + FightProps.GetValueOrDefault(FightProperty.FIGHT_PROP_ATTACK);
             FightProps[FightProperty.FIGHT_PROP_CUR_DEFENSE] =
-                (FightProps[FightProperty.FIGHT_PROP_BASE_DEFENSE] * (1f + FightProps[FightProperty.FIGHT_PROP_DEFENSE_PERCENT])) + FightProps[FightProperty.FIGHT_PROP_DEFENSE];
+                (FightProps[FightProperty.FIGHT_PROP_BASE_DEFENSE] * (1f + FightProps.GetValueOrDefault(FightProperty.FIGHT_PROP_DEFENSE_PERCENT))) + FightProps.GetValueOrDefault(FightProperty.FIGHT_PROP_DEFENSE);
 
             // Set current hp
             FightProps[FightProperty.FIGHT_PROP_CUR_HP] = FightProps[FightProperty.FIGHT_PROP_MAX_HP] * hpPercent;
@@ -145,8 +182,8 @@ namespace Weedwacker.GameServer.Systems.World
             {
                 AbilityInfo = new(),
                 RendererChangedInfo = new(),
-                AiInfo = new() { IsAiOpen = true, BornPos = new Vector() { X = SpawnInfo.pos.X, Y = SpawnInfo.pos.Y, Z = SpawnInfo.pos.Z } },
-                BornPos = new Vector() { X = SpawnInfo.pos.X, Y = SpawnInfo.pos.Y, Z = SpawnInfo.pos.Z }
+                AiInfo = new() { IsAiOpen = true, BornPos = new Vector() { X = Position.X, Y = Position.Y, Z = Position.Z } },
+                BornPos = SpawnInfo != null ? new Vector() { X = SpawnInfo.pos.X, Y = SpawnInfo.pos.Y, Z = SpawnInfo.pos.Z } : new Vector() { X = Position.X, Y = Position.Y, Z = Position.Z },
             };
 
             SceneEntityInfo entityInfo = new()
@@ -175,8 +212,8 @@ namespace Weedwacker.GameServer.Systems.World
 
             SceneMonsterInfo monsterInfo = new SceneMonsterInfo()
             {
-                MonsterId = EntityId,
-                BlockId = BlockId,
+                MonsterId = (uint)MonsterData.id,
+                BlockId = BlockId == 0 ? 3001 : BlockId,
                 GroupId = GroupId,
                 ConfigId = ConfigId,
                 AuthorityPeerId = Scene.World.Host.PeerId,

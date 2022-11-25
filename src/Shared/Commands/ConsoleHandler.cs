@@ -8,7 +8,8 @@ namespace Weedwacker.Shared.Commands
         static readonly Dictionary<string, (byte, UserRank, Func<string[], Task<string>>)> RegisteredCommands = new()
         {
             { "help", (0, UserRank.Mod, ConsoleCommands.OnHelp) },
-            { "hash", (1, UserRank.Console, ConsoleCommands.OnHash) },
+            { "hashability", (1, UserRank.Console, ConsoleCommands.OnHashAbility) },
+            { "hashpath", (1, UserRank.Console, ConsoleCommands.OnHashPath) }
         };
         public static void AddCommand(string cmd, byte argCount, UserRank rank, Func<string[], Task<string>> action)
         {

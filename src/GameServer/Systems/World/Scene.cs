@@ -133,6 +133,7 @@ namespace Weedwacker.GameServer.Systems.World
 
         private async Task SetupPlayerAvatarsAsync(Player.Player player)
         {
+            await Task.Yield();
             // Add new entities for player
             TeamInfo teamInfo = player.TeamManager.GetCurrentTeamInfo();
             player.TeamManager.ActiveTeam = new();
@@ -201,8 +202,9 @@ namespace Weedwacker.GameServer.Systems.World
             await entity.OnCreateAsync(); // Call entity create event
         }
 
-        public async Task AddEntityAsync(SceneEntity entity)
+        public async Task AddEntityAsync(SceneEntity? entity)
         {
+            if (entity == null) return;
             await AddEntityDirectly(entity);
             await BroadcastPacketAsync(new PacketSceneEntityAppearNotify(entity));
         }

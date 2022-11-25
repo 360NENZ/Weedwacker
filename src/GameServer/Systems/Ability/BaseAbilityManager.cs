@@ -27,14 +27,14 @@ namespace Weedwacker.GameServer.Systems.Ability
         {
             foreach(var ability in AbilitySpecials)
             {
-                uint ablHash = (uint)Utils.AbilityHash(ability.Key);
+                uint ablHash = Utils.AbilityHash(ability.Key);
                 AbilitySpecialOverrideMap[ablHash] = new();
                 if (ability.Value != null)
                 {
                     foreach (var special in ability.Value)
                     {
-                        AbilitySpecialOverrideMap[ablHash][(uint)Utils.AbilityHash(special.Key)] = special.Value;
-                        AbilitySpecialHashMap[(uint)Utils.AbilityHash(special.Key)] = special.Key;
+                        AbilitySpecialOverrideMap[ablHash][Utils.AbilityHash(special.Key)] = special.Value;
+                        AbilitySpecialHashMap[Utils.AbilityHash(special.Key)] = special.Key;
                     }
                 }
             }
@@ -53,7 +53,7 @@ namespace Weedwacker.GameServer.Systems.Ability
                         await invocation.Invoke(ability.abilityName, Owner);
                     else
                         Logger.DebugWriteLine($"Missing localId: {invoke.Head.LocalId}, ability: {invoke.Head.InstancedAbilityId}");
-                    info = new AbilityMetaModifierChange(); // just to satisfy the compiler. abilityData is empty anyway.
+                    info = new AbilityMetaModifierChange(); // just to satisfy the compiler. In this case abilityData is empty anyway.
                     break;
                 case AbilityInvokeArgument.MetaModifierChange:
                     info = AbilityMetaModifierChange.Parser.ParseFrom(data);

@@ -15,7 +15,7 @@ namespace Weedwacker.GameServer.Systems.World
         {
             State = (GadgetState)state;
             //await Scene.BroadcastPacketAsync(new PacketGadgetStateNotify(this, state));
-            Scene.ScriptManager.CallEvent(EventType.EVENT_GADGET_STATE_CHANGE, new ScriptArgs(state, (int)ConfigId));
+            await Scene.ScriptManager.CallEvent(EventType.EVENT_GADGET_STATE_CHANGE, new ScriptArgs(state, (int)ConfigId));
         }
         public override SceneEntityInfo ToProto()
         {

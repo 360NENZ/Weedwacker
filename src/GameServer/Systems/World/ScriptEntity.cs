@@ -4,8 +4,10 @@ namespace Weedwacker.GameServer.Systems.World
 {
     internal abstract class ScriptEntity : SceneEntity
     {
-        public override Vector3 Position { get => throw new NotImplementedException(); protected set => throw new NotImplementedException(); }
-        public override Vector3 Rotation { get => throw new NotImplementedException(); protected set => throw new NotImplementedException(); }
+        protected Vector3 _Position;
+        protected Vector3 _Rotation;
+        public override Vector3 Position { get => _Position; protected set => _Position = value; }
+        public override Vector3 Rotation { get => _Rotation; protected set => _Rotation = value; }
 
         public readonly uint BlockId;
         public readonly uint GroupId;

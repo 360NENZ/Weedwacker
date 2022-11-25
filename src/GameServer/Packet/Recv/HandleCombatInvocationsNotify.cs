@@ -21,6 +21,7 @@ namespace Weedwacker.GameServer.Packet.Recv
                         break;
                     case CombatTypeArgument.EvtBeingHit:
                         info = EvtBeingHitInfo.Parser.ParseFrom(data);
+                        var hitInfo = info as EvtBeingHitInfo;
                         //TODO
                         break;
                     case CombatTypeArgument.AnimatorStateChanged:

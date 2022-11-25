@@ -7,6 +7,7 @@ using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.Player
 {
+    //TODO scrap and do correctly
     internal class StaminaManager
     {
         public Player Owner { get; private set; }

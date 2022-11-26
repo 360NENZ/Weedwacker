@@ -1,5 +1,6 @@
 # Weedwacker
 Private Server reimplementation of a certain anime game
+Join us on our [discord](https://discord.gg/XJgJcf6nPf)!
 
 ### Features:
 - Ability Framework (funeral parlor director's health reduction works correctly, and as intended!)

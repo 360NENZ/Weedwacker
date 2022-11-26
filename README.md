@@ -1,5 +1,5 @@
 # Weedwacker
-Private Server reimplementation of a certain anime game
+Private Server reimplementation of a certain anime game.
 Join us on our [discord](https://discord.gg/XJgJcf6nPf)!
 
 ### Features:

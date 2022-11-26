@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Weedwacker.GameServer.Enums;
+﻿using Weedwacker.GameServer.Enums;
 using Weedwacker.Shared.Enums;
 using Weedwacker.Shared.Network.Proto;
 
@@ -33,7 +32,7 @@ namespace Weedwacker.GameServer.Packet.Recv
                     goto NotLog;
                 Log:
                 Connection.LogPacket("RECV in Union", cmdOpcode, cmdPayload);
-                NotLog:
+            NotLog:
 #endif
                 // Handle the subPacket
                 await session.HandlePacketAsync(cmdOpcode, EMPTY_BYTE_ARRAY, cmd.Body.ToByteArray());

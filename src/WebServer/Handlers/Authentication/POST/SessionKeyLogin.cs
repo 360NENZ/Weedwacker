@@ -15,7 +15,7 @@ namespace Weedwacker.WebServer.Handlers
 
             // Validate body data.
             if (bodyData == null || bodyData.data == null)
-            return false;
+                return false;
 
             // Decode additional body data.
             var tokenData = JsonConvert.DeserializeObject<ComboTokenReqJson.LoginTokenData>(bodyData.data);

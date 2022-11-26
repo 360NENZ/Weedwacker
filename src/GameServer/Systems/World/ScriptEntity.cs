@@ -12,7 +12,7 @@ namespace Weedwacker.GameServer.Systems.World
         public readonly uint BlockId;
         public readonly uint GroupId;
         public uint ConfigId { get; protected set; }
-        
+
         public ScriptEntity(Scene? scene) : base(scene)
         {
             // USE ONLY FOR CLIENT GADGETS. WHO NEEDS MULTIPLE INHERITANCE ANYWAY?!

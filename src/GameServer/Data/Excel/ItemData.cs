@@ -3,7 +3,7 @@ using Weedwacker.GameServer.Enums;
 
 namespace Weedwacker.GameServer.Data.Excel
 {
-    
+
     internal abstract class ItemData
     {
         [JsonProperty]

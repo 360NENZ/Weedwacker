@@ -20,7 +20,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
             {
                 Guid = Guid,
                 ItemId = (uint)ItemData.id,
-                Material = new() { Count = (uint)Count}
+                Material = new() { Count = (uint)Count }
             };
 
             return proto;

@@ -124,9 +124,9 @@ namespace Weedwacker.GameServer.Systems.World
         public virtual async Task MoveAsync(EntityMoveInfo moveInfo)
         {
             // Set the position and rotation.
-            if(moveInfo.MotionInfo.Pos != null)
+            if (moveInfo.MotionInfo.Pos != null)
                 Position = new Vector3(moveInfo.MotionInfo.Pos.X, moveInfo.MotionInfo.Pos.Y, moveInfo.MotionInfo.Pos.Z);
-            if(moveInfo.MotionInfo.Rot != null)
+            if (moveInfo.MotionInfo.Rot != null)
                 Rotation = new Vector3(moveInfo.MotionInfo.Rot.X, moveInfo.MotionInfo.Rot.Y, moveInfo.MotionInfo.Rot.Z);
         }
         /**

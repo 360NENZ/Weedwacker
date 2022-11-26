@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using System.Timers;
 using Newtonsoft.Json;
 using Weedwacker.GameServer.Data;
@@ -22,7 +17,7 @@ namespace Weedwacker.GameServer
         private static readonly HttpClient client = new HttpClient();
         private static System.Timers.Timer? TickTimer;
         public static GameConfig? Configuration;
-        public static SortedList<int,Connection> OnlinePlayers = new(); // <gameUid,connection>
+        public static SortedList<int, Connection> OnlinePlayers = new(); // <gameUid,connection>
         private static HashSet<World> Worlds = new();
         public static SortedList<int, AvatarCompiledData> AvatarInfo = new(); // <avatarId,data>
         public static Dictionary<uint, string> AbilityNameHashMap;
@@ -32,7 +27,7 @@ namespace Weedwacker.GameServer
             var contentData = new StringContent(req, Encoding.UTF8, "application/json");
             var rsp = await client.PostAsync(Configuration.Server.WebServerUrl + "/hk4e_global/mdk/shield/api/verify", contentData);
             var result = JsonConvert.DeserializeObject<LoginResultJson>(await rsp.Content.ReadAsStringAsync());
-            if(result.message == "OK")
+            if (result.message == "OK")
             {
                 return true;
             }
@@ -51,7 +46,7 @@ namespace Weedwacker.GameServer
                 return avatarInfo;
             }
             else return null;
-            
+
         }
 
         public static async Task Start()
@@ -63,7 +58,7 @@ namespace Weedwacker.GameServer
             else
             {
                 DirectoryInfo di = new DirectoryInfo(Configuration.Server.LogLocation);
-                foreach(FileInfo file in di.GetFiles())
+                foreach (FileInfo file in di.GetFiles())
                 {
                     file.Delete();
                 }
@@ -78,7 +73,7 @@ namespace Weedwacker.GameServer
                 AvatarInfo.Add(id, new AvatarCompiledData(id));
             }
             SetAbilityHashMap();
-            
+
             // Create a timer with a one second interval.
             TickTimer = new System.Timers.Timer(1000);
             // Hook up the Elapsed event for the timer. 
@@ -123,14 +118,14 @@ namespace Weedwacker.GameServer
             try
             {
                 // Tick worlds.
-                foreach(var world in Worlds)
+                foreach (var world in Worlds)
                 {
                     if (await world.OnTickAsync())
                         toRemove.Add(world);
                 }
 
                 // Tick players.
-                foreach(var player in OnlinePlayers.Values)
+                foreach (var player in OnlinePlayers.Values)
                 {
                     await player.Player.OnTickAsync();
                 }
@@ -152,7 +147,7 @@ namespace Weedwacker.GameServer
             SocialDetail socialDetail;
             if (OnlinePlayers.TryGetValue((int)reqUid, out Connection session))
             {
-                return session.Player.SocialManager.GetSocialDetail(askerUid);            
+                return session.Player.SocialManager.GetSocialDetail(askerUid);
             }
             else
             {

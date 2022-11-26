@@ -28,7 +28,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             Owner = owner;
             AvatarsGuid = new();
             var tasks = new List<Task>();
-            foreach(Avatar avatar in Avatars.Values)
+            foreach (Avatar avatar in Avatars.Values)
             {
                 tasks.Add(avatar.OnLoadAsync(owner));
             }
@@ -71,7 +71,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             AvatarsGuid.Add(avatar.Guid, avatar);
             var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
             var update = Builders<AvatarManager>.Update.Set($"{nameof(Avatars)}.{avatar.AvatarId}", avatar);
-            await DatabaseManager.UpdateAvatarsAsync(filter, update); 
+            await DatabaseManager.UpdateAvatarsAsync(filter, update);
 
             bool addToTeam = false;
             if (notify) await Owner.SendPacketAsync(new PacketAvatarAddNotify(avatar, addToTeam));

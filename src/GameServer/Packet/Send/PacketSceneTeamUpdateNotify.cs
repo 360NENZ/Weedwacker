@@ -7,53 +7,53 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketSceneTeamUpdateNotify : BasePacket
     {
-		public PacketSceneTeamUpdateNotify(Player player) : base(Enums.OpCode.SceneTeamUpdateNotify)
-		{
-			SceneTeamUpdateNotify proto = new SceneTeamUpdateNotify()
-			{
-				IsInMp = player.IsInMultiplayer()
-			};
+        public PacketSceneTeamUpdateNotify(Player player) : base(Enums.OpCode.SceneTeamUpdateNotify)
+        {
+            SceneTeamUpdateNotify proto = new SceneTeamUpdateNotify()
+            {
+                IsInMp = player.IsInMultiplayer()
+            };
 
-			foreach (Player p in player.Scene.Players)
-			{
-				foreach (AvatarEntity avatar in p.TeamManager.ActiveTeam.Values)
+            foreach (Player p in player.Scene.Players)
+            {
+                foreach (AvatarEntity avatar in p.TeamManager.ActiveTeam.Values)
                 {
                     //TODO
                     AbilitySyncStateInfo avatarAbilityInfo = new();
-					//TODO
+                    //TODO
                     AbilitySyncStateInfo weaponAbilityInfo = new();
-					//TODO
-					ServerBuff buffList = new();
+                    //TODO
+                    ServerBuff buffList = new();
 
-					SceneTeamAvatar avatarProto = new()
-					{
-						PlayerUid = (uint)p.GameUid,
-						AvatarGuid = avatar.Avatar.Guid,
-						EntityId = avatar.EntityId,
-						SceneId = (uint)p.SceneId,
-						SceneEntityInfo = avatar.ToProto(),
-						WeaponGuid = avatar.Avatar.GetWeapon().Guid,
-						WeaponEntityId = avatar.Avatar.GetWeapon().WeaponEntityId,
-						IsPlayerCurAvatar = p.TeamManager.GetCurrentAvatarEntity() == avatar,
-						IsOnScene = p.TeamManager.GetCurrentAvatarEntity() == avatar, // might affect cutscenes. investigate
-						AvatarAbilityInfo = avatarAbilityInfo,
-						WeaponAbilityInfo = weaponAbilityInfo,
-						AbilityControlBlock = avatar.GetAbilityControlBlock(),
-						IsReconnect = false, //TODO
-					};
+                    SceneTeamAvatar avatarProto = new()
+                    {
+                        PlayerUid = (uint)p.GameUid,
+                        AvatarGuid = avatar.Avatar.Guid,
+                        EntityId = avatar.EntityId,
+                        SceneId = (uint)p.SceneId,
+                        SceneEntityInfo = avatar.ToProto(),
+                        WeaponGuid = avatar.Avatar.GetWeapon().Guid,
+                        WeaponEntityId = avatar.Avatar.GetWeapon().WeaponEntityId,
+                        IsPlayerCurAvatar = p.TeamManager.GetCurrentAvatarEntity() == avatar,
+                        IsOnScene = p.TeamManager.GetCurrentAvatarEntity() == avatar, // might affect cutscenes. investigate
+                        AvatarAbilityInfo = avatarAbilityInfo,
+                        WeaponAbilityInfo = weaponAbilityInfo,
+                        AbilityControlBlock = avatar.GetAbilityControlBlock(),
+                        IsReconnect = false, //TODO
+                    };
 
 
-					if (player.IsInMultiplayer())
-					{
-						avatarProto.AvatarInfo = avatar.Avatar.ToProto();
-						avatarProto.SceneAvatarInfo = avatar.GetSceneAvatarInfo();
-					}
+                    if (player.IsInMultiplayer())
+                    {
+                        avatarProto.AvatarInfo = avatar.Avatar.ToProto();
+                        avatarProto.SceneAvatarInfo = avatar.GetSceneAvatarInfo();
+                    }
 
-					proto.SceneTeamAvatarList.Add(avatarProto);
-				}
-			}
+                    proto.SceneTeamAvatarList.Add(avatarProto);
+                }
+            }
 
-			Data = proto.ToByteArray();
-		}
-	}
+            Data = proto.ToByteArray();
+        }
+    }
 }

@@ -8,12 +8,15 @@ namespace Weedwacker.GameServer.Packet.Send
     {
         public PacketPrivateChatNotify(uint senderUid, uint targetUid, string text) : base(OpCode.PrivateChatNotify)
         {
-            PrivateChatNotify proto = new PrivateChatNotify() 
+            PrivateChatNotify proto = new PrivateChatNotify()
             {
                 ChatInfo = new ChatInfo()
                 {
-                    Uid = senderUid, ToUid = targetUid, Text = text, Time = (uint)DateTimeOffset.Now.Second
-                } 
+                    Uid = senderUid,
+                    ToUid = targetUid,
+                    Text = text,
+                    Time = (uint)DateTimeOffset.Now.Second
+                }
             };
 
             Data = proto.ToByteArray();

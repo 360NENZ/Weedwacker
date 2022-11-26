@@ -11,6 +11,6 @@ namespace Weedwacker.GameServer.Data.BinOut.AbilityGroup
         [JsonProperty]
         public readonly AbilityGroupTargetType abilityGroupTargetType;
         [JsonProperty]
-        public readonly List<TargetAbility> targetAbilities;          
+        public readonly List<TargetAbility> targetAbilities;
     }
 }

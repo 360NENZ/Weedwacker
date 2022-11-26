@@ -1,6 +1,4 @@
 ﻿using Newtonsoft.Json;
-using Weedwacker.GameServer.Data.Common;
-using Weedwacker.GameServer.Enums;
 
 namespace Weedwacker.GameServer.Data.Excel
 {

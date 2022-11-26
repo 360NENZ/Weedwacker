@@ -7,7 +7,7 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketGetPlayerTokenRsp : BasePacket
     {
-        public PacketGetPlayerTokenRsp(Connection session, string token): base(OpCode.GetPlayerTokenRsp, true)
+        public PacketGetPlayerTokenRsp(Connection session, string token) : base(OpCode.GetPlayerTokenRsp, true)
         {
 
             GetPlayerTokenRsp p = new GetPlayerTokenRsp()

@@ -1,6 +1,5 @@
 ﻿#if !NEED_POH_SHIM
 
-using System;
 using System.Buffers;
 
 namespace KcpSharp

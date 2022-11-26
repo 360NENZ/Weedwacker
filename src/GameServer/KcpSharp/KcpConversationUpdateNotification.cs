@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KcpSharp
+﻿namespace KcpSharp
 {
     internal readonly struct KcpConversationUpdateNotification : IDisposable
     {

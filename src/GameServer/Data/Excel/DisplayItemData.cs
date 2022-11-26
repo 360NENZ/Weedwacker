@@ -9,6 +9,6 @@ namespace Weedwacker.GameServer.Data.Excel
         public readonly DisplayType displayType;
         [JsonProperty]
         public readonly int param;
-       
+
     }
 }

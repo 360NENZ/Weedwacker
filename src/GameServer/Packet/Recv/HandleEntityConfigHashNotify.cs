@@ -1,6 +1,4 @@
-﻿using Weedwacker.GameServer.Packet.Send;
-
-namespace Weedwacker.GameServer.Packet.Recv
+﻿namespace Weedwacker.GameServer.Packet.Recv
 {
     internal class HandleEntityConfigHashNotify : BaseHandler
     {

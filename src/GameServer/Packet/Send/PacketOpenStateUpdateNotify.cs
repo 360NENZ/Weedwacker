@@ -1,5 +1,4 @@
 ﻿using Google.Protobuf;
-using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Systems.Player;
 using Weedwacker.Shared.Network.Proto;
 
@@ -11,7 +10,7 @@ namespace Weedwacker.GameServer.Packet.Send
         {
             OpenStateUpdateNotify proto = new OpenStateUpdateNotify();
 
-            foreach ( var openState in player.ProgressManager.OpenStates)
+            foreach (var openState in player.ProgressManager.OpenStates)
             {
                 proto.OpenStateMap.Add((uint)openState.Key, (uint)openState.Value);
             }

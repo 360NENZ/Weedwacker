@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Weedwacker.GameServer.Enums;
 
@@ -36,8 +35,8 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp
 
             var tasks = new Task[]
             {
-                InitializeMixinIds(), 
-                InitializeModifierIds(), 
+                InitializeMixinIds(),
+                InitializeModifierIds(),
                 InitializeActionIds()
             };
 
@@ -101,7 +100,7 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp
                 ushort modifierIndex = 0;
                 for (uint i = 0; i < modifierArray.Length; i++)
                 {
-                    LocalIdGenerator idGenerator = new(ConfigAbilitySubContainerType.NONE) { ModifierIndex = modifierIndex};
+                    LocalIdGenerator idGenerator = new(ConfigAbilitySubContainerType.NONE) { ModifierIndex = modifierIndex };
                     ModifierList[i] = modifierArray[i].Value;
                     tasks[i] = modifierArray[i].Value.Initialize(idGenerator, LocalIdToInvocationMap);
                     modifierIndex++;

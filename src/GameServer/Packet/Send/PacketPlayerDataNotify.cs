@@ -7,23 +7,23 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketPlayerDataNotify : BasePacket
     {
-		public PacketPlayerDataNotify(Player player) : base(OpCode.PlayerDataNotify, 2)
-		{
-			PlayerDataNotify p = new PlayerDataNotify()
-			{
-				NickName = player.Profile.Nickname,
-				ServerTime = (ulong)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-				IsFirstLoginToday = true, //TODO
-				RegionId = (uint)player.RegionId
-			};
+        public PacketPlayerDataNotify(Player player) : base(OpCode.PlayerDataNotify, 2)
+        {
+            PlayerDataNotify p = new PlayerDataNotify()
+            {
+                NickName = player.Profile.Nickname,
+                ServerTime = (ulong)DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                IsFirstLoginToday = true, //TODO
+                RegionId = (uint)player.RegionId
+            };
 
-			foreach (PlayerProperty prop in Enum.GetValues(typeof(PlayerProperty)))
-			{
-				if((int)prop >= 10000)
-					p.PropMap.Add((uint)prop, new PropValue() { Type = (uint)prop, Ival = player.PlayerProperties.GetValueOrDefault(prop), Val = (uint)player.PlayerProperties.GetValueOrDefault(prop) });
-			}
+            foreach (PlayerProperty prop in Enum.GetValues(typeof(PlayerProperty)))
+            {
+                if ((int)prop >= 10000)
+                    p.PropMap.Add((uint)prop, new PropValue() { Type = (uint)prop, Ival = player.PlayerProperties.GetValueOrDefault(prop), Val = (uint)player.PlayerProperties.GetValueOrDefault(prop) });
+            }
 
-			Data = p.ToByteArray();
-		}
-	}
+            Data = p.ToByteArray();
+        }
+    }
 }

@@ -25,7 +25,7 @@ namespace Weedwacker.WebServer.Handlers
                     {
                         public int enable { get; set; } = 1;
                         public int[] status_codes { get; set; } = { 206 };
-                        public string[] url_paths { get; set; } = { "dataUpload" };  
+                        public string[] url_paths { get; set; } = { "dataUpload" };
                     }
                     public class KibanaPcConfig
                     {

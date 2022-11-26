@@ -3,7 +3,6 @@ using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
-using Weedwacker.GameServer.Systems.Player;
 using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.Inventory

@@ -19,7 +19,7 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
         public List<Region>? regions;
         public List<Trigger>? triggers;
         public List<Variable>? variables;
-        public SortedList<uint, Suite> suites; 
+        public SortedList<uint, Suite> suites;
         public InitConfig init_config;
 
         public class Suite
@@ -34,7 +34,7 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
             public uint rand_weight => (uint?)(long?)Table[$"{nameof(rand_weight)}"] ?? 0;
             public bool ban_refresh => (bool?)Table[$"{nameof(ban_refresh)}"] ?? false;
 
-            public Suite(Lua luastate,LuaTable table)
+            public Suite(Lua luastate, LuaTable table)
             {
                 LuaState = luastate;
                 Table = table;
@@ -113,7 +113,7 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
         }
 
         public class Gadget : SpawnInfo
-        {          
+        {
             public uint gadget_id => (uint?)(long?)Table[$"{nameof(gadget_id)}"] ?? 0;
             public uint level => (uint?)(long?)Table[$"{nameof(level)}"] ?? 0;
             public string? drop_tag => (string?)Table[$"{nameof(drop_tag)}"] ?? "";
@@ -209,7 +209,7 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
                                 end");
             LuaState.DoString($"success, loadGroup{group_id} = pcall(loadfile ,\"" + script + "\"" + $", \"bt\" , _SCENE_GROUP{group_id})");
             try
-            {               
+            {
                 LuaState.DoString($"loadGroup{group_id}()");
             }
             catch
@@ -217,25 +217,25 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
                 Logger.DebugWriteLine($"Failed to load scene group: {group_id}");
                 return null;
             }
-            
+
             if (LuaState[$"_SCENE_GROUP{group_id}.{nameof(init_config)}"] != null)
                 init_config = new(LuaState[$"_SCENE_GROUP{group_id}.{nameof(init_config)}"] as LuaTable);
-            if(LuaState[$"_SCENE_GROUP{group_id}.{nameof(monsters)}"] != null)
-                monsters = new List<Monster>(LuaState.GetTableDict(LuaState.GetTable($"_SCENE_GROUP{group_id}.{nameof(monsters)}")).Values.Select( w => new Monster(w as LuaTable)));
+            if (LuaState[$"_SCENE_GROUP{group_id}.{nameof(monsters)}"] != null)
+                monsters = new List<Monster>(LuaState.GetTableDict(LuaState.GetTable($"_SCENE_GROUP{group_id}.{nameof(monsters)}")).Values.Select(w => new Monster(w as LuaTable)));
             if (LuaState[$"_SCENE_GROUP{group_id}.{nameof(npcs)}"] != null)
                 npcs = new List<Npc>(LuaState.GetTableDict(LuaState.GetTable($"_SCENE_GROUP{group_id}.{nameof(npcs)}")).Values.Select(w => new Npc(w as LuaTable)));
             if (LuaState[$"_SCENE_GROUP{group_id}.{nameof(gadgets)}"] != null)
                 gadgets = new List<Gadget>(LuaState.GetTableDict(LuaState.GetTable($"_SCENE_GROUP{group_id}.{nameof(gadgets)}")).Values.Select(w => new Gadget(w as LuaTable)));
             if (LuaState[$"_SCENE_GROUP{group_id}.{nameof(regions)}"] != null)
-                regions = new List<Region>(LuaState.GetTableDict(LuaState.GetTable($"_SCENE_GROUP{group_id}.{nameof(regions)}")).Values.Select(w => new Region(w as LuaTable)));          
+                regions = new List<Region>(LuaState.GetTableDict(LuaState.GetTable($"_SCENE_GROUP{group_id}.{nameof(regions)}")).Values.Select(w => new Region(w as LuaTable)));
             if (LuaState[$"_SCENE_GROUP{group_id}.{nameof(triggers)}"] != null)
                 triggers = new List<Trigger>(LuaState.GetTableDict(LuaState.GetTable($"_SCENE_GROUP{group_id}.{nameof(triggers)}")).Values.Select(w => new Trigger(w as LuaTable)));
             if (LuaState[$"_SCENE_GROUP{group_id}.{nameof(variables)}"] != null)
                 variables = new List<Variable>(LuaState.GetTableDict(LuaState.GetTable($"_SCENE_GROUP{group_id}.{nameof(variables)}")).Values.Select(w => new Variable(w as LuaTable)));
-            
+
             if (LuaState[$"_SCENE_GROUP{group_id}.{nameof(suites)}"] != null)
                 suites = new SortedList<uint, Suite>(LuaState.GetTableDict(LuaState.GetTable($"_SCENE_GROUP{group_id}.{nameof(suites)}")).ToDictionary(w => (uint)(long)w.Key, w => new Suite(LuaState, w.Value as LuaTable)));
-            
+
             return this;
         }
     }

@@ -30,7 +30,7 @@ namespace Weedwacker.GameServer.Data.Excel
             total = (List<ItemParamData>)total.Concat(costItems);
             if (coinCost > 0)
                 total.Add(new ItemParamData(202, coinCost));
-            
+
             return total;
         }
     }

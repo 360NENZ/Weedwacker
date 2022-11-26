@@ -2,11 +2,8 @@
 using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Data.Common;
 using Weedwacker.GameServer.Data.Excel;
-using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet.Send;
-using Weedwacker.GameServer.Systems.Inventory;
-using Weedwacker.GameServer.Systems.Shop;
 using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.Inventory
@@ -16,7 +13,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
         [BsonId] public int OwnerId; // GameUid
         [BsonIgnore] private Player.Player Owner;
         [BsonElement] public Dictionary<ItemType, SubInventory> SubInventories { get; private set; }
-       
+
         [BsonIgnore] public Dictionary<ulong, GameItem> GuidMap = new();
         public InventoryManager(Player.Player owner)
         {
@@ -33,7 +30,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
         private int GetVirtualItemValue(int itemId)
         {
-            switch(itemId)
+            switch (itemId)
             {
                 case 106: // Resin
                     return Owner.PlayerProperties[PlayerProperty.PROP_PLAYER_RESIN];
@@ -74,11 +71,11 @@ namespace Weedwacker.GameServer.Systems.Inventory
             return await AddItemByIdAsync(GuidMap[guid].ItemId, count, reason);
         }
 
-        public async Task<List<GameItem>?> AddItemByIdManyAsync(IEnumerable<Tuple<int,int>> idAndCount, ActionReason reason = ActionReason.None)
+        public async Task<List<GameItem>?> AddItemByIdManyAsync(IEnumerable<Tuple<int, int>> idAndCount, ActionReason reason = ActionReason.None)
         {
             List<GameItem> updatedItems = new();
 
-            foreach (Tuple<int,int> item in idAndCount)
+            foreach (Tuple<int, int> item in idAndCount)
             {
                 //Add but don't notify the player yet
                 GameItem? gameItem = await AddItemByIdAsync(item.Item1, item.Item2, ActionReason.None, false);
@@ -157,14 +154,14 @@ namespace Weedwacker.GameServer.Systems.Inventory
                     await Owner.SendPacketAsync(new PacketStoreItemChangeNotify(updatedItem));
                 }
             }
-                return updatedItem;
+            return updatedItem;
         }
 
-        public async Task<bool> PayPromoteCostAsync(IEnumerable<ItemParamData> costItems , ActionReason reason = ActionReason.None)
+        public async Task<bool> PayPromoteCostAsync(IEnumerable<ItemParamData> costItems, ActionReason reason = ActionReason.None)
         {
-            Dictionary<MaterialItem,int> materials = new();
+            Dictionary<MaterialItem, int> materials = new();
             Dictionary<int, int> virtualItems = new();
-            foreach(ItemParamData itemData in costItems)
+            foreach (ItemParamData itemData in costItems)
             {
                 if (GameData.ItemDataMap[itemData.id].itemType == ItemType.ITEM_MATERIAL)
                 {
@@ -179,7 +176,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
                 }
             }
             // We have the requisite amount for all items
-            foreach(MaterialItem material in materials.Keys) await RemoveItemByGuid(material.Guid, materials[material]);
+            foreach (MaterialItem material in materials.Keys) await RemoveItemByGuid(material.Guid, materials[material]);
             foreach (int item in virtualItems.Keys) await PayVirtualItemByIdAsync(item, virtualItems[item]);
             return true;
         }
@@ -190,11 +187,11 @@ namespace Weedwacker.GameServer.Systems.Inventory
                 case 102: // Adventure exp
                     return await Owner.ExpManager.AddAdventureExp(count);
                 case 105: // Companionship exp
-                return await Owner.ExpManager.AddCompanionshipExp(count);
+                    return await Owner.ExpManager.AddCompanionshipExp(count);
                 case 106: // Resin
-                return await Owner.ResinManager.AddResinAsync(count);
+                    return await Owner.ResinManager.AddResinAsync(count);
                 case 107:  // Legendary Key
-                return await Owner.PropManager.AddLegendaryKeyAsync(count);
+                    return await Owner.PropManager.AddLegendaryKeyAsync(count);
                 case 114: // Iron Coin
                     //TODO
                     return false;
@@ -202,13 +199,13 @@ namespace Weedwacker.GameServer.Systems.Inventory
                     //TODO
                     return false;
                 case 201: // Primogem
-                return await Owner.PropManager.AddPrimogemsAsync(count);
+                    return await Owner.PropManager.AddPrimogemsAsync(count);
                 case 202: // Mora
                     return await Owner.PropManager.AddMoraAsync(count);
                 case 203: // Genesis Crystals
                     return await Owner.PropManager.AddGenesisCrystalsAsync(count);
                 case 204: // Home Coin
-                return await Owner.PropManager.AddHomeCoinAsync(count);
+                    return await Owner.PropManager.AddHomeCoinAsync(count);
                 default:
                     Logger.WriteErrorLine($"Unknown Virtual Item: {itemId}");
                     return false;
@@ -269,8 +266,8 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
             // Was the operation successful?
             bool result = false;
-            
-            switch(item.ItemData.itemType)
+
+            switch (item.ItemData.itemType)
             {
                 case ItemType.ITEM_RELIQUARY:
                     result = await SubInventories[ItemType.ITEM_RELIQUARY].RemoveItemAsync(item, count);
@@ -287,7 +284,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
             }
 
             if (item.Count <= 0)
-            { 
+            {
                 await Owner.SendPacketAsync(new PacketStoreItemDelNotify(item));
             }
             else
@@ -312,7 +309,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
                 {
                     await UnequipRelicAsync(otherAvatar.Guid, asRelic.ItemData.equipType);
                 }
-                
+
                 if (await avatar.EquipRelic(asRelic, true))
                 {
                     asRelic.EquippedAvatar = avatar.AvatarId;
@@ -338,8 +335,8 @@ namespace Weedwacker.GameServer.Systems.Inventory
                 WeaponItem asWeapon = (WeaponItem)weapon;
                 if (avatar.Data.GeneralData.weaponType == asWeapon.ItemData.weaponType)
                 {
-                    if(await avatar.EquipWeapon(asWeapon, true))
-                    asWeapon.EquippedAvatar = avatar.AvatarId;
+                    if (await avatar.EquipWeapon(asWeapon, true))
+                        asWeapon.EquippedAvatar = avatar.AvatarId;
                     return true;
                 }
             }
@@ -353,9 +350,9 @@ namespace Weedwacker.GameServer.Systems.Inventory
 
             if (avatar != null && slot != EquipType.EQUIP_WEAPON)
             {
- 
-                    return await avatar.UnequipRelic(slot);
-                
+
+                return await avatar.UnequipRelic(slot);
+
             }
 
             return false;
@@ -367,8 +364,8 @@ namespace Weedwacker.GameServer.Systems.Inventory
             if (avatar != null)
             {
 
-                    return await avatar.UnequipWeapon();
-                
+                return await avatar.UnequipWeapon();
+
             }
 
             return false;
@@ -378,10 +375,10 @@ namespace Weedwacker.GameServer.Systems.Inventory
         {
             Owner = owner;
             GuidMap = new();
-            foreach(SubInventory sub in SubInventories.Values)
+            foreach (SubInventory sub in SubInventories.Values)
             {
                 await sub.OnLoadAsync(owner, this);
-            }      
+            }
         }
     }
 }

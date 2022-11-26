@@ -9,7 +9,7 @@ namespace Weedwacker.WebServer.Handlers
             public int retcode { get; set; } = 0;
             public bool success { get; set; } = true;
             public string message { get; set; } = "";
-            public Data[] data { get; set; } = { new Data()};
+            public Data[] data { get; set; } = { new Data() };
             public class Data
             {
                 public int code { get; set; } = 1000;

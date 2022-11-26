@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using Weedwacker.GameServer.Enums;
-using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp.SelectTargetType
 {

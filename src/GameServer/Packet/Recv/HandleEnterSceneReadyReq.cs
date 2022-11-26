@@ -14,7 +14,7 @@ namespace Weedwacker.GameServer.Packet.Recv
             if (session.Player.EnterSceneToken == proto.EnterSceneToken)
             {
                 await session.Player.World.BroadcastPacketAsync(new PacketEnterScenePeerNotify(session.Player));
-                
+
             }
             await session.SendPacketAsync(new PacketEnterSceneReadyRsp(session.Player, proto.EnterSceneToken));
         }

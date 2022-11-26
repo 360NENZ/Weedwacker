@@ -1,6 +1,5 @@
 ﻿using Google.Protobuf;
 using Weedwacker.GameServer.Systems.Player;
-using Weedwacker.GameServer.Systems.Social;
 using Weedwacker.Shared.Network.Proto;
 
 namespace Weedwacker.GameServer.Packet.Send

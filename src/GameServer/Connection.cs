@@ -1,21 +1,16 @@
-﻿using KcpSharp;
-using Microsoft.VisualBasic;
-using System.Buffers;
+﻿using System.Buffers;
 using System.Net;
-using System.Net.Sockets;
 using System.Reflection;
-using Weedwacker.GameServer.Enums;
-using Weedwacker.GameServer.Packet;
-using static Weedwacker.GameServer.Extensions;
-using Weedwacker.Shared.Utils;
-using Weedwacker.GameServer.Systems.Player;
-using System.Text;
-using Weedwacker.GameServer.Database;
 using Google.Protobuf.Reflection;
+using KcpSharp;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Weedwacker.GameServer.Enums;
+using Weedwacker.GameServer.Packet;
+using Weedwacker.GameServer.Systems.Player;
 using Weedwacker.Shared.Enums;
 using Weedwacker.Shared.Network.Proto;
+using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer
 {
@@ -32,7 +27,7 @@ namespace Weedwacker.GameServer
         public uint ClientTime { get; private set; }
         public long LastPingTime { get; private set; }
         private uint LastClientSeq = 10;
-        public static readonly List<OpCode> BANNED_PACKETS  = new List<OpCode>(){ OpCode.WindSeedClientNotify, OpCode.PlayerLuaShellNotify };
+        public static readonly List<OpCode> BANNED_PACKETS = new List<OpCode>() { OpCode.WindSeedClientNotify, OpCode.PlayerLuaShellNotify };
 #if DEBUG
         private static uint LogIndex = 0;
 #endif
@@ -41,7 +36,7 @@ namespace Weedwacker.GameServer
             Conversation = conversation;
             RemoteEndPoint = remote;
             CancelToken = new CancellationTokenSource();
-            Start();           
+            Start();
         }
         async void Start()
         {
@@ -63,7 +58,7 @@ namespace Weedwacker.GameServer
                 CancelToken.Dispose();
             }
             catch { }
-            
+
         }
 
         public void UpdateLastPingTime(uint clientTime)
@@ -176,7 +171,7 @@ namespace Weedwacker.GameServer
 #if DEBUG
                 bool allDebug = GameServer.Configuration.Server.LogPackets == Shared.Enums.ServerDebugMode.ALL;
 #endif
-                while (br.BaseStream.Position< br.BaseStream.Length)
+                while (br.BaseStream.Position < br.BaseStream.Length)
                 {
                     // Length
                     if (br.BaseStream.Length - br.BaseStream.Position < 12)
@@ -233,7 +228,7 @@ namespace Weedwacker.GameServer
                         goto NotLog;
                     Log:
                     LogPacket("RECV", opcode, payload);
-                    NotLog:
+                NotLog:
 #endif
                     bool handled = await HandlePacketAsync(opcode, header, payload);
 
@@ -245,11 +240,11 @@ namespace Weedwacker.GameServer
                     }
 #endif
                 }
-  
+
             }
             catch (Exception e)
             {
-                Logger.WriteErrorLine(e.Message,e);
+                Logger.WriteErrorLine(e.Message, e);
             }
             finally
             {
@@ -361,9 +356,9 @@ namespace Weedwacker.GameServer
 #endif
             byte[] packetBytes = await packet.BuildPacketAsync();
 
-                Crypto.Xor(packetBytes, UseSecretKey ? SecretKey : Crypto.DISPATCH_KEY);
-            
-            await Conversation.SendAsync(packetBytes, CancelToken.Token);  
+            Crypto.Xor(packetBytes, UseSecretKey ? SecretKey : Crypto.DISPATCH_KEY);
+
+            await Conversation.SendAsync(packetBytes, CancelToken.Token);
         }
 
         public async Task SetSecretKey(ulong seed)

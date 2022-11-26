@@ -75,7 +75,7 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp
         {
             if (actions == null) return;
             await Task.Yield();
-            LocalIdGenerator idGenerator = new(ConfigAbilitySubContainerType.MODIFIER_ACTION) { ConfigIndex = configIndex, ModifierIndex =  modifierIndex};
+            LocalIdGenerator idGenerator = new(ConfigAbilitySubContainerType.MODIFIER_ACTION) { ConfigIndex = configIndex, ModifierIndex = modifierIndex };
             idGenerator.InitializeActionLocalIds(actions, localIdToInvocationMap);
         }
     }

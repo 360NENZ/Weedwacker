@@ -16,7 +16,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
         {
             Owner = owner;
             Inventory = inventory;
-            foreach(MaterialItem item in Items.Values)
+            foreach (MaterialItem item in Items.Values)
             {
                 item.Guid = Owner.GetNextGameGuid();
                 Inventory.GuidMap.Add(item.Guid, item);

@@ -85,7 +85,7 @@ namespace Weedwacker.WebServer.Handlers
                             {
                                 ann.type = type.id;
                                 break;
-                            }                         
+                            }
                         }
                         if (ann.type == -1)
                         {

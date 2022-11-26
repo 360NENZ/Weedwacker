@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Weedwacker.Shared.Authentication;
 using Weedwacker.Shared.Utils;
 using Weedwacker.WebServer.Authentication;
-using Weedwacker.Shared.Authentication;
 using Weedwacker.WebServer.Authentication.Objects;
 
 namespace Weedwacker.WebServer.Handlers;
@@ -25,7 +25,7 @@ internal class ClientLogin : IHandler
                 .Authenticate(IAuthenticationSystem.FromPasswordRequest(context, bodyData));
         // Send response.
         await context.Response.WriteAsJsonAsync(responseData);
-        
+
         // Log to console.
         Logger.WriteLine(string.Format("Client {0} is trying to log in.", context.Connection.RemoteIpAddress.ToString()));
         return true;

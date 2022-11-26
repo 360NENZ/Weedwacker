@@ -1,7 +1,6 @@
 ﻿using Google.Protobuf;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.Shared.Network.Proto;
-using Weedwacker.Shared.Utils;
 
 
 namespace Weedwacker.GameServer.Packet
@@ -45,7 +44,7 @@ namespace Weedwacker.GameServer.Packet
                 ClientSequenceId = clientSequence,
                 SentMs = (ulong)DateTimeOffset.Now.ToUnixTimeMilliseconds()
             };
-            
+
             Header = header.ToByteArray();
             return this;
         }

@@ -1,8 +1,6 @@
-﻿using KcpSharp;
-using Microsoft.VisualBasic;
-using System.Buffers;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
+using KcpSharp;
 using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer
@@ -33,7 +31,7 @@ namespace Weedwacker.GameServer
         public static void StartListener()
         {
             ListenAddress = new(IPAddress.Parse(GameServer.Configuration.Server.AccessAddress), PORT);
-            UDPClient = new(ListenAddress);        
+            UDPClient = new(ListenAddress);
             if (UDPListener == null) return;
             KCPTransport = KcpSocketTransport.CreateMultiplexConnection(UDPClient, 1400);
             KCPTransport.Start();
@@ -42,7 +40,7 @@ namespace Weedwacker.GameServer
         static void RegisterConnection(Connection con)
         {
             if (!con.ConversationID.HasValue) return;
-            Connections[con.ConversationID.Value] = con;            
+            Connections[con.ConversationID.Value] = con;
         }
         public static void UnregisterConnection(Connection con)
         {

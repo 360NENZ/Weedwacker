@@ -1,6 +1,5 @@
 ﻿using MongoDB.Driver;
 using Weedwacker.Shared.Utils;
-using Weedwacker.Shared.Utils.Configuration;
 
 namespace Weedwacker.WebServer.Database
 {
@@ -17,7 +16,7 @@ namespace Weedwacker.WebServer.Database
             Database = DbClient.GetDatabase(WebServer.Configuration.Database.Database);
             Accounts = Database.GetCollection<Account>("accounts");
 
-            if(Database.GetCollection<DatabaseProperties>("dbProperties").Find(w => true).FirstOrDefault() == null)
+            if (Database.GetCollection<DatabaseProperties>("dbProperties").Find(w => true).FirstOrDefault() == null)
             {
                 Properties = new();
                 Database.GetCollection<DatabaseProperties>("dbProperties").InsertOne(Properties);
@@ -29,31 +28,32 @@ namespace Weedwacker.WebServer.Database
             Logger.WriteLine("Connected to WebServer database");
         }
 
-        public static Account? CreateAccountWithUid(string username, string uid)
+        public static Account? CreateAccountWithUid(string username, string uid = "0")
         {
             //Make sure there are no name or id collisions
             var queryResult = Accounts.Find(w => w.Username == username || w.Id == uid);
-            if(queryResult.ToList().Count > 0)
+            if (queryResult.ToList().Count > 0)
             {
                 return null;
             }
 
             // Account
-            
-            if(uid == Properties.NextUid || uid == "0")
+            var newUid = uid;
+            if (uid == Properties.NextUid || uid == "0")
             {
                 //Increment the counter
                 var filter = Builders<DatabaseProperties>.Filter.Eq(x => x.NextUid, Properties.NextUid); // All the documents with (NextUid = Properties.NextUid)
-                var newUid = (int.Parse(Properties.NextUid) + 1).ToString();
+                newUid = (int.Parse(Properties.NextUid) + 1).ToString();
                 var update = Builders<DatabaseProperties>.Update.Set(x => x.NextUid, newUid); // Increment counter by 1
-                
+
                 Database.GetCollection<DatabaseProperties>("dbProperties").UpdateOne(filter, update);
+                Properties.NextUid = (int.Parse(Properties.NextUid) + 1).ToString();
             }
-            Account account = new(username, uid);
+            Account account = new(username, newUid);
             Accounts.InsertOne(account);
             return account;
         }
-        
+
         public static async Task SaveAccount(Account account)
         {
             // Replaces the account document.
@@ -68,13 +68,13 @@ namespace Weedwacker.WebServer.Database
         public static async Task<Account?> GetAccountByIdAsync(string uid)
         {
             var matches = await Accounts.FindAsync(w => w.Id == uid);
-                return matches.FirstOrDefault();
+            return matches.FirstOrDefault();
         }
 
         public static async Task<Account?> GetAccountByNameAsync(string name)
         {
             var matches = await Accounts.FindAsync(w => w.Username == name);
-                return matches.FirstOrDefault();
+            return matches.FirstOrDefault();
         }
         public static async Task<Account> GetAccountBySessionKeyAsync(string sessionKey)
         {

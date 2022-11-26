@@ -22,12 +22,12 @@ namespace Weedwacker.WebServer.Handlers
                 public string name { get; set; } = "原神海外";
                 public bool disable_regist { get; set; } = false;
                 public bool enable_email_captcha { get; set; } = false;
-                public string[] thirdparty { get; set; } = {"fb", "tw"};
+                public string[] thirdparty { get; set; } = { "fb", "tw" };
                 public bool disable_mmt { get; set; } = false;
                 public bool server_guest { get; set; } = false;
                 public ThirdPartyIgnore thirdparty_ignore { get; set; } = new();
                 public bool enable_ps_bind_account { get; set; } = false;
-                public ThirdPartyLoginConfigs thirdparty_login_configs { get; set; } = new(); 
+                public ThirdPartyLoginConfigs thirdparty_login_configs { get; set; } = new();
                 public class ThirdPartyIgnore
                 {
                     public string tw { get; set; } = "";

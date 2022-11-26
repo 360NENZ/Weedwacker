@@ -1,8 +1,8 @@
-﻿using Weedwacker.WebServer.Authentication.Objects;
-using Weedwacker.WebServer.Database;
-using Weedwacker.Shared.Utils;
+﻿using Microsoft.AspNetCore.Http;
 using Weedwacker.Shared.Authentication;
-using Microsoft.AspNetCore.Http;
+using Weedwacker.Shared.Utils;
+using Weedwacker.WebServer.Authentication.Objects;
+using Weedwacker.WebServer.Database;
 
 namespace Weedwacker.WebServer.Authentication
 {
@@ -37,7 +37,7 @@ namespace Weedwacker.WebServer.Authentication
                     if (account == null)
                     {
                         responseMessage = "Username not found, create failed.";
-                        Logger.WriteLine(string.Format("Client {0} failed to log in: Account create failed.", address));
+                        Logger.WriteLine($"Client {address} failed to log in: Account create failed.");
                     }
                     else
                     {
@@ -45,18 +45,18 @@ namespace Weedwacker.WebServer.Authentication
                         successfulLogin = true;
 
                         // Log the creation.
-                        Logger.WriteLine(string.Format("Client {0} succeessfully logged in: Account {1} created.", address, response.data.account.uid));
+                        Logger.WriteLine($"Client {address} succeessfully logged in: Account {response.data.account.uid} created.");
                     }
                 }
                 else if (account != null)
                     successfulLogin = true;
                 else
-                    loggerMessage = string.Format("Client {0} failed to log in: Account not found.", address);
+                    loggerMessage = $"Client {address} failed to log in: Account not found.";
             }
             else
             {
                 responseMessage = "Max account limit reached, create failed";
-                loggerMessage = string.Format("Client {0} failed to log in: Max account limit reached", address);
+                loggerMessage = $"Client {address} failed to log in: Max account limit reached";
             }
 
             // Set response data.
@@ -67,7 +67,7 @@ namespace Weedwacker.WebServer.Authentication
                 response.data.account.token = await account.GenerateSessionKey();
                 response.data.account.email = account.Email;
 
-                loggerMessage = string.Format("Client {0} logged in as {0}.", address, account.Id);
+                loggerMessage = $"Client {address} logged in as {account.Id}.";
             }
             else
             {
@@ -97,7 +97,7 @@ namespace Weedwacker.WebServer.Authentication
             string loggerMessage;
 
             // Log the attempt.
-            Logger.WriteLine(string.Format("Verifying session key from {0}", address));
+            Logger.WriteLine($"Verifying session key from {address}");
 
             // Get account from database.
             Account? account = await DatabaseManager.GetAccountByIdAsync(requestData.uid);
@@ -114,7 +114,7 @@ namespace Weedwacker.WebServer.Authentication
                 response.data.account.email = account.Email;
 
                 // Log the login.
-                loggerMessage = string.Format("Successfully Verified session key for uid: {0}", requestData.uid);
+                loggerMessage = $"Successfully Verified session key for uid: {requestData.uid}";
             }
             else
             {
@@ -123,7 +123,7 @@ namespace Weedwacker.WebServer.Authentication
                 response.data = null;
 
                 // Log the failure.
-                loggerMessage = string.Format("failed verify token from: {0}.", address);
+                loggerMessage = $"failed verify token from: {address}.";
             }
 
 
@@ -149,7 +149,7 @@ namespace Weedwacker.WebServer.Authentication
             string loggerMessage;
 
             // Log the attempt.
-            Logger.WriteLine(string.Format("Verifying session key from {0}", address));
+            Logger.WriteLine($"Verifying session key from {address}");
 
 
 
@@ -168,7 +168,7 @@ namespace Weedwacker.WebServer.Authentication
                 response.data.account.email = account.Email;
 
                 // Log the login.
-                loggerMessage = string.Format("Successfully Verified session key for uid: {0}", requestData.uid);
+                loggerMessage = $"Successfully Verified session key for uid: {requestData.uid}";
             }
             else
             {
@@ -177,7 +177,7 @@ namespace Weedwacker.WebServer.Authentication
                 response.data = null;
 
                 // Log the failure.
-                loggerMessage = string.Format("failed verify token from: {0}.", address);
+                loggerMessage = $"failed verify token from: {address}.";
             }
 
 
@@ -220,7 +220,7 @@ namespace Weedwacker.WebServer.Authentication
                     response.data.combo_token = await account.GenerateLoginToken();
 
                     // Log the login.
-                    loggerMessage = string.Format("Client {0} succeed to exchange combo token.", address);
+                    loggerMessage = $"Client {address} succeed to exchange combo token.";
 
                 }
                 else
@@ -229,7 +229,7 @@ namespace Weedwacker.WebServer.Authentication
                     response.message = "Wrong session key.";
 
                     // Log the failure.
-                    loggerMessage = string.Format("Client {0} failed to exchange combo token.", address);
+                    loggerMessage = $"Client {address} failed to exchange combo token.";
                 }
             }
             else
@@ -237,7 +237,7 @@ namespace Weedwacker.WebServer.Authentication
                 response.retcode = -201;
                 response.message = "Max account limit reached, create failed";
 
-                loggerMessage = string.Format("Client {0} failed to log in: Max account limit reached", address);
+                loggerMessage = $"Client {address} failed to log in: Max account limit reached";
             }
 
             Logger.WriteLine(loggerMessage);

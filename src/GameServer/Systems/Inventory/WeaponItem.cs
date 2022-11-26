@@ -7,89 +7,89 @@ namespace Weedwacker.GameServer.Systems.Inventory
 {
     internal class WeaponItem : EquipItem
     {
-		[BsonElement] public List<int>? Affixes { get; protected set; } = new();
+        [BsonElement] public List<int>? Affixes { get; protected set; } = new();
         [BsonElement] public int Refinement { get; protected set; } = 0;
-		[BsonIgnore] public uint WeaponEntityId;
-		[BsonIgnore] public new WeaponData ItemData => (WeaponData)GameData.ItemDataMap[ItemId];
+        [BsonIgnore] public uint WeaponEntityId;
+        [BsonIgnore] public new WeaponData ItemData => (WeaponData)GameData.ItemDataMap[ItemId];
 
-		public WeaponItem(ulong guid, int itemId, int uniqueId) : base(guid, itemId)
-		{
-			Id = uniqueId;
-			Level = 1;
-
-			if (ItemData.skillAffix != null)
-			{
-				foreach (int skillAffix in ItemData.skillAffix)
-				{
-					if (skillAffix > 0)
-					{
-						Affixes.Add(skillAffix);
-					}
-				}
-			}
-		}
-
-		public async Task OnLoadAsync(ulong guid)
+        public WeaponItem(ulong guid, int itemId, int uniqueId) : base(guid, itemId)
         {
-			Guid = guid;
-			Count = 1;
+            Id = uniqueId;
+            Level = 1;
+
+            if (ItemData.skillAffix != null)
+            {
+                foreach (int skillAffix in ItemData.skillAffix)
+                {
+                    if (skillAffix > 0)
+                    {
+                        Affixes.Add(skillAffix);
+                    }
+                }
+            }
         }
 
-		public Shared.Network.Proto.Weapon ToWeaponProto()
-		{
-			Shared.Network.Proto.Weapon weapon = new()
-			{
-				Level = (uint)Level,
-				Exp = (uint)Exp,
-				PromoteLevel = (uint)PromoteLevel
-			};
-
-
-			if (Affixes != null && Affixes.Count > 0)
-			{
-				foreach (int affix in Affixes)
-				{
-					weapon.AffixMap.Add((uint)affix, (uint)Refinement);
-				}
-			}
-
-			return weapon;
-		}
-
-		public SceneWeaponInfo CreateSceneWeaponInfo()
-		{
-			SceneWeaponInfo weaponInfo = new SceneWeaponInfo()
-			{
-				EntityId = WeaponEntityId,
-				ItemId = (uint)ItemId,
-				Guid = Guid,
-				Level = (uint)Level,
-				GadgetId = (uint)ItemData.gadgetId,
-				AbilityInfo = new AbilitySyncStateInfo() { IsInited = Affixes.Count > 0 }
-			};
-
-			if (Affixes.Count > 0)
-			{
-				foreach (int affix in Affixes)
-				{
-					weaponInfo.AffixMap.Add((uint)affix, (uint)Refinement);
-				}
-			}
-
-			return weaponInfo;
-		}
-
-		public override Item ToProto()
+        public async Task OnLoadAsync(ulong guid)
         {
-			Item proto = new()
-			{
-				Guid = Guid,
-				ItemId = (uint)ItemData.id
-			};
+            Guid = guid;
+            Count = 1;
+        }
 
-			Shared.Network.Proto.Weapon weapon = ToWeaponProto();
-			proto.Equip = new Equip() { Weapon = weapon, IsLocked = Locked };
-			return proto;
-		}
+        public Shared.Network.Proto.Weapon ToWeaponProto()
+        {
+            Shared.Network.Proto.Weapon weapon = new()
+            {
+                Level = (uint)Level,
+                Exp = (uint)Exp,
+                PromoteLevel = (uint)PromoteLevel
+            };
+
+
+            if (Affixes != null && Affixes.Count > 0)
+            {
+                foreach (int affix in Affixes)
+                {
+                    weapon.AffixMap.Add((uint)affix, (uint)Refinement);
+                }
+            }
+
+            return weapon;
+        }
+
+        public SceneWeaponInfo CreateSceneWeaponInfo()
+        {
+            SceneWeaponInfo weaponInfo = new SceneWeaponInfo()
+            {
+                EntityId = WeaponEntityId,
+                ItemId = (uint)ItemId,
+                Guid = Guid,
+                Level = (uint)Level,
+                GadgetId = (uint)ItemData.gadgetId,
+                AbilityInfo = new AbilitySyncStateInfo() { IsInited = Affixes.Count > 0 }
+            };
+
+            if (Affixes.Count > 0)
+            {
+                foreach (int affix in Affixes)
+                {
+                    weaponInfo.AffixMap.Add((uint)affix, (uint)Refinement);
+                }
+            }
+
+            return weaponInfo;
+        }
+
+        public override Item ToProto()
+        {
+            Item proto = new()
+            {
+                Guid = Guid,
+                ItemId = (uint)ItemData.id
+            };
+
+            Shared.Network.Proto.Weapon weapon = ToWeaponProto();
+            proto.Equip = new Equip() { Weapon = weapon, IsLocked = Locked };
+            return proto;
+        }
     }
 }

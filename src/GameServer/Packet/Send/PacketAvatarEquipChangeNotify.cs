@@ -8,40 +8,40 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketAvatarEquipChangeNotify : BasePacket
     {
-		public PacketAvatarEquipChangeNotify(Avatar avatar, EquipItem item, EquipType slot) : base(OpCode.AvatarEquipChangeNotify)
-		{
+        public PacketAvatarEquipChangeNotify(Avatar avatar, EquipItem item, EquipType slot) : base(OpCode.AvatarEquipChangeNotify)
+        {
 
-			AvatarEquipChangeNotify proto = new()
-			{
-				AvatarGuid = avatar.Guid,
-				EquipType = (uint)slot,
-				EquipGuid = item.Guid,
-				ItemId = (uint)item.ItemId
-			};
+            AvatarEquipChangeNotify proto = new()
+            {
+                AvatarGuid = avatar.Guid,
+                EquipType = (uint)slot,
+                EquipGuid = item.Guid,
+                ItemId = (uint)item.ItemId
+            };
 
-			if (item.ItemData.itemType == ItemType.ITEM_WEAPON)
-			{
-				var asWeapon = (WeaponItem)item;
-				proto.Weapon = asWeapon.CreateSceneWeaponInfo();
-			}
-			else
-			{
-				var asRelic = (ReliquaryItem)item;
-				proto.Reliquary = asRelic.CreateSceneReliquaryInfo();
-			}
+            if (item.ItemData.itemType == ItemType.ITEM_WEAPON)
+            {
+                var asWeapon = (WeaponItem)item;
+                proto.Weapon = asWeapon.CreateSceneWeaponInfo();
+            }
+            else
+            {
+                var asRelic = (ReliquaryItem)item;
+                proto.Reliquary = asRelic.CreateSceneReliquaryInfo();
+            }
 
-			Data = proto.ToByteArray();
-		}
+            Data = proto.ToByteArray();
+        }
 
-		public PacketAvatarEquipChangeNotify(Avatar avatar, EquipType slot) : base(OpCode.AvatarEquipChangeNotify)
-		{
-			AvatarEquipChangeNotify proto = new()
-			{
-				AvatarGuid = avatar.Guid,
-				EquipType = (uint)slot
-			};
+        public PacketAvatarEquipChangeNotify(Avatar avatar, EquipType slot) : base(OpCode.AvatarEquipChangeNotify)
+        {
+            AvatarEquipChangeNotify proto = new()
+            {
+                AvatarGuid = avatar.Guid,
+                EquipType = (uint)slot
+            };
 
-			Data = proto.ToByteArray();
-		}
-	}
+            Data = proto.ToByteArray();
+        }
+    }
 }

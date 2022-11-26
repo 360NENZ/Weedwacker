@@ -17,7 +17,7 @@ namespace Weedwacker.GameServer.Enums
         }
         public QuestCondAttribute(string name)
         {
-            QuestCondNum = (int)Enum.Parse(typeof(QuestCond),name);
+            QuestCondNum = (int)Enum.Parse(typeof(QuestCond), name);
             QuestCondName = name;
         }
     }
@@ -215,7 +215,7 @@ namespace Weedwacker.GameServer.Enums
     }
 
     internal enum QuestExec
-    { 
+    {
         QUEST_EXEC_NONE = 0,
         QUEST_EXEC_DEL_PACK_ITEM = 1,
         QUEST_EXEC_UNLOCK_POINT = 2,

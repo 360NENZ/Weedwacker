@@ -4,14 +4,14 @@ namespace Weedwacker.Shared.Utils
 {
     public static class Logger
     {
-        public static void WriteLine(string message, [CallerMemberName] string memberName = "",[CallerFilePath] string fileName = "",
+        public static void WriteLine(string message, [CallerMemberName] string memberName = "", [CallerFilePath] string fileName = "",
             [CallerLineNumber] int lineNumber = 0)
         {
             Console.WriteLine(ParseMessage(message, memberName, fileName, lineNumber));
         }
         private static string ParseMessage(string message, string memberName = "", string fileName = "",
             int lineNumber = 0)
-        {           
+        {
             return $"[{DateTime.UtcNow:yy-MM-dd HH:mm:ss}]<{fileName.Split("\\").Last()}:{memberName}> {message}";
         }
         public static void DebugWriteLine(string message)

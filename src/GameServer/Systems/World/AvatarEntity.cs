@@ -20,7 +20,7 @@ namespace Weedwacker.GameServer.Systems.World
         private bool monitorLandingEvent = false;
 
         public AvatarEntity(TeamInfo team, Scene scene, Avatar.Avatar avatar) : base(scene)
-        {           
+        {
             TeamInfo = team;
             Avatar = avatar;
             LiveState = LifeState.LIFE_ALIVE;
@@ -169,7 +169,7 @@ namespace Weedwacker.GameServer.Systems.World
                 ServerBuffList =,
                 */
             };
-            foreach(var talent in Avatar.GetCurSkillDepot().Talents) avatarInfo.TalentIdList.Add((uint)talent);
+            foreach (var talent in Avatar.GetCurSkillDepot().Talents) avatarInfo.TalentIdList.Add((uint)talent);
             foreach (var skill in Avatar.GetCurSkillDepot().Skills) avatarInfo.SkillLevelMap.Add((uint)skill.Key, (uint)skill.Value);
             foreach (var proudSkill in Avatar.GetCurSkillDepot().InherentProudSkillOpens) avatarInfo.InherentProudSkillList.Add((uint)proudSkill.proudSkillId);
             foreach (var extra in Avatar.GetCurSkillDepot().ProudSkillExtraLevelMap) avatarInfo.ProudSkillExtraLevelMap.Add((uint)extra.Key, (uint)extra.Value);
@@ -211,7 +211,7 @@ namespace Weedwacker.GameServer.Systems.World
                 EntityAuthorityInfo = authority,
                 LastMoveSceneTimeMs = LastMoveSceneTimeMs,
                 LastMoveReliableSeq = LastMoveReliableSeq,
-                LifeState = (uint)LiveState,            
+                LifeState = (uint)LiveState,
             };
             entityInfo.AnimatorParaList.Add(new AnimatorParameterValueInfoPair());
 

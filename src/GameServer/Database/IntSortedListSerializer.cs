@@ -9,7 +9,7 @@ namespace Weedwacker.GameServer.Database
         {
         }
 
-        protected override SortedList<int, V> CreateInstance() 
+        protected override SortedList<int, V> CreateInstance()
         {
             return new SortedList<int, V>();
         }

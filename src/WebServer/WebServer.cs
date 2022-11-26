@@ -1,13 +1,13 @@
-﻿using Weedwacker.WebServer.Handlers;
-using Weedwacker.WebServer.Authentication;
-using Weedwacker.Shared.Utils;
-using Weedwacker.Shared.Utils.Configuration;
-using Weedwacker.WebServer.Database;
+﻿using System.Net;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Http;
-using System.Net;
+using Weedwacker.Shared.Utils;
+using Weedwacker.Shared.Utils.Configuration;
+using Weedwacker.WebServer.Authentication;
+using Weedwacker.WebServer.Database;
+using Weedwacker.WebServer.Handlers;
 
 namespace Weedwacker.WebServer
 {

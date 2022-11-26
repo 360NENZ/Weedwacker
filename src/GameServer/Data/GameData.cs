@@ -4,23 +4,23 @@ using Newtonsoft.Json;
 using NLua;
 using Weedwacker.GameServer.Data.BinOut.Ability.Temp;
 using Weedwacker.GameServer.Data.BinOut.Ability.Temp.AbilityMixins;
-using Weedwacker.GameServer.Data.BinOut.Ability.Temp.Predicates;
 using Weedwacker.GameServer.Data.BinOut.Ability.Temp.Actions;
+using Weedwacker.GameServer.Data.BinOut.Ability.Temp.AttackPatterns;
+using Weedwacker.GameServer.Data.BinOut.Ability.Temp.BornTypes;
+using Weedwacker.GameServer.Data.BinOut.Ability.Temp.DirectionTypes;
+using Weedwacker.GameServer.Data.BinOut.Ability.Temp.EventOps;
+using Weedwacker.GameServer.Data.BinOut.Ability.Temp.Predicates;
+using Weedwacker.GameServer.Data.BinOut.Ability.Temp.SelectTargetType;
 using Weedwacker.GameServer.Data.BinOut.AbilityGroup;
 using Weedwacker.GameServer.Data.BinOut.Avatar;
 using Weedwacker.GameServer.Data.BinOut.Scene.Point;
 using Weedwacker.GameServer.Data.BinOut.Scene.SceneNpcBorn;
 using Weedwacker.GameServer.Data.BinOut.Talent;
+using Weedwacker.GameServer.Data.Common;
 using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.GameServer.Systems.Script.Scene;
 using Weedwacker.Shared.Utils;
 using static Weedwacker.GameServer.Data.SerializationSettings;
-using Weedwacker.GameServer.Data.BinOut.Ability.Temp.BornTypes;
-using Weedwacker.GameServer.Data.BinOut.Ability.Temp.DirectionTypes;
-using Weedwacker.GameServer.Data.BinOut.Ability.Temp.SelectTargetType;
-using Weedwacker.GameServer.Data.BinOut.Ability.Temp.AttackPatterns;
-using Weedwacker.GameServer.Data.BinOut.Ability.Temp.EventOps;
-using Weedwacker.GameServer.Data.Common;
 
 namespace Weedwacker.GameServer.Data
 {
@@ -89,7 +89,7 @@ namespace Weedwacker.GameServer.Data
         static readonly JsonSerializer Serializer = new()
         {
             // To handle $type
-            TypeNameHandling = TypeNameHandling.Objects,           
+            TypeNameHandling = TypeNameHandling.Objects,
             SerializationBinder = new KnownTypesBinder
             {
                 KnownTypes = new Type[] {
@@ -232,7 +232,7 @@ namespace Weedwacker.GameServer.Data
                     var fileData = Serializer.Deserialize<Obj>(jr);
                     // Use the name (without ".json") of the file as the key
                     map.Add(Regex.Replace(filePath.Name, "\\.json", ""), fileData);
-                    
+
                     /*
                     try
                     {
@@ -356,7 +356,7 @@ namespace Weedwacker.GameServer.Data
             });
             Logger.WriteLine("Initializing ConfigAbility local ids...");
             var tasks = new List<Task>();
-            foreach(var container in ConfigAbilityAvatarMap.Values)
+            foreach (var container in ConfigAbilityAvatarMap.Values)
             {
                 foreach (var config in container)
                 {

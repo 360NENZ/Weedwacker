@@ -18,10 +18,10 @@ namespace Weedwacker.GameServer.Systems.Player
 
         public async Task OnPlayerCreate()
         {
-            foreach(int openState in DEFAULT_OPEN_STATES)
+            foreach (int openState in DEFAULT_OPEN_STATES)
             {
                 await SetOpenStateAsync(openState, 1);
-            }            
+            }
         }
 
         public async Task OnLoginAsync()
@@ -83,7 +83,7 @@ namespace Weedwacker.GameServer.Systems.Player
                         {
                             // ToDo: Implement.
                             return false;
-                }
+                        }
                     case OpenStateCondType.OPEN_STATE_COND_PARENT_QUEST:
                         {
                             // ToDo: Implement.

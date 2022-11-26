@@ -8,7 +8,7 @@ using Weedwacker.Shared.Network.Proto;
 namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketPlayerEnterSceneNotify : BasePacket
-    { 
+    {
         public PacketPlayerEnterSceneNotify(Player target, EnterType type, EnterReason reason, Scene newScene, Vector3 newPos, int prevSceneId = default, Vector3 prevPos = default) : base(OpCode.PlayerEnterSceneNotify)
         {
             target.SceneLoadState = SceneLoadState.LOADING;
@@ -31,7 +31,7 @@ namespace Weedwacker.GameServer.Packet.Send
 
             if (newScene.DungeonData != null) proto.DungeonId = (uint)newScene.DungeonData.id;
             if (reason == EnterReason.Login) proto.IsFirstLoginEnterScene = true;
-            if(prevSceneId != default)
+            if (prevSceneId != default)
             {
                 proto.PrevSceneId = (uint)prevSceneId;
                 proto.PrevPos = new() { X = prevPos.X, Y = prevPos.Y, Z = prevPos.Z };

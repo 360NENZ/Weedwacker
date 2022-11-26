@@ -11,15 +11,15 @@ namespace Weedwacker.GameServer.Data.Excel
         [JsonProperty] public readonly int level;
         [JsonProperty] public readonly CurveInfo[] curveInfos;
 
-		public Tuple<ArithType, float> GetArith(GrowCurveType type)
-		{
-			foreach (CurveInfo curveInfo in curveInfos)
-			{
-				if (curveInfo.type == type) return Tuple.Create(curveInfo.arith, curveInfo.value);
-			}
-			Logger.WriteErrorLine("Could not find value for " + type + " for avatar level:" + level);
-			return Tuple.Create(ArithType.ARITH_MULTI, (float)1.0);
-		}
+        public Tuple<ArithType, float> GetArith(GrowCurveType type)
+        {
+            foreach (CurveInfo curveInfo in curveInfos)
+            {
+                if (curveInfo.type == type) return Tuple.Create(curveInfo.arith, curveInfo.value);
+            }
+            Logger.WriteErrorLine("Could not find value for " + type + " for avatar level:" + level);
+            return Tuple.Create(ArithType.ARITH_MULTI, (float)1.0);
+        }
 
         public static float CalcValue(float value, Tuple<ArithType, float> curve)
         {

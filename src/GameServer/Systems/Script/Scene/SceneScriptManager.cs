@@ -1,5 +1,4 @@
-﻿using NLua;
-using Weedwacker.GameServer.Enums;
+﻿using Weedwacker.GameServer.Enums;
 
 namespace Weedwacker.GameServer.Systems.Script.Scene
 {
@@ -11,7 +10,7 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
         public ScriptMonsterSpawnService ScriptMonsterSpawnService;
 
         public static Task<SceneScriptManager> CreateAsync(int sceneId, string scriptPath)
-        {          
+        {
             var scene = new SceneScriptManager();
             return scene.InitializeAsync(sceneId, scriptPath);
         }
@@ -37,7 +36,7 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
                     return defaultVal;
                 }
             }
-            else if(defaultVal != default)
+            else if (defaultVal != default)
             {
                 GroupVariables.Add(group, new() { { key, defaultVal } });
                 return defaultVal;

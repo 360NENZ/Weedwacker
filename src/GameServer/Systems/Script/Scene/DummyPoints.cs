@@ -39,12 +39,12 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
                 dummy_points = LuaState.GetTableDict(LuaState.GetTable($"_SCENE{SceneId}_POINTS.{nameof(dummy_points)}")).ToDictionary(w => (string)w.Key, w => new Position(w.Value as LuaTable));
             }
 
-            return this;         
+            return this;
         }
         private DummyPoints(Lua luaState, int sceneId)
         {
             LuaState = luaState;
-            SceneId = sceneId;        
+            SceneId = sceneId;
         }
 
         public class Position

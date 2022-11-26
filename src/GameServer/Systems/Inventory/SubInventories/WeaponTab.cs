@@ -4,7 +4,6 @@ using MongoDB.Driver;
 using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
-using Weedwacker.GameServer.Systems.Player;
 using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.Inventory
@@ -72,7 +71,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
                     return newMaterial;
                 }
             }
-                
+
             if (Items.Count == InventoryLimit)
             {
                 return null;
@@ -108,7 +107,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
                 Items.Remove(weapon.Id);
                 return true;
             }
-            else if(UpgradeMaterials.TryGetValue((item as MaterialItem).ItemId, out MaterialItem material))
+            else if (UpgradeMaterials.TryGetValue((item as MaterialItem).ItemId, out MaterialItem material))
             {
                 if (material.Count - count >= 1)
                 {

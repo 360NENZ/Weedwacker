@@ -111,7 +111,7 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
             var tasks = new List<Task>();
             foreach (var entry in groups)
             {
-                tasks.Add(AddGroup(entry.Value.id, new FileInfo(Path.Combine(scenePath, $"scene{SceneId}_group{entry.Value.id}.lua"))));              
+                tasks.Add(AddGroup(entry.Value.id, new FileInfo(Path.Combine(scenePath, $"scene{SceneId}_group{entry.Value.id}.lua"))));
             }
             await Task.WhenAll(tasks);
             return this;

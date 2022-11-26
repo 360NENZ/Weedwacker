@@ -1,7 +1,6 @@
 ﻿using Vim.Math3d;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet.Send;
-using Weedwacker.GameServer.Systems.World;
 using Weedwacker.Shared.Network.Proto;
 using Weedwacker.Shared.Utils;
 
@@ -203,7 +202,7 @@ namespace Weedwacker.GameServer.Systems.Player
             }
             CurrentState = motionState;
             Vector? posVector = motionInfo.Pos;
-            if(posVector != null)
+            if (posVector != null)
                 CurrentPos = new(posVector.X, posVector.Y, posVector.Z);
             await HandleImmediateStamina(motionState);
         }

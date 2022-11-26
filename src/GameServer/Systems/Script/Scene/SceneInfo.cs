@@ -15,7 +15,7 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
         public SortedList<int, Rectangle>? block_rects = new(); // <index, rectangle>
         public DummyPoints? dummy_points; // load dummy points from Scene<sceneId>_dummy_points.lua
         public LuaTable routes_config;// => LuaState.GetTable("routes_config"); // load routes from ???
-        
+
         public static Task<SceneInfo> CreateAsync(Lua lua, int sceneId, string scriptPath)
         {
             var scene = new SceneInfo();
@@ -52,9 +52,9 @@ namespace Weedwacker.GameServer.Systems.Script.Scene
             FileInfo sceneInfo = new(Path.Combine(scriptPath, "Scene", $"{sceneId}", $"scene{sceneId}.lua"));
             string sceneScript = sceneInfo.FullName;
             sceneScript = Regex.Replace(sceneScript, @"(?<!\\)[\\](?!\\)", @"\\"); // replace \\ with \\\\
-            lua.DoString("loadScene = loadfile (\"" + sceneScript + "\""+ $", \"bt\" , _SCENE{sceneId})");
+            lua.DoString("loadScene = loadfile (\"" + sceneScript + "\"" + $", \"bt\" , _SCENE{sceneId})");
             lua.DoString("loadScene()");
-            if(lua[$"_SCENE{sceneId}.{nameof(scene_config)}"] != null)
+            if (lua[$"_SCENE{sceneId}.{nameof(scene_config)}"] != null)
                 scene_config = new(lua.GetTable($"_SCENE{sceneId}.{nameof(scene_config)}"));
             if (lua[$"_SCENE{sceneId}.{nameof(blocks)}"] != null)
             {

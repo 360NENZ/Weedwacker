@@ -1,6 +1,4 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-using Newtonsoft.Json;
-using Weedwacker.Shared.Utils;
+﻿using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.WebServer.Database
 {
@@ -31,7 +29,7 @@ namespace Weedwacker.WebServer.Database
         {
             public int uid { get; private set; }
         }
-        
+
 
         public Account(string username, string id)
         {

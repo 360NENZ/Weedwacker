@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using Weedwacker.GameServer.Data.Common;
-using static Weedwacker.GameServer.Data.ResourceAttribute;
 
 namespace Weedwacker.GameServer.Data.Excel
 {

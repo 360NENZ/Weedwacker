@@ -81,7 +81,7 @@ namespace Weedwacker.GameServer.Systems.World
             {
                 EntityId = EntityId,
                 EntityType = ProtEntityType.Gadget,
-                MotionInfo = new() { Pos = new() { X = Position.X, Y = Position.Y, Z = Position.Z}, Rot = new() { X = Rotation.X, Y = Rotation.Y, Z = Rotation.Z}, Speed = new() },
+                MotionInfo = new() { Pos = new() { X = Position.X, Y = Position.Y, Z = Position.Z }, Rot = new() { X = Rotation.X, Y = Rotation.Y, Z = Rotation.Z }, Speed = new() },
                 EntityClientData = new(),
                 EntityAuthorityInfo = authority,
                 LifeState = 1,

@@ -6,16 +6,16 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketPlayerGameTimeNotify : BasePacket
     {
-		public PacketPlayerGameTimeNotify(Player player) : base(Enums.OpCode.PlayerGameTimeNotify)
-		{
-			PlayerGameTimeNotify proto = new PlayerGameTimeNotify()
-			{
-				GameTime = player.Scene.Time,
-				Uid = (uint)player.GameUid,
-				//IsHome = TODO
-			};
+        public PacketPlayerGameTimeNotify(Player player) : base(Enums.OpCode.PlayerGameTimeNotify)
+        {
+            PlayerGameTimeNotify proto = new PlayerGameTimeNotify()
+            {
+                GameTime = player.Scene.Time,
+                Uid = (uint)player.GameUid,
+                //IsHome = TODO
+            };
 
-			Data = proto.ToByteArray();
-		}
-	}
+            Data = proto.ToByteArray();
+        }
+    }
 }

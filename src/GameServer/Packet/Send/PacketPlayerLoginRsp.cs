@@ -8,35 +8,35 @@ namespace Weedwacker.GameServer.Packet.Send
     {
         private static QueryCurrRegionHttpRsp RegionCache;
 
-        public PacketPlayerLoginRsp(Connection session) : base(Enums.OpCode.PlayerLoginRsp,1)
+        public PacketPlayerLoginRsp(Connection session) : base(Enums.OpCode.PlayerLoginRsp, 1)
         {
             RegionInfo info;
 
 
-                if (RegionCache == null)
+            if (RegionCache == null)
+            {
+                try
                 {
-                    try
+                    // todo: we might want to push custom config to client
+                    RegionInfo serverRegion = new RegionInfo()
                     {
-                        // todo: we might want to push custom config to client
-                        RegionInfo serverRegion = new RegionInfo()
-                        {
-                            GateserverIp = GameServer.Configuration.Server.AccessAddress,
-                            GateserverPort = (uint)GameServer.Configuration.Server.AccessPort,
-                            SecretKey = ByteString.CopyFrom(Crypto.DISPATCH_SEED),
-                            ResVersionConfig = new(),
-                        };
-                        RegionCache = new QueryCurrRegionHttpRsp()
-                        {
-                            RegionInfo = serverRegion
-                        };
-                    }
-                    catch (Exception e)
+                        GateserverIp = GameServer.Configuration.Server.AccessAddress,
+                        GateserverPort = (uint)GameServer.Configuration.Server.AccessPort,
+                        SecretKey = ByteString.CopyFrom(Crypto.DISPATCH_SEED),
+                        ResVersionConfig = new(),
+                    };
+                    RegionCache = new QueryCurrRegionHttpRsp()
                     {
-                        Logger.WriteErrorLine("Error while initializing region cache!", e);
-                    }
+                        RegionInfo = serverRegion
+                    };
                 }
+                catch (Exception e)
+                {
+                    Logger.WriteErrorLine("Error while initializing region cache!", e);
+                }
+            }
 
-                info = RegionCache.RegionInfo;
+            info = RegionCache.RegionInfo;
 
             PlayerLoginRsp p = new PlayerLoginRsp()
             {

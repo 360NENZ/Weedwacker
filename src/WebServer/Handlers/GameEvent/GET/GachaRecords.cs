@@ -8,7 +8,7 @@ namespace Weedwacker.WebServer.Handlers
     {
         public async Task<bool> HandleAsync(HttpContext context)
         {
-            string recordsTemplate = await File.ReadAllTextAsync(WebServer.Configuration.structure.data +"gacha/records.html");
+            string recordsTemplate = await File.ReadAllTextAsync(WebServer.Configuration.structure.data + "gacha/records.html");
             if (!(recordsTemplate.Length > 0))
             {
                 Logger.WriteLine("File does not exist: " + recordsTemplate);

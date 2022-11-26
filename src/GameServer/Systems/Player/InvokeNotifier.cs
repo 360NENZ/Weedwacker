@@ -2,7 +2,6 @@
 using Weedwacker.GameServer.Packet;
 using Weedwacker.GameServer.Packet.Send;
 using Weedwacker.Shared.Network.Proto;
-using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.Player
 {
@@ -80,7 +79,7 @@ namespace Weedwacker.GameServer.Systems.Player
             }
             if (ToHost.Any())
             {
-                var packet = Activator.CreateInstance(PacketType,ToHost);
+                var packet = Activator.CreateInstance(PacketType, ToHost);
                 await Owner.World.Host.SendPacketAsync((BasePacket)packet);
                 ToHost.Clear();
             }

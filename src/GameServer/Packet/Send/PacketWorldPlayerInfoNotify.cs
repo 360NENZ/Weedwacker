@@ -10,7 +10,7 @@ namespace Weedwacker.GameServer.Packet.Send
         {
 
             WorldPlayerInfoNotify proto = new();
-           
+
             proto.PlayerInfoList.AddRange(world.Players.Select(p => p.GetOnlinePlayerInfo()));
             proto.PlayerUidList.AddRange(world.Players.Select(p => (uint)p.GameUid));
 

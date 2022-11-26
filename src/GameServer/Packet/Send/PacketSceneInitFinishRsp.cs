@@ -6,11 +6,11 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketSceneInitFinishRsp : BasePacket
     {
-		public PacketSceneInitFinishRsp(Player player) : base(Enums.OpCode.SceneInitFinishRsp, 11)
-		{
-			SceneInitFinishRsp p = new SceneInitFinishRsp() { EnterSceneToken = player.EnterSceneToken };
+        public PacketSceneInitFinishRsp(Player player) : base(Enums.OpCode.SceneInitFinishRsp, 11)
+        {
+            SceneInitFinishRsp p = new SceneInitFinishRsp() { EnterSceneToken = player.EnterSceneToken };
 
-			Data = p.ToByteArray();
-		}
-	}
+            Data = p.ToByteArray();
+        }
+    }
 }

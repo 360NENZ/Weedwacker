@@ -10,7 +10,7 @@ namespace Weedwacker.GameServer.Packet.Recv
         public override async Task HandleAsync(Connection session, byte[] header, byte[] payload)
         {
             GetShopReq req = GetShopReq.Parser.ParseFrom(payload);
-		    await session.SendPacketAsync(new PacketGetShopRsp(session.Player, req.ShopType));
-	}
-}
+            await session.SendPacketAsync(new PacketGetShopRsp(session.Player, req.ShopType));
+        }
+    }
 }

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KcpSharp
+﻿namespace KcpSharp
 {
     /// <summary>
     /// The options to use when renting buffers from the pool.

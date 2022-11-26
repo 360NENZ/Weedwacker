@@ -1,9 +1,7 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using Weedwacker.GameServer.Data;
-using Weedwacker.GameServer.Data.Excel;
 using Weedwacker.GameServer.Database;
-using Weedwacker.GameServer.Systems.Player;
 using Weedwacker.Shared.Network.Proto;
 
 namespace Weedwacker.GameServer.Systems.Shop

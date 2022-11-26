@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KcpSharp
+﻿namespace KcpSharp
 {
     /// <summary>
     /// Options for customized keep-alive functionality.

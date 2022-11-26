@@ -9,7 +9,7 @@ namespace Weedwacker.GameServer.Database
         {
         }
 
-        protected override Dictionary<int, V> CreateInstance() 
+        protected override Dictionary<int, V> CreateInstance()
         {
             return new Dictionary<int, V>();
         }

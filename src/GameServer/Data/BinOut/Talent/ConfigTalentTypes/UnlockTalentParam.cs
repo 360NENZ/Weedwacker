@@ -10,7 +10,7 @@ namespace Weedwacker.GameServer.Data.BinOut.Talent
 
         public override void Apply(BaseAbilityManager abilityManager, double[] paramList)
         {
-            if(abilityManager.UnlockedTalentParams.ContainsKey(abilityName))
+            if (abilityManager.UnlockedTalentParams.ContainsKey(abilityName))
                 abilityManager.UnlockedTalentParams[abilityName].Add(talentParam);
             else
             {

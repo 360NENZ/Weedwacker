@@ -180,18 +180,18 @@ namespace Weedwacker.GameServer.Systems.World
         {
             Players.AsParallel().ForAll(async player =>
             {
-                    // Dont send packets if player is logging in and filter out joining player
+                // Dont send packets if player is logging in and filter out joining player
                 if (!player.HasSentLoginPackets || player == paramPlayer) return;
 
 
-                    // Update team of all players since max players has been changed - Probably not the best way to do it
+                // Update team of all players since max players has been changed - Probably not the best way to do it
                 if (IsMultiplayer)
                 {
                     player.TeamManager.MpTeam.CopyFrom(player.TeamManager.MpTeam, player.TeamManager.GetMaxTeamSize());
                     await player.TeamManager.UpdateTeamEntities();
                 }
 
-                    // Dont send packets if player is loading into the scene
+                // Dont send packets if player is loading into the scene
                 if (player.SceneLoadState < SceneLoadState.INIT)
                 {
                     await Task.WhenAll(new Task[]

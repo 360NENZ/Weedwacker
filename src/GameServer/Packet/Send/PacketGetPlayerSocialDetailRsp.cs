@@ -5,20 +5,20 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketGetPlayerSocialDetailRsp : BasePacket
     {
-		public PacketGetPlayerSocialDetailRsp(SocialDetail? detail) : base(Enums.OpCode.GetPlayerSocialDetailRsp)
-		{
-			GetPlayerSocialDetailRsp proto = new GetPlayerSocialDetailRsp();
+        public PacketGetPlayerSocialDetailRsp(SocialDetail? detail) : base(Enums.OpCode.GetPlayerSocialDetailRsp)
+        {
+            GetPlayerSocialDetailRsp proto = new GetPlayerSocialDetailRsp();
 
-			if (detail != null)
-			{
-				proto.DetailData = detail;
-			}
-			else
-			{
-				proto.Retcode = (int)Retcode.RetSvrError;
-			}
+            if (detail != null)
+            {
+                proto.DetailData = detail;
+            }
+            else
+            {
+                proto.Retcode = (int)Retcode.RetSvrError;
+            }
 
-			Data = proto.ToByteArray();
-		}
-	}
+            Data = proto.ToByteArray();
+        }
+    }
 }

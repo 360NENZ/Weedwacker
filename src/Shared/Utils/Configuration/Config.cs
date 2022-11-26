@@ -8,7 +8,7 @@ namespace Weedwacker.Shared.Utils.Configuration
         public static async Task<T> Load<T>(string jsonName)
         {
 
-            
+
             if (!File.Exists(jsonName))
             {
                 T config = (T)Activator.CreateInstance(typeof(T));
@@ -23,7 +23,7 @@ namespace Weedwacker.Shared.Utils.Configuration
                 return config;
             }
 
-            
+
         }
     }
 }

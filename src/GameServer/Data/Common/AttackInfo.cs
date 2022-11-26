@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using Weedwacker.GameServer.Enums;
-using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Data.Common
 {
@@ -12,7 +11,7 @@ namespace Weedwacker.GameServer.Data.Common
         [JsonProperty] public readonly AttackProperty attackProperty;
         [JsonProperty] public readonly HitPattern hitPattern;
         [JsonProperty] public readonly TargetType? canBeModifiedBy;
-        
+
         public class AttackProperty
         {
             [JsonProperty] public readonly object? bonusCriticalHurt;

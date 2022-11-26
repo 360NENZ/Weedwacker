@@ -7,7 +7,6 @@ using Weedwacker.GameServer.Systems.Ability;
 using Weedwacker.GameServer.Systems.Script;
 using Weedwacker.GameServer.Systems.Script.Scene;
 using Weedwacker.Shared.Network.Proto;
-using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.GameServer.Systems.World
 {
@@ -40,7 +39,7 @@ namespace Weedwacker.GameServer.Systems.World
         }
         private MonsterEntity(Scene scene, MonsterData monsterData, int level, SceneGroup.Monster? spawnInfo, uint blockId, uint groupId) : base(scene, blockId, groupId, spawnInfo.config_id)
         {
-            
+
             EntityId = scene.World.GetNextEntityId(EntityIdType.MONSTER);
             MonsterData = monsterData;
             FightProps = new();
@@ -51,7 +50,7 @@ namespace Weedwacker.GameServer.Systems.World
 
             // Monster weapon
             if (monsterData.equips[0] != 0) RightWeaponEntityId = scene.World.GetNextEntityId(EntityIdType.WEAPON);
-            if (monsterData.equips[1] != 0) LeftWeaponEntityId = scene.World.GetNextEntityId(EntityIdType.WEAPON);          
+            if (monsterData.equips[1] != 0) LeftWeaponEntityId = scene.World.GetNextEntityId(EntityIdType.WEAPON);
         }
 
         private MonsterEntity(Scene? scene, Player.Player targetPlayer, MonsterData monsterData, int level, Vector3 posOffset = default, Vector3 rotOffset = default) : base(scene)
@@ -60,7 +59,7 @@ namespace Weedwacker.GameServer.Systems.World
             MonsterData = monsterData;
             FightProps = new();
             Level = level;
-            Position = targetPlayer.Position + new Vector3(10,0,10) + posOffset;
+            Position = targetPlayer.Position + new Vector3(10, 0, 10) + posOffset;
             Rotation = targetPlayer.Rotation + rotOffset;
 
             // Monster weapon
@@ -118,7 +117,7 @@ namespace Weedwacker.GameServer.Systems.World
 
 
             Scene.DeadSpawnedEntities.Add(SpawnInfo);
-            
+
             //TODO challenge
 
             if (GroupId > 0)
@@ -145,10 +144,10 @@ namespace Weedwacker.GameServer.Systems.World
 
             FightProps[FightProperty.FIGHT_PROP_PHYSICAL_SUB_HURT] = MonsterData.physicalSubHurt;
             FightProps[FightProperty.FIGHT_PROP_FIRE_SUB_HURT] = MonsterData.fireSubHurt;
-            FightProps[FightProperty.FIGHT_PROP_ELEC_SUB_HURT] =  MonsterData.elecSubHurt;
+            FightProps[FightProperty.FIGHT_PROP_ELEC_SUB_HURT] = MonsterData.elecSubHurt;
             FightProps[FightProperty.FIGHT_PROP_WATER_SUB_HURT] = MonsterData.waterSubHurt;
             FightProps[FightProperty.FIGHT_PROP_GRASS_SUB_HURT] = MonsterData.grassSubHurt;
-            FightProps[FightProperty.FIGHT_PROP_WIND_SUB_HURT] =  MonsterData.windSubHurt;
+            FightProps[FightProperty.FIGHT_PROP_WIND_SUB_HURT] = MonsterData.windSubHurt;
             FightProps[FightProperty.FIGHT_PROP_ROCK_SUB_HURT] = MonsterData.rockSubHurt;
             FightProps[FightProperty.FIGHT_PROP_ICE_SUB_HURT] = MonsterData.iceSubHurt;
 

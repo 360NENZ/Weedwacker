@@ -1,7 +1,5 @@
 ﻿using NLua;
-using Weedwacker.GameServer.Data;
 using Weedwacker.GameServer.Enums;
-using Weedwacker.GameServer.Systems.Script.Scene;
 using Weedwacker.GameServer.Systems.World;
 using Weedwacker.Shared.Utils;
 
@@ -18,8 +16,9 @@ namespace Weedwacker.GameServer.Systems.Script
             Logger.DebugWriteLine($"[LUA] Call SetGadgetStateByConfigId with {configId},{gadgetState}");
             IEnumerable<ScriptEntity> entities = context.SceneScriptManager.Scene.ScriptEntities.Values.Where(w => w.GetType() == typeof(ScriptGadgetEntity)).Where(s => s.ConfigId == configId);
 
-            if (entities.Any()) {
-                foreach(var entity in entities)
+            if (entities.Any())
+            {
+                foreach (var entity in entities)
                     (entity as ScriptGadgetEntity).SetGadgetState(gadgetState);
                 return 0;
             }
@@ -76,7 +75,8 @@ namespace Weedwacker.GameServer.Systems.Script
             IEnumerable<ScriptEntity> gadget = context.SceneScriptManager.Scene.ScriptEntities.Values
                     .Where(w => w.ConfigId == configId && w.GroupId == groupId);
 
-            if (!(gadget is GadgetWorktop worktop)) {
+            if (!(gadget is GadgetWorktop worktop))
+            {
                 return 1;
             }
 
@@ -330,7 +330,7 @@ namespace Weedwacker.GameServer.Systems.Script
             }
             else
                 return 1;
-            
+
         }
 
         public static int MarkPlayerAction(ScriptLibContext context, int var2, int var3, int var4)
@@ -368,7 +368,8 @@ namespace Weedwacker.GameServer.Systems.Script
                 return 1;
             }
 
-            if (entity is ScriptGadgetEntity gadget) {
+            if (entity is ScriptGadgetEntity gadget)
+            {
                 gadget.SetGadgetState(state);
                 return 0;
             }
@@ -485,7 +486,7 @@ namespace Weedwacker.GameServer.Systems.Script
 
             if (entities.Any())
             {
-                foreach(var entity in entities)
+                foreach (var entity in entities)
                     context.SceneScriptManager.Scene.RemoveEntityAsync(entity);
 
                 return 0;
@@ -497,6 +498,6 @@ namespace Weedwacker.GameServer.Systems.Script
 
 
         }
-        
+
     }
 }

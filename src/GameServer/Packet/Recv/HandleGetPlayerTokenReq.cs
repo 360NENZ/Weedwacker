@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Security.Cryptography;
 using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet.Send;
@@ -21,7 +16,7 @@ namespace Weedwacker.GameServer.Packet.Recv
             GetPlayerTokenReq req = GetPlayerTokenReq.Parser.ParseFrom(payload);
 
             // Authenticate
-            if (! await GameServer.VerifyToken(req.AccountUid, req.AccountToken)) return;
+            if (!await GameServer.VerifyToken(req.AccountUid, req.AccountToken)) return;
 
             // If the account doesn't have a player for this server, creates a new one
             session.Player = await DatabaseManager.GetPlayerByAccountUidAsync(req.AccountUid);
@@ -66,7 +61,7 @@ namespace Weedwacker.GameServer.Packet.Recv
                     byte[] seed_bytes = client_seed;
 
                     //Kind of a hack, but whatever
-                    RSA encryptor = req.KeyId == 3 ? Crypto.CurOSEncryptor : Crypto.CurCNEncryptor;
+                    RSA encryptor = Crypto.GetDispatchEncryptionKey((int)req.KeyId);
                     byte[] seed_encrypted = encryptor.Encrypt(seed_bytes, RSAEncryptionPadding.Pkcs1);
 
                     byte[] seed_bytes_sign = signer.SignData(seed_bytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);

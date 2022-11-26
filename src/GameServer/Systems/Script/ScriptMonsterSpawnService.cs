@@ -17,7 +17,7 @@ namespace Weedwacker.GameServer.Systems.Script
 
         public void OnMonsterDead(MonsterEntity entityMonster)
         {
-            OnMonsterDeadListener.ForEach(l =>l.OnNotify(entityMonster));
+            OnMonsterDeadListener.ForEach(l => l.OnNotify(entityMonster));
         }
     }
 }

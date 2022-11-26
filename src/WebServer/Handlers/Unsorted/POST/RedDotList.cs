@@ -18,7 +18,7 @@ namespace Weedwacker.WebServer.Handlers
             public Data data { get; set; } = new();
             public class Data
             {
-                public List<Infos> infos { get; set; } = new() { new Infos()};
+                public List<Infos> infos { get; set; } = new() { new Infos() };
                 public class Infos
                 {
                     public int red_point_type { get; set; } = 2201;

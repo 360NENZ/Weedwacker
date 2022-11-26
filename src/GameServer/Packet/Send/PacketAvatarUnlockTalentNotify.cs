@@ -7,18 +7,18 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketAvatarUnlockTalentNotify : BasePacket
     {
-		public PacketAvatarUnlockTalentNotify(Avatar avatar, int depotId, int talentId) : base(OpCode.AvatarUnlockTalentNotify)
-		{
+        public PacketAvatarUnlockTalentNotify(Avatar avatar, int depotId, int talentId) : base(OpCode.AvatarUnlockTalentNotify)
+        {
 
-			AvatarUnlockTalentNotify proto = new AvatarUnlockTalentNotify()
-			{
-				AvatarGuid = avatar.Guid,
-				EntityId = (uint)avatar.EntityId,
-				TalentId = (uint)talentId,
-				SkillDepotId = (uint)depotId
-			};
+            AvatarUnlockTalentNotify proto = new AvatarUnlockTalentNotify()
+            {
+                AvatarGuid = avatar.Guid,
+                EntityId = (uint)avatar.EntityId,
+                TalentId = (uint)talentId,
+                SkillDepotId = (uint)depotId
+            };
 
-			Data = proto.ToByteArray();
-		}
-	}
+            Data = proto.ToByteArray();
+        }
+    }
 }

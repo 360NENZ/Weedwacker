@@ -20,18 +20,18 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp.Actions
             float curHP;
             float maxHP;
             float newHP;
-            switch(target)
+            switch (target)
             {
                 case TargetType.None:
                 case TargetType.Self:
                     curHP = avatar.FightProps[FightProperty.FIGHT_PROP_CUR_HP];
                     maxHP = avatar.FightProps[FightProperty.FIGHT_PROP_MAX_HP];
                     newHP = curHP - DynamicFloatHelper.ResolveDynamicFloat(amountByTargetCurrentHPRatio, avatar, abilityName) * curHP;
-                    if(limboByTargetMaxHPRatio != null)
+                    if (limboByTargetMaxHPRatio != null)
                     {
                         newHP = Math.Max(newHP, (float)limboByTargetMaxHPRatio);
                     }
-                    else if(newHP < 1f)
+                    else if (newHP < 1f)
                     {
                         if (lethal)
                         {

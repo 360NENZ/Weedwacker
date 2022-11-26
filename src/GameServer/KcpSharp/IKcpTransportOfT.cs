@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KcpSharp
+﻿namespace KcpSharp
 {
     /// <summary>
     /// A transport instance for upper-level connections.

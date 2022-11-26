@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using Weedwacker.GameServer.Systems.Ability;
-using Weedwacker.GameServer.Systems.Avatar;
 
 namespace Weedwacker.GameServer.Data.BinOut.Talent
 {

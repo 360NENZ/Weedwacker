@@ -18,9 +18,9 @@ namespace Weedwacker.GameServer.Packet.Send
                 Reason = reason,
                 ChangeHpReason = changeHpReason
             };
-            if(param != null)
+            if (param != null)
                 param.AsParallel().ForAll(w => proto.ParamList.Add(w));
-            
+
             Data = proto.ToByteArray();
         }
 

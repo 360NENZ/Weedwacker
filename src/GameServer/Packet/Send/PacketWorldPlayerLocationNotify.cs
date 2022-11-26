@@ -7,16 +7,16 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketWorldPlayerLocationNotify : BasePacket
     {
-		public PacketWorldPlayerLocationNotify(World world) : base(Enums.OpCode.WorldPlayerLocationNotify)
-		{
-			WorldPlayerLocationNotify proto = new WorldPlayerLocationNotify();
+        public PacketWorldPlayerLocationNotify(World world) : base(Enums.OpCode.WorldPlayerLocationNotify)
+        {
+            WorldPlayerLocationNotify proto = new WorldPlayerLocationNotify();
 
-			foreach (Player p in world.Players)
-			{
-				proto.PlayerWorldLocList.Add(new PlayerWorldLocationInfo() { SceneId = (uint)p.SceneId, PlayerLoc = p.GetPlayerLocationInfo()});
-			}
+            foreach (Player p in world.Players)
+            {
+                proto.PlayerWorldLocList.Add(new PlayerWorldLocationInfo() { SceneId = (uint)p.SceneId, PlayerLoc = p.GetPlayerLocationInfo() });
+            }
 
-			Data = proto.ToByteArray();
-		}
-	}
+            Data = proto.ToByteArray();
+        }
+    }
 }

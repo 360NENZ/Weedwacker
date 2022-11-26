@@ -2,7 +2,7 @@
 
 namespace Weedwacker.WebServer.Handlers
 {
-    internal class ListPriceTier :IHandler
+    internal class ListPriceTier : IHandler
     {
         public class ListPriceTiersRspJson
         {

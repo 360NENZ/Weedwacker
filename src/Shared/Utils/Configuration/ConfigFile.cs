@@ -10,8 +10,8 @@ namespace Weedwacker.Shared.Utils.Configuration
 
         public abstract class DatabaseJson
         {
-                public string connectionUri;
-                public string database;
+            public string connectionUri;
+            public string database;
         }
         public class StructureJson
         {

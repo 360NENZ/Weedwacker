@@ -69,7 +69,7 @@ namespace Weedwacker.WebServer.Handlers
                             public string gamebiz { get; set; } = "hk4e_global";
                             public int env { get; set; } = 2;
                             public string channelId { get; set; } = "1";
-                            public string subchannelId { get; set; } = "3";                         
+                            public string subchannelId { get; set; } = "3";
 
                         }
                     }

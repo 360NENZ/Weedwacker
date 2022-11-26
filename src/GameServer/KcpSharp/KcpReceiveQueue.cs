@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Threading.Tasks.Sources;
+﻿using System.Threading.Tasks.Sources;
 using System.Diagnostics;
 
 #if NEED_LINKEDLIST_SHIM

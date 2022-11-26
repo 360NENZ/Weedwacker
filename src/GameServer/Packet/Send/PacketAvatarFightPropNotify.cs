@@ -7,18 +7,18 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketAvatarFightPropNotify : BasePacket
     {
-		public PacketAvatarFightPropNotify(Avatar avatar) : base(OpCode.AvatarFightPropNotify)
-		{
-			AvatarFightPropNotify proto = new AvatarFightPropNotify()
-			{
-				AvatarGuid = avatar.Guid
-			};
-			foreach(FightProperty prop in avatar.FightProp.Keys)
+        public PacketAvatarFightPropNotify(Avatar avatar) : base(OpCode.AvatarFightPropNotify)
+        {
+            AvatarFightPropNotify proto = new AvatarFightPropNotify()
             {
-				proto.FightPropMap.Add((uint)prop,avatar.FightProp[prop]);
+                AvatarGuid = avatar.Guid
+            };
+            foreach (FightProperty prop in avatar.FightProp.Keys)
+            {
+                proto.FightPropMap.Add((uint)prop, avatar.FightProp[prop]);
             }
 
-			Data = proto.ToByteArray();
-		}
-	}
+            Data = proto.ToByteArray();
+        }
+    }
 }

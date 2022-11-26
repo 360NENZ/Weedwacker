@@ -41,7 +41,7 @@ namespace Weedwacker.GameServer.Commands
             }
             else
                 goto ERROR;
-            
+
             return $"spawn entity {id} for player {guid}";
         ERROR:
             return $"could not find entity {id}";

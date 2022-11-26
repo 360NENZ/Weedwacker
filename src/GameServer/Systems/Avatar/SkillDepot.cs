@@ -74,8 +74,8 @@ namespace Weedwacker.GameServer.Systems.Avatar
             }
 
             foreach (int skillId in avatarInfo.SkillDepotData[depotId].skills)
-            { 
-                if (skillId != 0) Skills.Add(skillId, 1); 
+            {
+                if (skillId != 0) Skills.Add(skillId, 1);
             }
 
             var inherentProudSkillGroups = avatarInfo.SkillDepotData[depotId].inherentProudSkillOpens.Where(w => w.needAvatarPromoteLevel <= 1).ToDictionary(q => q.proudSkillGroupId).Keys.ToList();
@@ -104,14 +104,14 @@ namespace Weedwacker.GameServer.Systems.Avatar
             if (Character.Data.AbilityHashMap.TryGetValue(DepotId, out Dictionary<uint, ConfigAbility>? hashMap))
                 Abilities = hashMap;
 
-            foreach(ConfigAbilityContainer container in GameData.ConfigAbilityAvatarMap["ConfigAbility_Avatar_AllDefault"])
+            foreach (ConfigAbilityContainer container in GameData.ConfigAbilityAvatarMap["ConfigAbility_Avatar_AllDefault"])
             {
-                if(container.Default is ConfigAbility config)
+                if (container.Default is ConfigAbility config)
                 {
                     Abilities[(uint)Utils.AbilityHash(config.abilityName)] = config;
                 }
             }
-            foreach(string abilityName in GameData.GlobalCombatData.defaultAbilities.defaultAvatarAbilities)
+            foreach (string abilityName in GameData.GlobalCombatData.defaultAbilities.defaultAvatarAbilities)
             {
                 foreach (ConfigAbilityContainer container in GameData.ConfigAbilityAvatarMap["ConfigAbility_Avatar_Common"])
                 {
@@ -128,7 +128,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         {
             Owner = owner;
             Character = avatar;
-            InitializeConfig();          
+            InitializeConfig();
         }
         public uint GetCoreProudSkillLevel()
         {

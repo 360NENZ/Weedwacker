@@ -189,7 +189,7 @@ namespace Weedwacker.GameServer.Systems.Inventory
             MaterialData data = (MaterialData)GameData.ItemDataMap[item.ItemId];
 
             switch (data.materialType)
-            { 
+            {
                 case MaterialType.MATERIAL_WEAPON_EXP_STONE:
                     return await Inventory.SubInventories[ItemType.ITEM_WEAPON].RemoveItemAsync(item);
 

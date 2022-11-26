@@ -60,7 +60,7 @@ namespace Weedwacker.GameServer.Systems.Player
         [BsonIgnore] public ShopManager ShopManager; // Loaded by DatabaseManager
         [BsonIgnore] public Social.SocialManager SocialManager; // Loaded by DatabaseManager
         [BsonIgnore] public TeamManager TeamManager; // Loaded by DatabaseManager
-     
+
         [BsonIgnore] public InvokeNotifier<CombatInvokeEntry> CombatInvNotifyList;
         [BsonIgnore] public InvokeNotifier<AbilityInvokeEntry> AbilityInvNotifyList;
         [BsonIgnore] public InvokeNotifier<AbilityInvokeEntry> ClientAbilityInitFinishNotifyList;
@@ -185,7 +185,7 @@ namespace Weedwacker.GameServer.Systems.Player
 
                     NextSendPlayerLocTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() + 5000;
                 }
-                if(Scene != null && time > NextSendPlayerTimeNotify)
+                if (Scene != null && time > NextSendPlayerTimeNotify)
                 {
                     // Send every 10 seconds
                     await SendPacketAsync(new PacketPlayerTimeNotify(this));
@@ -222,11 +222,11 @@ namespace Weedwacker.GameServer.Systems.Player
 
             // Create world
             World.World world = new(this);
-            if (SceneId == 0 || Position == new Vector3(0,0,0)) // new player?
+            if (SceneId == 0 || Position == new Vector3(0, 0, 0)) // new player?
             {
                 SceneId = 3;
                 WorldAreaIds = Tuple.Create(1, 109); // beach
-                await EnterWorldAreaAsync(1, 1, true); 
+                await EnterWorldAreaAsync(1, 1, true);
                 await world.AddPlayerAsync(this, EnterReason.Login, EnterType.Self, true);
             }
             else

@@ -34,7 +34,7 @@ namespace Weedwacker.GameServer.Systems.Ability
                     config.Apply(this, proudSkill.paramList);
                 }
             }
-            foreach(var skill in CurDepot.Skills)
+            foreach (var skill in CurDepot.Skills)
             {
                 AvatarSkillData skillData = (Owner as AvatarEntity).Avatar.Data.SkillData[CurDepotId][skill.Key];
                 ProudSkillData proudSkill = (Owner as AvatarEntity).Avatar.Data.ProudSkillData[CurDepotId]

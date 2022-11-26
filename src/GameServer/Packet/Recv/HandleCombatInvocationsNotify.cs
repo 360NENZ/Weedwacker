@@ -106,7 +106,7 @@ namespace Weedwacker.GameServer.Packet.Recv
 #if DEBUG
                 if (GameServer.Configuration.Server.LogCombatInvocations)
                 {
-                    if(!GameServer.Configuration.Server.CombatArgTypeBlacklist.Contains(entry.ArgumentType))
+                    if (!GameServer.Configuration.Server.CombatArgTypeBlacklist.Contains(entry.ArgumentType))
                     {
                         Connection.LogCombatInvocation("RECV combat invoke: ", entry, info.GetType());
                     }

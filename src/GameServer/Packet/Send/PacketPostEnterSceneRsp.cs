@@ -6,14 +6,14 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketPostEnterSceneRsp : BasePacket
     {
-		public PacketPostEnterSceneRsp(Player player) : base(Enums.OpCode.PostEnterSceneRsp)
-		{
-			PostEnterSceneRsp p = new PostEnterSceneRsp()
-			{
-				EnterSceneToken = player.EnterSceneToken
-			};
+        public PacketPostEnterSceneRsp(Player player) : base(Enums.OpCode.PostEnterSceneRsp)
+        {
+            PostEnterSceneRsp p = new PostEnterSceneRsp()
+            {
+                EnterSceneToken = player.EnterSceneToken
+            };
 
-			Data = p.ToByteArray();
-		}
-	}
+            Data = p.ToByteArray();
+        }
+    }
 }

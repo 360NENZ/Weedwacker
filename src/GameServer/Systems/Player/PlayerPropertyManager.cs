@@ -102,7 +102,7 @@ namespace Weedwacker.GameServer.Systems.Player
                 case PlayerProperty.PROP_IS_MP_MODE_AVAILABLE:
                 case PlayerProperty.PROP_IS_ONLY_MP_WITH_PS_PLAYER:
                     if (value == 0 || value == 1) goto default;
-                    return false;                   
+                    return false;
                 case PlayerProperty.PROP_SPRING_AUTO_USE_PERCENT:
                     if (value < MIN_SPRING_AUTO_USE_PERCENT || value > MAX_SPRING_AUTO_USE_PERCENT) return false;
                     goto default;

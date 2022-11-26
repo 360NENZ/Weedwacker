@@ -1,5 +1,4 @@
-﻿using Weedwacker.Shared.Utils.Configuration;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 
 namespace Weedwacker.Shared.Utils
 {
@@ -12,13 +11,18 @@ namespace Weedwacker.Shared.Utils
         public static byte[] ENCRYPT_KEY;
         public static ulong ENCRYPT_SEED = 0x0;
         public static byte[] ENCRYPT_SEED_BUFFER = new byte[0];
-        
-        public static RSA CurOSEncryptor = RSA.Create(); //Public key
-        public static RSA CurCNEncryptor = RSA.Create(); // Public Key
+
+        public static RSA Cur3Encryptor = RSA.Create(); //Public key
+        public static RSA Cur2Encryptor = RSA.Create(); // Public Key
+        public static RSA Cur4Encryptor = RSA.Create();
+        public static RSA Cur5Encryptor = RSA.Create();
         public static RSA CurSigner = RSA.Create(); //Private Key
-        
+
+        public static Dictionary<int, RSA> DispatchEncryptionKeys;
+
         public static void LoadKeys(string path)
         {
+            DispatchEncryptionKeys = new();
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
             var keypath = Path.Combine(path, "dispatchKey.bin");
@@ -33,22 +37,33 @@ namespace Weedwacker.Shared.Utils
                 ENCRYPT_KEY = File.ReadAllBytes(encryptkeypath);
             if (File.Exists(encryptseedbufferpath))
                 ENCRYPT_SEED_BUFFER = File.ReadAllBytes(encryptseedbufferpath);
-            
+
             try
             {
-                CurOSEncryptor.ImportFromPem(File.ReadAllText(path + "OSCB.pem").ToCharArray());
-                var OSparams = CurOSEncryptor.ExportParameters(true);
-                CurCNEncryptor.ImportFromPem(File.ReadAllText(path + "OSCN.pem").ToCharArray());
+                Cur3Encryptor.ImportFromPem(File.ReadAllText(path + "3.pem").ToCharArray());
+                var OSparams = Cur3Encryptor.ExportParameters(true);
+                DispatchEncryptionKeys[3] = Cur3Encryptor;
+                Cur2Encryptor.ImportFromPem(File.ReadAllText(path + "2.pem").ToCharArray());
+                DispatchEncryptionKeys[2] = Cur2Encryptor;
+                Cur4Encryptor.ImportFromPem(File.ReadAllText(path + "4.pem").ToCharArray());
+                DispatchEncryptionKeys[4] = Cur4Encryptor;
+                Cur5Encryptor.ImportFromPem(File.ReadAllText(path + "5.pem").ToCharArray());
+                DispatchEncryptionKeys[5] = Cur5Encryptor;
 
                 CurSigner.ImportFromPem(File.ReadAllText(path + "SigningKey.pem").ToCharArray());
                 var signParams = CurSigner.ExportParameters(true);
-                
+
             }
             catch (Exception e)
             {
                 Logger.WriteErrorLine("An error occurred while loading keys.", e);
             }
-            
+
+        }
+
+        public static RSA GetDispatchEncryptionKey(int key)
+        {
+            return DispatchEncryptionKeys[key];
         }
 
         public static void Xor(byte[] packet, byte[] key)
@@ -70,6 +85,8 @@ namespace Weedwacker.Shared.Utils
         {
             return System.Security.Cryptography.RandomNumberGenerator.GetBytes(length);
         }
+
+
 
         // Mersenne Twister 19937 using uint64 instead of uint32. Used to generate the encryption key for the game session
         public class MT19937

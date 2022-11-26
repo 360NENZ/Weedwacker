@@ -1,11 +1,7 @@
-﻿using Weedwacker.GameServer;
-using System;
-using System.Buffers;
+﻿using System.Buffers;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
+using Weedwacker.GameServer;
 using Weedwacker.Shared.Utils;
 
 namespace KcpSharp
@@ -105,7 +101,7 @@ namespace KcpSharp
                 return default;
             }
 
-            return new ValueTask(_udpListener.SendAsync(packet.ToArray(),  endpoint, cancellationToken).AsTask());
+            return new ValueTask(_udpListener.SendAsync(packet.ToArray(), endpoint, cancellationToken).AsTask());
         }
 
         private async void RunReceiveLoop()
@@ -119,7 +115,7 @@ namespace KcpSharp
 
             using IMemoryOwner<byte> memoryOwner = AllocateBuffer(_mtu);
             try
-            { 
+            {
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     int bytesReceived = 0;

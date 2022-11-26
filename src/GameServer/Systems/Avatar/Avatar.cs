@@ -8,7 +8,6 @@ using Weedwacker.GameServer.Database;
 using Weedwacker.GameServer.Enums;
 using Weedwacker.GameServer.Packet.Send;
 using Weedwacker.GameServer.Systems.Inventory;
-using Weedwacker.GameServer.Systems.Player;
 using Weedwacker.GameServer.Systems.World;
 using Weedwacker.Shared.Network.Proto;
 using Weedwacker.Shared.Utils;
@@ -35,7 +34,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
         [BsonElement] public int CurrentDepotId { get; private set; }
         [BsonSerializer(typeof(IntDictionarySerializer<SkillDepot>))]
         [BsonElement] public Dictionary<int, SkillDepot> SkillDepots { get; private set; } = new();
-        
+
         [BsonElement] public FetterSystem Fetters { get; private set; }
         [BsonIgnore] public Dictionary<EquipType, EquipItem> Equips { get; private set; } = new(); // Loaded through the inventory system
         [BsonElement] public Dictionary<FightProperty, float> FightProp { get; private set; } = new();
@@ -115,7 +114,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
             var update = Builders<AvatarManager>.Update.Set($"{nameof(AvatarManager.Avatars)}.{AvatarId}.{nameof(FightProp)}.{FightProperty.FIGHT_PROP_CUR_HP}", value);
             await DatabaseManager.UpdateAvatarsAsync(filter, update);
-            if(notifyClient) await Owner.SendPacketAsync(new PacketAvatarFightPropUpdateNotify(this, FightProperty.FIGHT_PROP_CUR_HP));
+            if (notifyClient) await Owner.SendPacketAsync(new PacketAvatarFightPropUpdateNotify(this, FightProperty.FIGHT_PROP_CUR_HP));
             return true;
         }
         public SkillDepot GetCurSkillDepot()
@@ -123,7 +122,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             return SkillDepots[CurrentDepotId];
         }
         public async Task<bool> SetFlyCloakAsync(int cloakId)
-        { 
+        {
             FlyCloak = cloakId;
             var filter = Builders<AvatarManager>.Filter.Where(w => w.OwnerId == Owner.GameUid);
             var update = Builders<AvatarManager>.Update.Set($"{nameof(AvatarManager.Avatars)}.{AvatarId}.{FlyCloak}", FlyCloak);
@@ -169,7 +168,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
         public GameItem? GetRelic(EquipType slot)
         {
-            if(slot == EquipType.EQUIP_WEAPON)
+            if (slot == EquipType.EQUIP_WEAPON)
             {
                 Logger.WriteErrorLine("Tried to access weapon as relic");
                 return null;
@@ -232,7 +231,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             {
                 return false;
             }
- 
+
             else if (GetRelic(itemEquipType) != null)
             {
                 // Unequip item in current slot if it exists
@@ -255,7 +254,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 await Owner.SendPacketAsync(new PacketAvatarEquipChangeNotify(this, item, itemEquipType));
             }
 
-           await RecalcStatsAsync(notifyClient);
+            await RecalcStatsAsync(notifyClient);
 
             return true;
         }
@@ -270,7 +269,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             // Set equip
             Equips[EquipType.EQUIP_WEAPON] = item;
             item.EquippedAvatar = AvatarId;
-            if(Owner.World != null)
+            if (Owner.World != null)
                 item.WeaponEntityId = Owner.World.GetNextEntityId(EntityIdType.WEAPON);
 
             //TODO apply weapon openConfigs
@@ -287,7 +286,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
             await RecalcStatsAsync(notifyClient);
 
-            return true;                         
+            return true;
         }
 
         public async Task<bool> UnequipRelic(EquipType slot, bool notifyClient = true)
@@ -331,7 +330,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 await DatabaseManager.UpdateInventoryAsync(inventoryFilter, inventoryUpdate);
 
                 if (notifyClient) await Owner.SendPacketAsync(new PacketAvatarEquipChangeNotify(this, EquipType.EQUIP_WEAPON));
-                await RecalcStatsAsync(notifyClient);              
+                await RecalcStatsAsync(notifyClient);
                 return true;
             }
 
@@ -351,7 +350,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
 
             // Clear properties
             FightProp.Clear();
-            if(GetCurSkillDepot().Element != null)
+            if (GetCurSkillDepot().Element != null)
                 GetCurSkillDepot().Element.CurEnergy = 0;
 
             // Base stats
@@ -379,7 +378,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             for (int slotId = 1; slotId <= 5; slotId++)
             {
                 // Get artifact
-                
+
                 if (!Equips.TryGetValue((EquipType)slotId, out EquipItem equip))
                 {
                     continue;
@@ -414,7 +413,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             }
 
             // Artifact Set stuff
-            foreach (KeyValuePair<int,int> e in sets.ToList())
+            foreach (KeyValuePair<int, int> e in sets.ToList())
             {
                 ReliquarySetData setData = GameData.ReliquarySetDataMap[e.Key];
                 if (setData == null)
@@ -612,7 +611,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
             avatarInfo.PropMap.Add((uint)PlayerProperty.PROP_EXP, new PropValue() { Type = (uint)PlayerProperty.PROP_EXP, Ival = (uint)Exp, Val = (uint)Exp });
             avatarInfo.PropMap.Add((uint)PlayerProperty.PROP_BREAK_LEVEL, new PropValue() { Type = (uint)PlayerProperty.PROP_BREAK_LEVEL, Ival = (uint)PromoteLevel, Val = (uint)PromoteLevel });
             avatarInfo.PropMap.Add((uint)PlayerProperty.PROP_SATIATION_VAL, new PropValue() { Type = (uint)PlayerProperty.PROP_SATIATION_VAL, Ival = 0, Val = 0 });
-            avatarInfo.PropMap.Add((uint)PlayerProperty.PROP_SATIATION_PENALTY_TIME, new PropValue() { Type = (uint)PlayerProperty.PROP_SATIATION_PENALTY_TIME, Ival=0, Val = 0 });
+            avatarInfo.PropMap.Add((uint)PlayerProperty.PROP_SATIATION_PENALTY_TIME, new PropValue() { Type = (uint)PlayerProperty.PROP_SATIATION_PENALTY_TIME, Ival = 0, Val = 0 });
 
             return avatarInfo;
         }

@@ -1,5 +1,5 @@
-﻿using Weedwacker.Shared.Utils;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
+using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.WebServer.Handlers
 {

@@ -232,7 +232,7 @@ namespace Weedwacker.GameServer.Systems.World
 
         public async Task<bool> RemoveEntityAsync(SceneEntity entity, Shared.Network.Proto.VisionType visionType = Shared.Network.Proto.VisionType.Die)
         {
-            if (ScriptEntities.Remove(entity.EntityId) || Entities.Remove(entity.EntityId) )
+            if (ScriptEntities.Remove(entity.EntityId) || Entities.Remove(entity.EntityId))
             {
                 await BroadcastPacketAsync(new PacketSceneEntityDisappearNotify(entity, visionType));
                 return true;
@@ -241,7 +241,7 @@ namespace Weedwacker.GameServer.Systems.World
         }
         public async Task RemoveEntitiesAsync(IEnumerable<SceneEntity> entity, Shared.Network.Proto.VisionType visionType)
         {
-            var toRemove = entity.Where(w => ScriptEntities.Remove(w.EntityId) || Entities.Remove(w.EntityId) );
+            var toRemove = entity.Where(w => ScriptEntities.Remove(w.EntityId) || Entities.Remove(w.EntityId));
             if (toRemove.Any())
             {
                 await BroadcastPacketAsync(new PacketSceneEntityDisappearNotify(toRemove, visionType));

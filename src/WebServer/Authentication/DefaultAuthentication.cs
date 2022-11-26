@@ -1,6 +1,6 @@
-﻿using Weedwacker.WebServer.Authentication.Objects;
+﻿using Weedwacker.Shared.Authentication;
 using Weedwacker.Shared.Utils;
-using Weedwacker.Shared.Authentication;
+using Weedwacker.WebServer.Authentication.Objects;
 using Weedwacker.WebServer.Database;
 
 namespace Weedwacker.WebServer.Authentication

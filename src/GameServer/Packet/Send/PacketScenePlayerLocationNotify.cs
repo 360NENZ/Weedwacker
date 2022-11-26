@@ -7,20 +7,20 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketScenePlayerLocationNotify : BasePacket
     {
-		public PacketScenePlayerLocationNotify(Scene scene) : base(Enums.OpCode.ScenePlayerLocationNotify)
-		{
-			ScenePlayerLocationNotify proto = new ScenePlayerLocationNotify()
-			{
-				SceneId = (uint)scene.GetId(),
-				//VehicleLocList = , //TODO
-			};
+        public PacketScenePlayerLocationNotify(Scene scene) : base(Enums.OpCode.ScenePlayerLocationNotify)
+        {
+            ScenePlayerLocationNotify proto = new ScenePlayerLocationNotify()
+            {
+                SceneId = (uint)scene.GetId(),
+                //VehicleLocList = , //TODO
+            };
 
-			foreach (Player p in scene.Players)
-			{
-				proto.PlayerLocList.Add(p.GetPlayerLocationInfo());
-			}
+            foreach (Player p in scene.Players)
+            {
+                proto.PlayerLocList.Add(p.GetPlayerLocationInfo());
+            }
 
-			Data = proto.ToByteArray();
-		}
-	}
+            Data = proto.ToByteArray();
+        }
+    }
 }

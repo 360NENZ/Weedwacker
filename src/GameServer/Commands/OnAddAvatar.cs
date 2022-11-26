@@ -11,7 +11,7 @@ namespace Weedwacker.GameServer.Commands
             {
                 return "invalid avatar id";
             }
-            if(!int.TryParse(args[1], out int guid) ||
+            if (!int.TryParse(args[1], out int guid) ||
                 !GameServer.OnlinePlayers.ContainsKey(guid))
             {
                 return "Player isn't online or doesn't exist";

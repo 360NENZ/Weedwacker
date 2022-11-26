@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KcpSharp
+﻿namespace KcpSharp
 {
     /// <summary>
     /// An instance that can produce exceptions in background jobs.

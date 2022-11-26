@@ -34,13 +34,13 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp
             switch (Type)
             {
                 case ConfigAbilitySubContainerType.ACTION:
-                    return (uint)Type + (ConfigIndex<< 3)    + (ActionIndex << 9);
+                    return (uint)Type + (ConfigIndex << 3) + (ActionIndex << 9);
                 case ConfigAbilitySubContainerType.MIXIN:
-                    return (uint)Type + (MixinIndex << 3)    + (ConfigIndex << 9) + (ActionIndex << 15);
+                    return (uint)Type + (MixinIndex << 3) + (ConfigIndex << 9) + (ActionIndex << 15);
                 case ConfigAbilitySubContainerType.MODIFIER_ACTION:
                     return (uint)Type + (ModifierIndex << 3) + (ConfigIndex << 9) + (ActionIndex << 15);
                 case ConfigAbilitySubContainerType.MODIFIER_MIXIN:
-                    return (uint)Type + (ModifierIndex << 3) + (MixinIndex << 9)  + (ConfigIndex << 15) + (ActionIndex << 21);
+                    return (uint)Type + (ModifierIndex << 3) + (MixinIndex << 9) + (ConfigIndex << 15) + (ActionIndex << 21);
                 default:
                     Logger.WriteErrorLine("Invalid ConfigAbilitySubContainerType");
                     return 0;

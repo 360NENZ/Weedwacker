@@ -1,5 +1,4 @@
-﻿using Vim.Math3d;
-using Weedwacker.GameServer.Enums;
+﻿using Weedwacker.GameServer.Enums;
 using Weedwacker.Shared.Network.Proto;
 
 namespace Weedwacker.GameServer.Systems.World
@@ -31,7 +30,8 @@ namespace Weedwacker.GameServer.Systems.World
             AsyncLoad = notify.IsAsyncLoad;
 
             SceneEntity owner = scene.GetEntityById(OwnerEntityId) as SceneEntity;
-            if (owner is ClientGadgetEntity ownerGadget) {
+            if (owner is ClientGadgetEntity ownerGadget)
+            {
                 OriginalOwnerEntityId = ownerGadget.OriginalOwnerEntityId;
             }
             else

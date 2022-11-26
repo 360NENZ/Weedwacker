@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KcpSharp
+﻿namespace KcpSharp
 {
     /// <summary>
     /// Helper methods for <see cref="IKcpExceptionProducer{T}"/>.

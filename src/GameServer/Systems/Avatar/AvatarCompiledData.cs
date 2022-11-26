@@ -103,7 +103,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                     }
                 }
                 if (GameData.AvatarTalentConfigDataMap.TryGetValue($"ConfigTalent_{Regex.Replace(name, "Avatar_", "")}", out Dictionary<string, BaseConfigTalent[]>? configTalents))
-                        ConfigTalentMap[depot.id] = configTalents;
+                    ConfigTalentMap[depot.id] = configTalents;
                 Dictionary<uint, ConfigAbility> abilityHashMap = new();
                 // add abilityGroup abilities (if player skill depot ability group)
                 if (depot.skillDepotAbilityGroup != null && depot.skillDepotAbilityGroup.Length > 0)
@@ -115,9 +115,9 @@ namespace Weedwacker.GameServer.Systems.Avatar
                         foreach (TargetAbility ability in abilityData.targetAbilities.Concat(ConfigAvatar.abilities))
                         {
                             ConfigAbility? config = null;
-                            foreach(var container in AbilityConfigMap[depot.id])
+                            foreach (var container in AbilityConfigMap[depot.id])
                             {
-                                if(container.Default is ConfigAbility konfig && konfig.abilityName == ability.abilityName)
+                                if (container.Default is ConfigAbility konfig && konfig.abilityName == ability.abilityName)
                                 {
                                     config = konfig;
                                     break;
@@ -125,7 +125,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                             }
                             if (config == null) continue;
                             abilityHashMap[(uint)Utils.AbilityHash(ability.abilityName)] = config;
-                        }                        
+                        }
                     }
                 }
                 foreach (TargetAbility ability in GameData.ConfigAvatarMap[$"ConfigAvatar_{AvatarName}"].abilities)

@@ -6,17 +6,17 @@ namespace Weedwacker.GameServer.Packet.Send
 {
     internal class PacketEnterScenePeerNotify : BasePacket
     {
-		public PacketEnterScenePeerNotify(Player player) : base(Enums.OpCode.EnterScenePeerNotify)
-		{
-			EnterScenePeerNotify proto = new EnterScenePeerNotify()
-			{
-				DestSceneId = (uint)player.SceneId,
-				PeerId = player.PeerId,
-				HostPeerId = player.World.GetHostPeerId(),
-				EnterSceneToken = player.EnterSceneToken
-			};
+        public PacketEnterScenePeerNotify(Player player) : base(Enums.OpCode.EnterScenePeerNotify)
+        {
+            EnterScenePeerNotify proto = new EnterScenePeerNotify()
+            {
+                DestSceneId = (uint)player.SceneId,
+                PeerId = player.PeerId,
+                HostPeerId = player.World.GetHostPeerId(),
+                EnterSceneToken = player.EnterSceneToken
+            };
 
-			Data = proto.ToByteArray();
-		}
-	}
+            Data = proto.ToByteArray();
+        }
+    }
 }

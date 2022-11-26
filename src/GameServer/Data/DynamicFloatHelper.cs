@@ -2,7 +2,6 @@
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 using Weedwacker.GameServer.Enums;
-using Weedwacker.GameServer.Systems.Avatar;
 using Weedwacker.GameServer.Systems.World;
 using Weedwacker.Shared.Utils;
 

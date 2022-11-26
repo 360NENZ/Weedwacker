@@ -9,17 +9,17 @@ namespace Weedwacker.GameServer.Packet.Send
         public PacketGetWidgetSlotRsp(Player player) : base(Enums.OpCode.GetWidgetSlotRsp)
         {
             //TODO
-            GetWidgetSlotRsp proto =new();
+            GetWidgetSlotRsp proto = new();
 
             if (player.WidgetId == 0)
-            {  
-                proto.SlotList.Add(new WidgetSlotData() { Tag = WidgetSlotTag.AttachAvatar});
+            {
+                proto.SlotList.Add(new WidgetSlotData() { Tag = WidgetSlotTag.AttachAvatar });
             }
             else
             {
                 proto.SlotList.Add(
                         new WidgetSlotData()
-                        { 
+                        {
                             IsActive = true,
                             MaterialId = (uint)player.WidgetId,
                             /*
@@ -30,7 +30,7 @@ namespace Weedwacker.GameServer.Packet.Send
 
                 proto.SlotList.Add(
                         new WidgetSlotData()
-                        { 
+                        {
                             Tag = WidgetSlotTag.AttachAvatar
                         });
             }

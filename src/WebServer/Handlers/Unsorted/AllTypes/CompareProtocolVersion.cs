@@ -14,7 +14,7 @@ namespace Weedwacker.WebServer.Handlers
             public string minimum { get; set; } = "";
 
         }
-    
+
         public class CompareProtocolVersionRspJson
         {
             public int retcode { get; set; } = 0;

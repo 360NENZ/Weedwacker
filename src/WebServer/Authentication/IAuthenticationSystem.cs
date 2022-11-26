@@ -1,7 +1,7 @@
-﻿using Weedwacker.WebServer.Database;
-using Weedwacker.WebServer.Authentication.Objects;
+﻿using Microsoft.AspNetCore.Http;
 using Weedwacker.Shared.Authentication;
-using Microsoft.AspNetCore.Http;
+using Weedwacker.WebServer.Authentication.Objects;
+using Weedwacker.WebServer.Database;
 
 namespace Weedwacker.WebServer.Authentication
 {

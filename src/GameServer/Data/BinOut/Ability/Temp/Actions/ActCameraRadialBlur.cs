@@ -11,6 +11,6 @@ namespace Weedwacker.GameServer.Data.BinOut.Ability.Temp.Actions
             [JsonProperty] public readonly float power;
             [JsonProperty] public readonly float blurTime;
             [JsonProperty] public readonly float fadeTime;
-            }
+        }
     }
 }

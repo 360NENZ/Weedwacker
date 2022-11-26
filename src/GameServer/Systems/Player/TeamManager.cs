@@ -46,7 +46,7 @@ namespace Weedwacker.GameServer.Systems.Player
             foreach (var team in Teams)
             {
                 reloadedTeams.Add(team.Key, new(team.Value.TeamName));
-                foreach(var entry in team.Value.AvatarInfo)
+                foreach (var entry in team.Value.AvatarInfo)
                 {
                     if (entry.Value == null) continue;
                     reloadedTeams[team.Key].AvatarInfo[entry.Key] = owner.Avatars.GetAvatarById(entry.Value.AvatarId);
@@ -82,7 +82,7 @@ namespace Weedwacker.GameServer.Systems.Player
 
         public async Task<bool> AddToTeamAsync(Avatar.Avatar avatar, int teamIndex = -1, int cIndex = -1)
         {
-            if(teamIndex == -1)
+            if (teamIndex == -1)
             {
                 teamIndex = CurrentTeamIndex;
             }
@@ -102,7 +102,7 @@ namespace Weedwacker.GameServer.Systems.Player
                     return false;
                 }
             }
-            Teams[teamIndex].AddAvatar(avatar, cIndex);           
+            Teams[teamIndex].AddAvatar(avatar, cIndex);
 
             // Update Database
             await DatabaseManager.SaveTeamsAsync(this);
@@ -117,7 +117,7 @@ namespace Weedwacker.GameServer.Systems.Player
                 CurrentTeamIndex = currentTeamIndex;
                 return true;
             }
-            else if(TowerTeams.ContainsKey(currentTeamIndex))
+            else if (TowerTeams.ContainsKey(currentTeamIndex))
             {
                 CurrentTeamIndex = currentTeamIndex;
                 return true;
@@ -176,7 +176,7 @@ namespace Weedwacker.GameServer.Systems.Player
             ActiveTeam.Clear();
 
             // update ActiveTeam using the entries of the current TeamInfo
-            for (int i = 0; i < GetCurrentTeamInfo().AvatarInfo.Count;  i++)
+            for (int i = 0; i < GetCurrentTeamInfo().AvatarInfo.Count; i++)
             {
                 if (GetCurrentTeamInfo().AvatarInfo[i] == null) continue;
                 int avatarId = GetCurrentTeamInfo().AvatarInfo[i].AvatarId;
@@ -236,7 +236,7 @@ namespace Weedwacker.GameServer.Systems.Player
 
             // Get team
             if (!Teams.TryGetValue(teamId, out TeamInfo teamInfo)) return;
-           
+
             // Set team data
             HashSet<Avatar.Avatar> newTeamAvatars = new();
             foreach (ulong guid in list)

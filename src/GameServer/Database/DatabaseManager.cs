@@ -100,7 +100,7 @@ namespace Weedwacker.GameServer.Database
         }
 
         private static async void BulkUpdate(object? source, ElapsedEventArgs e)
-        {           
+        {
             Task[]? tasks = new Task[] {
                 new Task(async () => {if (PlayerWrites.Any()) { await Players.BulkWriteAsync(PlayerWrites, BulkWrite); PlayerWrites.Clear(); } }),
                 new Task(async () => {if (AvatarWrites.Any()) { await Avatars.BulkWriteAsync(AvatarWrites, BulkWrite); AvatarWrites.Clear(); }}),
@@ -279,7 +279,7 @@ namespace Weedwacker.GameServer.Database
 
         public static async Task<ProgressManager> SaveProgressAsync(ProgressManager progress)
         {
-            await Progress.ReplaceOneAsync<ProgressManager>(w => w.OwnerId == progress.OwnerId, progress, new ReplaceOptions() { IsUpsert = true});
+            await Progress.ReplaceOneAsync<ProgressManager>(w => w.OwnerId == progress.OwnerId, progress, new ReplaceOptions() { IsUpsert = true });
             return progress;
         }
 

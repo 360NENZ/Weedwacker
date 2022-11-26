@@ -1,7 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
 using Weedwacker.Shared.Utils;
 
 namespace Weedwacker.WebServer.Handlers
@@ -59,7 +58,7 @@ namespace Weedwacker.WebServer.Handlers
 
                     if (!req.Query.ContainsKey("dispatchSeed"))
                     {
-                        
+
                         var response = new RegionManager.QueryCurRegionRspJson
                         {
                             content = regionData,
@@ -72,7 +71,7 @@ namespace Weedwacker.WebServer.Handlers
                     }
 
                     string key_id = req.Query["key_id"];
-                    var encryptor = key_id.Equals("3") ? Crypto.CurOSEncryptor : Crypto.CurCNEncryptor;
+                    var encryptor = Crypto.GetDispatchEncryptionKey(int.Parse(key_id));
                     var regionInfo = Convert.FromBase64String(regionData);
 
 
@@ -83,7 +82,7 @@ namespace Weedwacker.WebServer.Handlers
                     int numChunks = (int)Math.Ceiling(regionInfoLength / (double)chunkSize);
 
                     //Encrypt regionInfo in chunks
-                    byte[] encryptedRegionInfo = new byte[numChunks*256];
+                    byte[] encryptedRegionInfo = new byte[numChunks * 256];
 
                     for (int i = 0; i < numChunks; i++)
                     {
@@ -91,7 +90,7 @@ namespace Weedwacker.WebServer.Handlers
                         Index to = Math.Min((i + 1) * chunkSize, regionInfoLength);
                         byte[] chunk = regionInfo[from..to];
                         byte[] encryptedChunk = encryptor.Encrypt(chunk, RSAEncryptionPadding.Pkcs1);
-                        Array.Copy(encryptedChunk, 0, encryptedRegionInfo, i*256, encryptedChunk.Length);
+                        Array.Copy(encryptedChunk, 0, encryptedRegionInfo, i * 256, encryptedChunk.Length);
                     }
                     var signer = Crypto.CurSigner;
                     byte[] privateSignature = signer.SignData(regionInfo, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
@@ -109,7 +108,7 @@ namespace Weedwacker.WebServer.Handlers
                 }
                 catch (Exception e)
                 {
-                    Logger.WriteErrorLine(string.Format("An error occurred while handling query_cur_region/{0}.", regionName), e);
+                    Logger.WriteErrorLine($"An error occurred while handling query_cur_region/{regionName}.", e);
                 }
             }
             else
@@ -119,7 +118,7 @@ namespace Weedwacker.WebServer.Handlers
                 await context.Response.WriteAsync(regionData);
             }
             // Log to console.
-            Logger.WriteLine(string.Format("Client {0}s request: query_cur_region/{1}s", context.Connection.RemoteIpAddress.ToString(), regionName));
+            Logger.WriteLine($"Client {context.Connection.RemoteIpAddress}s request: query_cur_region/{regionName}s");
             return true;
         }
     }

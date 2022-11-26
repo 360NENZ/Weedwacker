@@ -8,71 +8,71 @@ namespace Weedwacker.GameServer.Systems.Inventory
 {
     internal class ReliquaryItem : EquipItem
     {
-		[BsonElement] public int MainPropId { get; protected set; }
-		[BsonElement] public HashSet<int>? AppendPropIdList { get; private set; } = new();
-		[BsonIgnore] public new ReliquaryData ItemData => (ReliquaryData)GameData.ItemDataMap[ItemId];
-		public ReliquaryItem(ulong guid, int itemId, int uniqueId) : base(guid, itemId)
-		{
-			Id = uniqueId;
-			Level = 1;
+        [BsonElement] public int MainPropId { get; protected set; }
+        [BsonElement] public HashSet<int>? AppendPropIdList { get; private set; } = new();
+        [BsonIgnore] public new ReliquaryData ItemData => (ReliquaryData)GameData.ItemDataMap[ItemId];
+        public ReliquaryItem(ulong guid, int itemId, int uniqueId) : base(guid, itemId)
+        {
+            Id = uniqueId;
+            Level = 1;
 
-			// Create main property
-			Random rand = new();
-			ReliquaryMainPropData mainPropData = GameData.ReliquaryMainPropDataMap.ElementAt(rand.Next(0, GameData.ReliquaryMainPropDataMap.Count)).Value;
-			MainPropId = mainPropData.id;
+            // Create main property
+            Random rand = new();
+            ReliquaryMainPropData mainPropData = GameData.ReliquaryMainPropDataMap.ElementAt(rand.Next(0, GameData.ReliquaryMainPropDataMap.Count)).Value;
+            MainPropId = mainPropData.id;
 
-			// Create extra stats
-			AppendPropIdList.Add(ItemData.appendPropNum);
-		}
+            // Create extra stats
+            AppendPropIdList.Add(ItemData.appendPropNum);
+        }
 
-		public async Task OnLoadAsync(ulong guid)
-		{
-			Guid = guid;
-		}
-		public EquipType GetEquipSlot()
-		{
-			return ItemData.equipType;
-		}
-		public Reliquary ToReliquaryProto()
-		{
-			Reliquary relic = new()
-			{
-				Level = (uint)Level,
-				Exp = (uint)Exp,
-				PromoteLevel = (uint)PromoteLevel,
-				MainPropId = (uint)MainPropId,
-			};
-			foreach(int id in AppendPropIdList)
+        public async Task OnLoadAsync(ulong guid)
+        {
+            Guid = guid;
+        }
+        public EquipType GetEquipSlot()
+        {
+            return ItemData.equipType;
+        }
+        public Reliquary ToReliquaryProto()
+        {
+            Reliquary relic = new()
             {
-				relic.AppendPropIdList.Add((uint)id);
+                Level = (uint)Level,
+                Exp = (uint)Exp,
+                PromoteLevel = (uint)PromoteLevel,
+                MainPropId = (uint)MainPropId,
+            };
+            foreach (int id in AppendPropIdList)
+            {
+                relic.AppendPropIdList.Add((uint)id);
             }
 
-			return relic;
-		}
+            return relic;
+        }
 
-		public SceneReliquaryInfo CreateSceneReliquaryInfo()
-		{
-			SceneReliquaryInfo relicInfo = new SceneReliquaryInfo()
-			{
-				ItemId = (uint)ItemId,
-				Guid = Guid,
-				Level = (uint)Level
-			};
-
-			return relicInfo;
-		}
-
-		public override Item ToProto()
+        public SceneReliquaryInfo CreateSceneReliquaryInfo()
         {
-			Item proto = new()
-			{
-				Guid = Guid,
-				ItemId = (uint)ItemData.id
-			};
+            SceneReliquaryInfo relicInfo = new SceneReliquaryInfo()
+            {
+                ItemId = (uint)ItemId,
+                Guid = Guid,
+                Level = (uint)Level
+            };
 
-			Reliquary relic = ToReliquaryProto();
-			proto.Equip = new Equip() { Reliquary = relic, IsLocked = Locked };
-			return proto;
-		}
+            return relicInfo;
+        }
+
+        public override Item ToProto()
+        {
+            Item proto = new()
+            {
+                Guid = Guid,
+                ItemId = (uint)ItemData.id
+            };
+
+            Reliquary relic = ToReliquaryProto();
+            proto.Equip = new Equip() { Reliquary = relic, IsLocked = Locked };
+            return proto;
+        }
     }
 }

@@ -39,11 +39,11 @@ namespace Weedwacker.GameServer.Systems.Avatar
             Avatar = avatar;
 
             FetterStates.Add(FetterInfoData.fetterId, new FetterData() { FetterId = (uint)FetterInfoData.fetterId, FetterState = DEFAULT_STATE });
-            foreach(FetterStoryData storyData in FetterStoryData.Values)
+            foreach (FetterStoryData storyData in FetterStoryData.Values)
             {
                 FetterStates.Add(storyData.fetterId, new FetterData() { FetterId = (uint)storyData.fetterId, FetterState = DEFAULT_STATE });
             }
-            foreach(FettersData fettersData in FettersData.Values)
+            foreach (FettersData fettersData in FettersData.Values)
             {
                 FetterStates.Add(fettersData.fetterId, new FetterData() { FetterId = (uint)fettersData.fetterId, FetterState = DEFAULT_STATE });
             }
@@ -92,7 +92,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                 {
                     FetterId = (uint)fetter.fetterId,
                     FetterState = ++FetterStates[fetter.fetterId].FetterState
-                };              
+                };
             }
             else
             {
@@ -121,7 +121,7 @@ namespace Weedwacker.GameServer.Systems.Avatar
                                 fetterProto.CondIndexList.Add(i);
                             }
                         }
-                        if(notifyPlayer) await Owner.SendPacketAsync(new PacketAvatarFetterDataNotify(Avatar));
+                        if (notifyPlayer) await Owner.SendPacketAsync(new PacketAvatarFetterDataNotify(Avatar));
                     }
                 }
             }

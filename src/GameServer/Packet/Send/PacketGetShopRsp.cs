@@ -20,7 +20,7 @@ namespace Weedwacker.GameServer.Packet.Send
                 proto.Retcode = (int)Retcode.RetShopNotOpen; // probably correct retcode
             Data = proto.ToByteArray();
         }
-            
+
     }
 }
 

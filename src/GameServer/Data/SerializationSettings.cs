@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+﻿using Newtonsoft.Json.Serialization;
 
 namespace Weedwacker.GameServer.Data
 {
@@ -20,6 +19,6 @@ namespace Weedwacker.GameServer.Data
                 assemblyName = null;
                 typeName = serializedType.Name;
             }
-        }      
+        }
     }
 }

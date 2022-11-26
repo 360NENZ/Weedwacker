@@ -10,7 +10,7 @@ namespace Weedwacker.GameServer.Commands
         public static async Task<string> OnExportHashes(params string[] args)
         {
             Dictionary<uint, string> hashMap = new();
-            foreach(var container in GameData.ConfigAbilityAvatarMap.Values)
+            foreach (var container in GameData.ConfigAbilityAvatarMap.Values)
             {
                 foreach (var ability in container)
                 {

@@ -13,7 +13,7 @@ namespace Weedwacker.GameServer.Packet.Recv
         public override async Task HandleAsync(Connection session, byte[] header, byte[] payload)
         {
             PrivateChatReq req = PrivateChatReq.Parser.ParseFrom(payload);
-            if(req.TargetUid == (uint)GameServer.Configuration.Server.GameOptions.Constants.SERVER_CONSOLE_UID)
+            if (req.TargetUid == (uint)GameServer.Configuration.Server.GameOptions.Constants.SERVER_CONSOLE_UID)
             {
                 if (req.Text[0] == '/')
                 {
@@ -25,7 +25,7 @@ namespace Weedwacker.GameServer.Packet.Recv
                     catch (Exception e)
                     {
                         Logger.WriteErrorLine(e.ToString());
-                    }                 
+                    }
                 }
 
                 // Create chat packet.

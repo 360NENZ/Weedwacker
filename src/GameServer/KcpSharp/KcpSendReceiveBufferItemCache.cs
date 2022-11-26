@@ -1,11 +1,10 @@
-﻿using System.Threading;
-
+﻿
 #if NEED_LINKEDLIST_SHIM
 using LinkedListOfBufferItem = KcpSharp.NetstandardShim.LinkedList<KcpSharp.KcpSendReceiveBufferItem>;
 using LinkedListNodeOfBufferItem = KcpSharp.NetstandardShim.LinkedListNode<KcpSharp.KcpSendReceiveBufferItem>;
 #else
-using LinkedListOfBufferItem = System.Collections.Generic.LinkedList<KcpSharp.KcpSendReceiveBufferItem>;
 using LinkedListNodeOfBufferItem = System.Collections.Generic.LinkedListNode<KcpSharp.KcpSendReceiveBufferItem>;
+using LinkedListOfBufferItem = System.Collections.Generic.LinkedList<KcpSharp.KcpSendReceiveBufferItem>;
 #endif
 
 namespace KcpSharp

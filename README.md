@@ -52,6 +52,11 @@ class Handlers
 			oS.host = "localhost"; // This can also be replaced with another IP address.
             oS.port = 443; // Change to the port of the WebServer
 		}
+		
+		if (oS.host.Equals("overseauspider.yuanshen.com:8888")) {
+            oS.oRequest.FailSession(404, "Blocked", "Not Found");
+        }
         
 	}
-};```
+};
+```
